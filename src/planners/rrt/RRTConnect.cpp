@@ -3,11 +3,10 @@
 //
 
 #include "RRTConnect.h"
-#include "spdlog/spdlog.h"
 
 planning::rrt::RRTConnect::RRTConnect(base::StateSpace *ss_) : AbstractPlanner(ss_)
 {
-	spdlog::info("Setting up RRTConnect planner...");
+
 }
 
 planning::rrt::RRTConnect::RRTConnect(base::StateSpace *ss_, base::State *start_,

@@ -34,8 +34,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif()
 
 find_package(Eigen3 REQUIRED)
-find_package(spdlog REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
+
+add_subdirectory(external/glog)
 
 # The compiled library code is here
 add_subdirectory(src)

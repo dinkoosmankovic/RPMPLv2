@@ -5,7 +5,6 @@
 #define RPMPL_ABSTRACTPLANNER_H
 
 #include "StateSpace.h"
-#include "spdlog/spdlog.h"
 
 namespace planning
 {
