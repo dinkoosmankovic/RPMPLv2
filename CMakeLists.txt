@@ -18,6 +18,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   # Let's nicely support folders in IDEs
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+
   # Testing only available if this is the main app
   # Note this needs to be done in the main CMakeLists
   # since it calls enable_testing, which must be in the
@@ -35,6 +38,8 @@ endif()
 
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
+
+find_package(Flann REQUIRED)
 
 add_subdirectory(external/glog)
 
