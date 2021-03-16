@@ -10,17 +10,17 @@
 
 namespace base
 {
-	class RealVectorSpace : public StateSpace
+class RealVectorSpace : public base::StateSpace
 	{
 	public:
 		RealVectorSpace(int dimensions);
 		~RealVectorSpace();
 		int getDimensions() override;
 		friend std::ostream &operator<<(std::ostream &os, const RealVectorSpace &space);
-		bool isValid(const State *q) override;
-		float getDistance(const State *q) override;
-		State *randomState() override;
-		Motion *getMotion(State* s1, State* s2) override;
+		bool isValid(const base::State *q) override;
+		float getDistance(const base::State *q) override;
+		base::State *randomState() override;
+		base::Motion *getMotion(base::State* s1, base::State* s2) override;
 	private:
 		int dimensions;
 	};

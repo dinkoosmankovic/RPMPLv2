@@ -34,6 +34,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif()
 
 find_package(Eigen3 REQUIRED)
+find_package(spdlog REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 # The compiled library code is here

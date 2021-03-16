@@ -1,5 +1,7 @@
-add_executable(main_app main_app.cpp)
-target_compile_features(main_app PRIVATE cxx_std_17)
+add_executable(test_state_spaces test_state_spaces.cpp)
+target_compile_features(test_state_spaces PRIVATE cxx_std_17)
+target_link_libraries(test_state_spaces PUBLIC rpmpl_library)
 
-
-target_link_libraries(main_app PUBLIC rpmpl_library)
+add_executable(test_rrtconnect test_rrtconnect.cpp)
+target_compile_features(test_rrtconnect PRIVATE cxx_std_17)
+target_link_libraries(test_rrtconnect PUBLIC rpmpl_library)

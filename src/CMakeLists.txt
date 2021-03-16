@@ -3,7 +3,10 @@
 
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/include/state_spaces
-        ${PROJECT_SOURCE_DIR}/include/state_spaces/real_vector_space)
+        ${PROJECT_SOURCE_DIR}/include/state_spaces/real_vector_space
+        ${PROJECT_SOURCE_DIR}/include/planners
+        ${PROJECT_SOURCE_DIR}/include/planners/rrt
+)
 
 # Optionally glob, but only for CMake 3.12 or later:
 file(GLOB_RECURSE HEADER_LIST CONFIGURE_DEPENDS
@@ -14,7 +17,7 @@ file(GLOB_RECURSE SRC_LIST CONFIGURE_DEPENDS
         "*.cpp"
         )
 
-message(${HEADER_LIST})
+message(${SRC_LIST})
 # Make an automatic library - will be static or dynamic based on user setting
 add_library(rpmpl_library SHARED ${SRC_LIST} ${HEADER_LIST})
 
