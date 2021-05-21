@@ -3,6 +3,17 @@
 //
 
 #include "StateSpace.h"
+#include "StateSpaceType.h"
 
 base::StateSpace::~StateSpace()
 {}
+
+StateSpaceType base::StateSpace::getStateSpaceType() const
+{
+	return stateSpaceType;
+}
+
+void base::StateSpace::setStateSpaceType(StateSpaceType stateSpaceType)
+{
+	StateSpace::stateSpaceType = stateSpaceType;
+}

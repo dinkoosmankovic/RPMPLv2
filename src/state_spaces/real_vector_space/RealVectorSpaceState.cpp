@@ -4,10 +4,11 @@
 
 #include "RealVectorSpaceState.h"
 
-base::RealVectorSpaceState::RealVectorSpaceState(int dimensions_, Eigen::VectorXf state_)
+base::RealVectorSpaceState::RealVectorSpaceState(Eigen::VectorXf state_)
 {
-	dimensions = dimensions_;
+	dimensions = state_.size();
 	coord = state_;
+	stateSpaceType = StateSpaceType::RealVectorSpace;
 }
 
 base::RealVectorSpaceState::~RealVectorSpaceState()
@@ -18,12 +19,14 @@ base::RealVectorSpaceState::RealVectorSpaceState(int dimensions_)
 {
 	dimensions = dimensions_;
 	coord = Eigen::VectorXf::Random(dimensions);
+	stateSpaceType = StateSpaceType::RealVectorSpace;
 }
 
 base::RealVectorSpaceState::RealVectorSpaceState(base::RealVectorSpaceState* state)
 {
 	dimensions = state->dimensions;
 	coord = state->coord;
+	stateSpaceType = StateSpaceType::RealVectorSpace;
 }
 
 int base::RealVectorSpaceState::getDimensions() const

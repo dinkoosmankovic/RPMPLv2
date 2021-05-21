@@ -17,11 +17,13 @@ namespace planning
 			RRTConnect(base::StateSpace *ss_, base::State *start_, base::State *goal_);
 			~RRTConnect();
 			bool solve() override;
+			base::State *getStartTree() const;
+			base::State *getGoalTree() const;
+
 		private:
 			base::StateSpace* ss;
 			base::State* start;
 			base::State* goal;
-
 		};
 	}
 }

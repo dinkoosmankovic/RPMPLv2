@@ -7,6 +7,7 @@
 
 #include <ostream>
 #include "StateSpace.h"
+#include "RealVectorSpaceState.h"
 
 namespace base
 {
@@ -19,7 +20,7 @@ class RealVectorSpace : public base::StateSpace
 		friend std::ostream &operator<<(std::ostream &os, const RealVectorSpace &space);
 		bool isValid(const base::State *q) override;
 		float getDistance(const base::State *q) override;
-		base::State *randomState() override;
+		RealVectorSpaceState *randomState() override;
 		base::Motion *getMotion(base::State* s1, base::State* s2) override;
 	private:
 		int dimensions;

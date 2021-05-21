@@ -7,7 +7,9 @@
 #include <Eigen/Dense>
 
 base::RealVectorSpace::RealVectorSpace(int dimensions) : dimensions(dimensions)
-{}
+{
+	setStateSpaceType(StateSpaceType::RealVectorSpace);
+}
 
 base::RealVectorSpace::~RealVectorSpace()
 {
@@ -34,9 +36,9 @@ float base::RealVectorSpace::getDistance(const base::State *q)
 	return 0;
 }
 
-base::State *base::RealVectorSpace::randomState()
+base::RealVectorSpaceState *base::RealVectorSpace::randomState()
 {
-	base::State* state = new base::RealVectorSpaceState(dimensions);
+	base::RealVectorSpaceState* state = new base::RealVectorSpaceState(dimensions);
 	return state;
 }
 

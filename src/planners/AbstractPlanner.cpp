@@ -5,3 +5,8 @@
 #include "AbstractPlanner.h"
 
 planning::AbstractPlanner::~AbstractPlanner() {}
+
+base::StateSpace *planning::AbstractPlanner::getSs() const
+{
+	return ss;
+}

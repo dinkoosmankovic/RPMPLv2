@@ -5,6 +5,8 @@
 #ifndef RPMPL_STATE_H
 #define RPMPL_STATE_H
 
+#include "StateSpaceType.h"
+
 namespace base
 {
 	class State
@@ -14,9 +16,12 @@ namespace base
 	public:
 		State *getParent() const;
 		void setParent(State *parent_);
+		StateSpaceType getStateSpaceType() const;
+		void setStateSpaceType(StateSpaceType stateSpaceType);
 	protected:
 		State(){};
 		virtual ~State() = 0;
+		StateSpaceType stateSpaceType;
 	};
 }
 #endif //RPMPL_STATE_H

@@ -18,7 +18,7 @@ namespace base
 	public:
 		RealVectorSpaceState(base::RealVectorSpaceState* state);
 		RealVectorSpaceState(int dimensions_);
-		RealVectorSpaceState(int dimensions_, Eigen::VectorXf state_);
+		RealVectorSpaceState(Eigen::VectorXf state_);
 		~RealVectorSpaceState();
 		int getDimensions() const;
 		void setDimensions(int dimensions);

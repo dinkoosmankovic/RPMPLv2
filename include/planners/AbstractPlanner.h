@@ -14,7 +14,8 @@ namespace planning
 		explicit AbstractPlanner(base::StateSpace* ss_) { ss = ss_; };
 		virtual ~AbstractPlanner() = 0;
 		virtual bool solve() = 0;
-	private:
+		base::StateSpace *getSs() const;
+	protected:
 		base::StateSpace* ss;
 	};
 }
