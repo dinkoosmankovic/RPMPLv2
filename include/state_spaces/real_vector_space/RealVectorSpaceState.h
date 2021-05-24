@@ -20,10 +20,10 @@ namespace base
 		RealVectorSpaceState(int dimensions_);
 		RealVectorSpaceState(Eigen::VectorXf state_);
 		~RealVectorSpaceState();
-		int getDimensions() const;
 		void setDimensions(int dimensions);
 		const Eigen::VectorXf &getCoord() const override;
 		void setCoord(const Eigen::VectorXf &coord);
+		int getDimension() const override;
 	};
 }
 

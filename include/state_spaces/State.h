@@ -22,6 +22,7 @@ namespace base
 		void setStateSpaceType(StateSpaceType stateSpaceType);
 		virtual const Eigen::VectorXf &getCoord() const = 0;
 		virtual void setCoord(const Eigen::VectorXf &coord) = 0;
+		virtual int getDimension() const = 0;
 	protected:
 		State(){};
 		virtual ~State() = 0;

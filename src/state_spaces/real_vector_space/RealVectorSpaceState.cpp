@@ -29,11 +29,6 @@ base::RealVectorSpaceState::RealVectorSpaceState(base::RealVectorSpaceState* sta
 	stateSpaceType = StateSpaceType::RealVectorSpace;
 }
 
-int base::RealVectorSpaceState::getDimensions() const
-{
-	return dimensions;
-}
-
 void base::RealVectorSpaceState::setDimensions(int dimensions)
 {
 	RealVectorSpaceState::dimensions = dimensions;
@@ -47,4 +42,9 @@ const Eigen::VectorXf &base::RealVectorSpaceState::getCoord() const
 void base::RealVectorSpaceState::setCoord(const Eigen::VectorXf &coord)
 {
 	RealVectorSpaceState::coord = coord;
+}
+
+int base::RealVectorSpaceState::getDimension() const
+{
+	return dimensions;
 }

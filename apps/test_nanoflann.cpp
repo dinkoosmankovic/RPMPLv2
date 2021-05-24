@@ -28,10 +28,10 @@ void buildKDTree(std::vector<base::State*>& states)
 	base::State* new_state = new base::RealVectorSpaceState(Eigen::Vector2f({0.001,0.001}));
 
 	base::Tree tree; tree.states = states;
+	const int dim = test_state->getDimension();
 	typedef nanoflann::KDTreeSingleIndexDynamicAdaptor<
 			nanoflann::L2_Simple_Adaptor<double, base::Tree> ,
-			base::Tree,
-			2 /* dim */
+			base::Tree /* dim */
 			> KdTree;
 
 	KdTree index(2, tree, nanoflann::KDTreeSingleIndexAdaptorParams(10) );
