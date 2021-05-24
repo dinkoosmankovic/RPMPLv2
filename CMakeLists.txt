@@ -39,9 +39,11 @@ endif()
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-find_package(Flann REQUIRED)
-
 add_subdirectory(external/glog)
+add_subdirectory(nanoflann)
+
+find_package(nanoflann)
+
 
 # The compiled library code is here
 add_subdirectory(src)
@@ -51,7 +53,8 @@ add_subdirectory(apps)
 
 # Testing only available if this is the main app
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well
-if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
-   AND BUILD_TESTING)
-  add_subdirectory(tests)
-endif()
+
+#if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
+#   AND BUILD_TESTING)
+#  add_subdirectory(tests)
+#endif()
