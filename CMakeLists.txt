@@ -40,7 +40,7 @@ find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 add_subdirectory(external/glog)
-add_subdirectory(nanoflann)
+add_subdirectory(external/nanoflann)
 
 find_package(nanoflann)
 

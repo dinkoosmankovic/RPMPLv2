@@ -2,5 +2,5 @@
 	path = external/glog
 	url = https://github.com/google/glog.git
 [submodule "nanoflann"]
-	path = nanoflann
+	path = external/nanoflann
 	url = https://github.com/jlblancoc/nanoflann.git
