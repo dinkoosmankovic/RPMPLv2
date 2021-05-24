@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 	LOG(INFO) << "RRTConnect planning finished.";
 	if (res)
 	{
-		LOG(INFO) << dynamic_cast<base::RealVectorSpaceState*>(planner->getStartTree())->getCoord().transpose();
+		LOG(INFO) << dynamic_cast<base::RealVectorSpaceState*>(planner->getStartTree()[0])->getCoord().transpose();
 	}
 	return 0;
 }
