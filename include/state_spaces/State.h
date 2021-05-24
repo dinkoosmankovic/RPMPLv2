@@ -7,6 +7,7 @@
 
 #include "StateSpaceType.h"
 #include <Eigen/Dense>
+#include <vector>
 
 namespace base
 {
@@ -26,5 +27,21 @@ namespace base
 		virtual ~State() = 0;
 		StateSpaceType stateSpaceType;
 	};
+
+	class Tree
+	{
+	public:
+		std::vector<base::State*>  states;
+
+		inline size_t kdtree_get_point_count() const { return states.size(); }
+
+		inline double kdtree_get_pt(const size_t idx, const size_t dim) const
+		{
+			return states[idx]->getCoord()[dim];
+		}
+		template <class BBOX>
+		bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+	};
+
 }
 #endif //RPMPL_STATE_H

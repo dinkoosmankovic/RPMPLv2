@@ -10,23 +10,8 @@
 #include <iostream>
 #include "RealVectorSpaceState.h"
 #include "RealVectorSpace.h"
+#include "State.h"
 
-//typedef std::vector<base::State*> Tree;
-
-struct Tree
-{
-	std::vector<base::State*>  states;
-
-	inline size_t kdtree_get_point_count() const { return states.size(); }
-
-	inline double kdtree_get_pt(const size_t idx, const size_t dim) const
-	{
-		return states[idx]->getCoord()[dim];
-	}
-	template <class BBOX>
-	bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
-
-};
 
 void generateRandomStates(base::StateSpace* ss, std::vector<base::State*>& states, int N = 20)
 {
@@ -42,10 +27,10 @@ void buildKDTree(std::vector<base::State*>& states)
 
 	base::State* new_state = new base::RealVectorSpaceState(Eigen::Vector2f({0.001,0.001}));
 
-	Tree tree; tree.states = states;
+	base::Tree tree; tree.states = states;
 	typedef nanoflann::KDTreeSingleIndexDynamicAdaptor<
-			nanoflann::L2_Simple_Adaptor<double, Tree> ,
-			Tree,
+			nanoflann::L2_Simple_Adaptor<double, base::Tree> ,
+			base::Tree,
 			2 /* dim */
 			> KdTree;
 
