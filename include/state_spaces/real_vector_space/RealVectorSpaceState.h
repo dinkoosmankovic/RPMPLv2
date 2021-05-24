@@ -22,7 +22,7 @@ namespace base
 		~RealVectorSpaceState();
 		int getDimensions() const;
 		void setDimensions(int dimensions);
-		const Eigen::VectorXf &getCoord() const;
+		const Eigen::VectorXf &getCoord() const override;
 		void setCoord(const Eigen::VectorXf &coord);
 	};
 }

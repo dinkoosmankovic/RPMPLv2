@@ -6,6 +6,7 @@
 #define RPMPL_STATE_H
 
 #include "StateSpaceType.h"
+#include <Eigen/Dense>
 
 namespace base
 {
@@ -18,6 +19,8 @@ namespace base
 		void setParent(State *parent_);
 		StateSpaceType getStateSpaceType() const;
 		void setStateSpaceType(StateSpaceType stateSpaceType);
+		virtual const Eigen::VectorXf &getCoord() const = 0;
+		virtual void setCoord(const Eigen::VectorXf &coord) = 0;
 	protected:
 		State(){};
 		virtual ~State() = 0;
