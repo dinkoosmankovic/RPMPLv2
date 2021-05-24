@@ -31,8 +31,28 @@ namespace base
 
 	class Tree
 	{
-	public:
 		std::vector<base::State*>  *states;
+	public:
+		Tree(std::vector<State *> *states_) : states(states_) {}
+		Tree()
+		{
+			states = new std::vector<State*>();
+		}
+
+		std::vector<base::State *> *getStates() const
+		{
+			return states;
+		}
+
+		void setStates(std::vector<State *> *states)
+		{
+			Tree::states = states;
+		}
+
+		void emptyTree()
+		{
+			states->empty();
+		}
 
 		inline size_t kdtree_get_point_count() const { return states->size(); }
 

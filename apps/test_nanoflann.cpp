@@ -27,7 +27,7 @@ void buildKDTree(std::vector<base::State*>& states)
 
 	base::State* new_state = new base::RealVectorSpaceState(Eigen::Vector2f({0.001,0.001}));
 
-	base::Tree tree; tree.states = &states;
+	base::Tree tree; tree.setStates(&states);
 	const int dim = test_state->getDimension();
 	typedef nanoflann::KDTreeSingleIndexDynamicAdaptor<
 			nanoflann::L2_Simple_Adaptor<double, base::Tree> ,
@@ -49,18 +49,18 @@ void buildKDTree(std::vector<base::State*>& states)
 	index.findNeighbors(resultSet, vec_c, nanoflann::SearchParams(10));
 	std::cout << "knnSearch(nn="<<num_results<<"): \n";
 	std::cout << "ret_index=" << ret_index << " out_dist_sqr=" << out_dist_sqr << std::endl;
-	std::cout << "point: " << tree.states->at(ret_index)->getCoord().transpose() << std::endl;
-	std::cout << "No. points in tree: " << tree.states->size() << std::endl;
+	std::cout << "point: " << tree.getStates()->at(ret_index)->getCoord().transpose() << std::endl;
+	std::cout << "No. points in tree: " << tree.getStates()->size() << std::endl;
 	std::cout << "*******************************************" << std::endl;
-	int K = tree.states->size();
-	tree.states->emplace_back(new_state);
+	int K = tree.getStates()->size();
+	tree.getStates()->emplace_back(new_state);
 	index.addPoints(K - 1, K);
 
 	index.findNeighbors(resultSet, vec_c, nanoflann::SearchParams(10));
 	std::cout << "knnSearch(nn="<<num_results<<"): \n";
 	std::cout << "ret_index=" << ret_index << " out_dist_sqr=" << out_dist_sqr << std::endl;
-	std::cout << "point: " << tree.states->at(ret_index)->getCoord().transpose() << std::endl;
-	std::cout << "No. points in tree: " << tree.states->size() << std::endl;
+	std::cout << "point: " << tree.getStates()->at(ret_index)->getCoord().transpose() << std::endl;
+	std::cout << "No. points in tree: " << tree.getStates()->size() << std::endl;
 
 }
 

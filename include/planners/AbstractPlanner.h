@@ -5,9 +5,15 @@
 #define RPMPL_ABSTRACTPLANNER_H
 
 #include "StateSpace.h"
+#include <nanoflann.hpp>
 
 namespace planning
 {
+	typedef nanoflann::KDTreeSingleIndexDynamicAdaptor<
+	nanoflann::L2_Simple_Adaptor<double, base::Tree> ,
+	base::Tree /* dim */
+	> KdTree;
+
 	class AbstractPlanner
 	{
 	public:

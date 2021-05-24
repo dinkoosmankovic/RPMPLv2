@@ -6,6 +6,7 @@
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 #include <RealVectorSpaceState.h>
+#include <nanoflann.hpp>
 
 planning::rrt::RRTConnect::RRTConnect(base::StateSpace *ss_) : AbstractPlanner(ss_)
 {
@@ -13,21 +14,24 @@ planning::rrt::RRTConnect::RRTConnect(base::StateSpace *ss_) : AbstractPlanner(s
 }
 
 planning::rrt::RRTConnect::RRTConnect(base::StateSpace *ss_, base::State *start_,
-									  base::State *goal_) : AbstractPlanner(ss_)
+									  base::State *goal_) : AbstractPlanner(ss_), ss(ss_)
 {
 	initPlanner();
 	start = start_;
 	goal = goal_;
-	startTree.emplace_back(start);
-	goalTree.emplace_back(goal);
+	startTree.getStates()->emplace_back(start);
+	goalTree.getStates()->emplace_back(goal);
 }
 
 planning::rrt::RRTConnect::~RRTConnect() {}
 
 void planning::rrt::RRTConnect::initPlanner()
 {
-	startTree.empty();
-	goalTree.empty();
+	//startTree = base::Tree();
+	//goalTree = base::Tree();
+	startTree.emptyTree();
+	goalTree.emptyTree();
+	prepareKdTrees();
 }
 
 bool planning::rrt::RRTConnect::solve()
@@ -54,17 +58,17 @@ bool planning::rrt::RRTConnect::solve()
 	return true;
 }
 
-Tree planning::rrt::RRTConnect::getStartTree() const
+base::Tree planning::rrt::RRTConnect::getStartTree() const
 {
 	return startTree;
 }
 
-Tree planning::rrt::RRTConnect::getGoalTree() const
+base::Tree planning::rrt::RRTConnect::getGoalTree() const
 {
 	return goalTree;
 }
 
-planning::rrt::Status planning::rrt::RRTConnect::extend(Tree tree, base::State *q_rand)
+planning::rrt::Status planning::rrt::RRTConnect::extend(base::Tree tree, base::State *q_rand)
 {
 
 	return planning::rrt::Trapped;
@@ -76,3 +80,9 @@ base::State *planning::rrt::RRTConnect::get_q_near(base::State* q)
 	return nullptr;
 }
 
+void planning::rrt::RRTConnect::prepareKdTrees()
+{
+	int dim = ss->getDimensions();
+	startKdTree = new KdTree(dim, startTree, nanoflann::KDTreeSingleIndexAdaptorParams(10) );
+	goalKdTree = new KdTree(dim, goalTree, nanoflann::KDTreeSingleIndexAdaptorParams(10) );
+}
