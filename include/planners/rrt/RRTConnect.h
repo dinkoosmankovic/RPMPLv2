@@ -6,6 +6,7 @@
 
 #include "AbstractPlanner.h"
 #include <vector>
+#include <memory>
 
 namespace planning
 {
@@ -15,32 +16,31 @@ namespace planning
 		class RRTConnect : public AbstractPlanner
 		{
 		public:
-			RRTConnect(base::StateSpace *ss_);
-			RRTConnect(base::StateSpace *ss_, base::State *start_, base::State *goal_);
+			RRTConnect(std::shared_ptr<base::StateSpace> ss_);
+			RRTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> goal_);
 			~RRTConnect();
 			bool solve() override;
 			base::Tree getStartTree() const;
 			base::Tree getGoalTree() const;
-			Status extend(base::Tree* tree, KdTree* kdtree, base::State* q_rand);
-			Status connect(base::Tree* tree, KdTree* kdtree, base::State* q_rand);
-			base::State* get_q_near(base::Tree* tree, KdTree* kdtree, base::State* q);
-			void addNode(base::Tree* tree, KdTree* kdtree, base::State* q);
-			const std::vector<base::State *> &getPath() const;
+			Status extend(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q_rand);
+			Status connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q_rand);
+			std::shared_ptr<base::State> get_q_near(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q);
+			void addNode(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q);
+			const std::vector<std::shared_ptr<base::State>> &getPath() const;
 
 		private:
-			base::StateSpace* ss;
-			base::State* start;
-			base::State* goal;
+			std::shared_ptr<base::StateSpace> ss;
+			std::shared_ptr<base::State> start;
+			std::shared_ptr<base::State> goal;
 			base::Tree startTree;
 			base::Tree goalTree;
 			void initPlanner();
 			void prepareKdTrees();
 			void computePath();
-			KdTree* startKdTree;
-			KdTree* goalKdTree;
+			std::shared_ptr<KdTree> startKdTree;
+			std::shared_ptr<KdTree> goalKdTree;
 			double step = 10;
-			std::vector<base::State*> path;
-
+			std::vector<std::shared_ptr<base::State>> path;
 		};
 	}
 }

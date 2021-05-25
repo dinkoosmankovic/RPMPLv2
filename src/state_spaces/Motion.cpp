@@ -4,7 +4,7 @@
 
 #include "Motion.h"
 
-base::Motion::Motion(base::State *startState, base::State *endState) : startState(startState), endState(endState)
+base::Motion::Motion(std::shared_ptr<State> startState, std::shared_ptr<State> endState) : startState(startState), endState(endState)
 {
 	endState->setParent(startState);
 }

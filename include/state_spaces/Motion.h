@@ -12,12 +12,10 @@ namespace base
 	class Motion
 	{
 	public:
-		Motion(base::State *startState, base::State *endState);
-	public:
+		Motion(std::shared_ptr<State> startState, std::shared_ptr<State> endState);
 	private:
-		base::State *startState;
-		base::State *endState;
-	protected:
+		std::shared_ptr<State> startState;
+		std::shared_ptr<State> endState;
 	};
 }
 

@@ -11,14 +11,14 @@ namespace base
 		StateSpace(){};
 		virtual ~StateSpace() = 0;
 		virtual int getDimensions() = 0;
-		virtual bool isValid(const State* q) = 0;
-		virtual float getDistance(const State* q) = 0;
-		virtual State* randomState() = 0;
-		virtual Motion* getMotion(State* s1, State* s2) = 0;
+		virtual bool isValid(const std::shared_ptr<base::State> q) = 0;
+		virtual float getDistance(const std::shared_ptr<base::State> q) = 0;
+		virtual std::shared_ptr<base::State> randomState() = 0;
+		virtual std::shared_ptr<Motion> getMotion(std::shared_ptr<base::State> s1, std::shared_ptr<base::State> s2) = 0;
 		virtual StateSpaceType getStateSpaceType() const;
 		virtual void setStateSpaceType(StateSpaceType stateSpaceType);
-		virtual base::State* interpolate(const base::State* q1, const base::State* q2, double t) = 0;
-		virtual bool equal(const base::State* q1, const base::State* q2) = 0;
+		virtual std::shared_ptr<base::State> interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, double t) = 0;
+		virtual bool equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) = 0;
 	protected:
 		StateSpaceType stateSpaceType;
 	};

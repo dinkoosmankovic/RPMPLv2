@@ -6,7 +6,7 @@
 
 planning::AbstractPlanner::~AbstractPlanner() {}
 
-base::StateSpace *planning::AbstractPlanner::getSs() const
+std::shared_ptr<base::StateSpace> planning::AbstractPlanner::getSs() const
 {
 	return ss;
 }

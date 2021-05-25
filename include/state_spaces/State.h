@@ -8,44 +8,46 @@
 #include "StateSpaceType.h"
 #include <Eigen/Dense>
 #include <vector>
+#include <memory>
 
 namespace base
 {
 	class State
 	{
 	private:
-		State* parent;
+		std::shared_ptr<State> parent;
 	public:
-		State *getParent() const;
-		void setParent(State *parent_);
+		std::shared_ptr<State> getParent() const;
+		void setParent(std::shared_ptr<State> parent_);
 		StateSpaceType getStateSpaceType() const;
 		void setStateSpaceType(StateSpaceType stateSpaceType);
 		virtual const Eigen::VectorXf &getCoord() const = 0;
 		virtual void setCoord(const Eigen::VectorXf &coord) = 0;
 		virtual int getDimension() const = 0;
 		friend std::ostream& operator<<(std::ostream& os, const State* state);
+		virtual ~State() = 0;
 	protected:
 		State(){};
-		virtual ~State() = 0;
 		StateSpaceType stateSpaceType;
 	};
 
 	class Tree
 	{
-		std::vector<base::State*>  *states;
+		std::shared_ptr<std::vector<std::shared_ptr<base::State>>> states;
 	public:
-		Tree(std::vector<State *> *states_) : states(states_) {}
+		Tree(std::shared_ptr<std::vector<std::shared_ptr<base::State> > > states_) : states(states_) {}
+		~Tree(){}
 		Tree()
 		{
-			states = new std::vector<State*>();
+			states = std::make_shared<std::vector<std::shared_ptr<State>>>();
 		}
 
-		std::vector<base::State *>* getStates() const
+		std::shared_ptr<std::vector<std::shared_ptr<base::State>>> getStates() const
 		{
 			return states;
 		}
 
-		void setStates(std::vector<State *> *states)
+		void setStates(std::shared_ptr<std::vector<std::shared_ptr<base::State>>>states)
 		{
 			Tree::states = states;
 		}

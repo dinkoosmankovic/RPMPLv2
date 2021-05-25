@@ -26,31 +26,31 @@ std::ostream &base::operator<<(std::ostream &os, const base::RealVectorSpace &sp
 	return os;
 }
 
-bool base::RealVectorSpace::isValid(const base::State *q)
+bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q)
 {
 	return true;
 }
 
-float base::RealVectorSpace::getDistance(const base::State *q)
+float base::RealVectorSpace::getDistance(const std::shared_ptr<base::State> q)
 {
 	return 0;
 }
 
-base::RealVectorSpaceState *base::RealVectorSpace::randomState()
+std::shared_ptr<base::State> base::RealVectorSpace::randomState()
 {
-	base::RealVectorSpaceState* state = new base::RealVectorSpaceState(dimensions);
+	std::shared_ptr<base::State> state = std::make_shared<base::RealVectorSpaceState>(dimensions);
 	return state;
 }
 
-base::Motion *base::RealVectorSpace::getMotion(base::State* s1, base::State* s2)
+std::shared_ptr<base::Motion> base::RealVectorSpace::getMotion(std::shared_ptr<base::State> s1, std::shared_ptr<base::State> s2)
 {
-	base::Motion* motion = new base::Motion(s1, s2);
+	//base::Motion* motion = new base::Motion(s1, s2);
 	return nullptr;
 }
 
-base::State *base::RealVectorSpace::interpolate(const base::State *q1, const base::State *q2, double t)
+std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, double t)
 {
-	base::State *q_t = randomState();
+	std::shared_ptr<base::State> q_t = randomState();
 	Eigen::VectorXf eig = ( q2->getCoord() - q1->getCoord() ) / (q2->getCoord() - q1->getCoord()).norm();
 	q_t->setCoord( q1->getCoord() + t * eig );
 	if (isValid(q_t))
@@ -59,7 +59,7 @@ base::State *base::RealVectorSpace::interpolate(const base::State *q1, const bas
 		return nullptr;
 }
 
-bool base::RealVectorSpace::equal(const base::State *q1, const base::State *q2)
+bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
 	double d = (q1->getCoord() - q2->getCoord()).norm();
 	// TODO: needs to be obtained from configuration file

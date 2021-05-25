@@ -21,13 +21,13 @@ class RealVectorSpace : public base::StateSpace
 
 		// these two function needs to be reimplemented in the context
 		// of collision checking (some other app with FCL)
-		virtual bool isValid(const base::State *q) override;
-		virtual float getDistance(const base::State *q) override;
+		virtual bool isValid(const std::shared_ptr<base::State> q) override;
+		virtual float getDistance(const std::shared_ptr<base::State>q) override;
 
-		base::State* interpolate(const base::State* q1, const base::State* q2, double t) override;
-		RealVectorSpaceState *randomState() override;
-		base::Motion *getMotion(base::State* s1, base::State* s2) override;
-	bool equal(const base::State *q1, const base::State *q2) override;
+		std::shared_ptr<base::State> interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, double t) override;
+		bool equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
+		std::shared_ptr<base::State> randomState() override;
+		std::shared_ptr<Motion> getMotion(std::shared_ptr<base::State> s1, std::shared_ptr<base::State> s2) override;
 private:
 		int dimensions;
 	};
