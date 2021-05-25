@@ -63,7 +63,7 @@ bool base::RealVectorSpace::equal(const base::State *q1, const base::State *q2)
 {
 	double d = (q1->getCoord() - q2->getCoord()).norm();
 	// TODO: needs to be obtained from configuration file
-	if (d < 1e-6)
+	if (d < 5)
 		return true;
 	return false;
 }

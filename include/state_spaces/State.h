@@ -23,6 +23,7 @@ namespace base
 		virtual const Eigen::VectorXf &getCoord() const = 0;
 		virtual void setCoord(const Eigen::VectorXf &coord) = 0;
 		virtual int getDimension() const = 0;
+		friend std::ostream& operator<<(std::ostream& os, const State* state);
 	protected:
 		State(){};
 		virtual ~State() = 0;
@@ -39,7 +40,7 @@ namespace base
 			states = new std::vector<State*>();
 		}
 
-		std::vector<base::State *> *getStates() const
+		std::vector<base::State *>* getStates() const
 		{
 			return states;
 		}
@@ -62,6 +63,17 @@ namespace base
 		}
 		template <class BBOX>
 		bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+
+		friend std::ostream& operator<<(std::ostream& os, const Tree& tree)
+		{
+			os << "Tree: " << std::endl;
+			for (int i = 0; i < tree.getStates()->size(); ++i)
+			{
+				os << tree.getStates()->at(i);
+
+			}
+			return os;
+		}
 	};
 
 }

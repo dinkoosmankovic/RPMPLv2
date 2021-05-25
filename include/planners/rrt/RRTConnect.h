@@ -23,8 +23,9 @@ namespace planning
 			base::Tree getGoalTree() const;
 			Status extend(base::Tree* tree, KdTree* kdtree, base::State* q_rand);
 			Status connect(base::Tree* tree, KdTree* kdtree, base::State* q_rand);
-			base::State* get_q_near(base::State* q);
+			base::State* get_q_near(base::Tree* tree, KdTree* kdtree, base::State* q);
 			void addNode(base::Tree* tree, KdTree* kdtree, base::State* q);
+			const std::vector<base::State *> &getPath() const;
 
 		private:
 			base::StateSpace* ss;
@@ -34,9 +35,12 @@ namespace planning
 			base::Tree goalTree;
 			void initPlanner();
 			void prepareKdTrees();
+			void computePath();
 			KdTree* startKdTree;
 			KdTree* goalKdTree;
 			double step = 10;
+			std::vector<base::State*> path;
+
 		};
 	}
 }
