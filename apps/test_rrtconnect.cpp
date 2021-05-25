@@ -15,13 +15,21 @@ int main(int argc, char **argv)
 	LOG(INFO) << "StateSpace Type: " << ss->getStateSpaceType();
 	base::State* start = new base::RealVectorSpaceState(Eigen::Vector2f({0,0}));
 	base::State* goal = new base::RealVectorSpaceState(Eigen::Vector2f({1,1}));
-	planning::rrt::RRTConnect* planner = new planning::rrt::RRTConnect(ss, start, goal);
-	LOG(INFO) << "RRTConnect initialized.";
-	bool res = planner->solve();
-	LOG(INFO) << "RRTConnect planning finished.";
-	if (res)
+	try
 	{
-		LOG(INFO) << dynamic_cast<base::RealVectorSpaceState*>(planner->getStartTree().getStates()->at(0))->getCoord().transpose();
+		planning::rrt::RRTConnect *planner = new planning::rrt::RRTConnect(ss, start, goal);
+		LOG(INFO) << "RRTConnect initialized.";
+		bool res = planner->solve();
+		LOG(INFO) << "RRTConnect planning finished.";
+		if (res)
+		{
+			LOG(INFO) << dynamic_cast<base::RealVectorSpaceState *>(planner->getStartTree().getStates()->at(
+					0))->getCoord().transpose();
+		}
+	}
+	catch (std::domain_error& e)
+	{
+		LOG(ERROR) << e.what();
 	}
 	return 0;
 }

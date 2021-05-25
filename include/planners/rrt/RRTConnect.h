@@ -11,7 +11,7 @@ namespace planning
 {
 	namespace rrt
 	{
-		enum Status {Advance, Trapped, Reached};
+		enum Status {Advanced, Trapped, Reached};
 		class RRTConnect : public AbstractPlanner
 		{
 		public:
@@ -21,8 +21,10 @@ namespace planning
 			bool solve() override;
 			base::Tree getStartTree() const;
 			base::Tree getGoalTree() const;
-			Status extend(base::Tree tree, base::State* q_rand);
+			Status extend(base::Tree* tree, KdTree* kdtree, base::State* q_rand);
+			Status connect(base::Tree* tree, KdTree* kdtree, base::State* q_rand);
 			base::State* get_q_near(base::State* q);
+			void addNode(base::Tree* tree, KdTree* kdtree, base::State* q);
 
 		private:
 			base::StateSpace* ss;
@@ -34,6 +36,7 @@ namespace planning
 			void prepareKdTrees();
 			KdTree* startKdTree;
 			KdTree* goalKdTree;
+			double step = 10;
 		};
 	}
 }

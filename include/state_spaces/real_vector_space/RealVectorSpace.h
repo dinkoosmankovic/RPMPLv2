@@ -18,11 +18,17 @@ class RealVectorSpace : public base::StateSpace
 		~RealVectorSpace();
 		int getDimensions() override;
 		friend std::ostream &operator<<(std::ostream &os, const RealVectorSpace &space);
-		bool isValid(const base::State *q) override;
-		float getDistance(const base::State *q) override;
+
+		// these two function needs to be reimplemented in the context
+		// of collision checking (some other app with FCL)
+		virtual bool isValid(const base::State *q) override;
+		virtual float getDistance(const base::State *q) override;
+
+		base::State* interpolate(const base::State* q1, const base::State* q2, double t) override;
 		RealVectorSpaceState *randomState() override;
 		base::Motion *getMotion(base::State* s1, base::State* s2) override;
-	private:
+	bool equal(const base::State *q1, const base::State *q2) override;
+private:
 		int dimensions;
 	};
 }
