@@ -19,7 +19,6 @@ int main(int argc, char **argv)
 	try
 	{
 		std::unique_ptr<planning::rrt::RRTConnect> planner = std::make_unique<planning::rrt::RRTConnect>(ss, start, goal);
-		LOG(INFO) << "RRTConnect initialized.";
 		bool res = planner->solve();
 		LOG(INFO) << "RRTConnect planning finished.";
 		if (res)

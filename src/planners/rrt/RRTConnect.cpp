@@ -5,7 +5,6 @@
 #include "RRTConnect.h"
 #include <glog/log_severity.h>
 #include <glog/logging.h>
-#include <RealVectorSpaceState.h>
 #include <nanoflann.hpp>
 #include <iostream>
 
@@ -45,8 +44,6 @@ void planning::rrt::RRTConnect::initPlanner()
 bool planning::rrt::RRTConnect::solve()
 {
 	// T_start and T_goal are initialized
-	// TODO: FLANN should be used!!!
-	LOG(INFO) << "Finding path...";
 	std::shared_ptr<base::Tree> Ta = std::make_shared<base::Tree>(startTree);
 	std::shared_ptr<base::Tree> Tb = std::make_shared<base::Tree>(goalTree);
 	std::shared_ptr<KdTree> Kd_Ta = startKdTree;
@@ -55,15 +52,11 @@ bool planning::rrt::RRTConnect::solve()
 	for (size_t i = 0; i < MAX_ITER; ++i)
 	{
 		std::shared_ptr<base::State> q_rand = getSs()->randomState();
-		LOG(INFO) << "Extending tree...";
 		if (extend(Ta, Kd_Ta, q_rand) != Trapped)
 		{
-			LOG(INFO) << "Not Trapped! Trying connect...";
 			std::shared_ptr<base::State> q_new = Ta->getStates()->back();
-			LOG(INFO) << "Obtained q_new";
 			if (connect(Tb, Kd_Tb, q_new) == Reached)
 			{
-				LOG(INFO) << "Reached!";
 				computePath();
 				return true;
 			}
@@ -174,8 +167,6 @@ void planning::rrt::RRTConnect::computePath()
 		path.emplace_back(current);
 		current = current->getParent();
 	}
-	current = nullptr;
-	LOG(INFO) << "Path computed!";
 }
 
 const std::vector<std::shared_ptr<base::State>> &planning::rrt::RRTConnect::getPath() const
