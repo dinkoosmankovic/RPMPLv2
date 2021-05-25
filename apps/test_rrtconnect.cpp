@@ -36,5 +36,6 @@ int main(int argc, char **argv)
 	{
 		LOG(ERROR) << e.what();
 	}
+	google::ShutDownCommandLineFlags();
 	return 0;
 }
