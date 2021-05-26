@@ -7,6 +7,7 @@
 #include <glog/logging.h>
 #include <nanoflann.hpp>
 #include <iostream>
+#include <chrono>
 
 planning::rrt::RRTConnect::RRTConnect(std::shared_ptr<base::StateSpace> ss_) : AbstractPlanner(ss_)
 {
@@ -33,6 +34,7 @@ planning::rrt::RRTConnect::~RRTConnect()
 void planning::rrt::RRTConnect::initPlanner()
 {
 	LOG(INFO) << "Initializing planner...";
+	plannerInfo = std::make_shared<PlannerInfo>();
 	startTree.emptyTree();
 	goalTree.emptyTree();
 	startTree.getStates()->emplace_back(start);
@@ -43,12 +45,14 @@ void planning::rrt::RRTConnect::initPlanner()
 
 bool planning::rrt::RRTConnect::solve()
 {
+	// start the clock
+	auto start = std::chrono::steady_clock::now();
 	// T_start and T_goal are initialized
 	std::shared_ptr<base::Tree> Ta = std::make_shared<base::Tree>(startTree);
 	std::shared_ptr<base::Tree> Tb = std::make_shared<base::Tree>(goalTree);
 	std::shared_ptr<KdTree> Kd_Ta = startKdTree;
 	std::shared_ptr<KdTree> Kd_Tb = goalKdTree;
-	int MAX_ITER = 3; // TODO: needs to be obtained from configuration file
+	int MAX_ITER = 3; // TODO: read from configuration file
 	for (size_t i = 0; i < MAX_ITER; ++i)
 	{
 		std::shared_ptr<base::State> q_rand = getSs()->randomState();
@@ -58,6 +62,9 @@ bool planning::rrt::RRTConnect::solve()
 			if (connect(Tb, Kd_Tb, q_new) == Reached)
 			{
 				computePath();
+				auto end = std::chrono::steady_clock::now();
+				double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+				plannerInfo->setPlanningTime(elapsed);
 				return true;
 			}
 		}
@@ -67,13 +74,17 @@ bool planning::rrt::RRTConnect::solve()
 			Tb = std::make_shared<base::Tree>(goalTree);
 			Kd_Ta = startKdTree;
 			Kd_Tb = goalKdTree;
-		} else
+		}
+		else
 		{
 			Tb = std::make_shared<base::Tree>(startTree);
 			Ta = std::make_shared<base::Tree>(goalTree);
 			Kd_Ta = goalKdTree;
 			Kd_Tb = startKdTree;
 		}
+		auto end = std::chrono::steady_clock::now();
+		double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+		plannerInfo->addIterationTime(elapsed);
 	}
 	return false;
 }

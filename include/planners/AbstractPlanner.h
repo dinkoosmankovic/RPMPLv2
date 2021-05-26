@@ -5,6 +5,7 @@
 #define RPMPL_ABSTRACTPLANNER_H
 
 #include "StateSpace.h"
+#include "PlannerInfo.h"
 #include <nanoflann.hpp>
 
 namespace planning
@@ -23,6 +24,7 @@ namespace planning
 		std::shared_ptr<base::StateSpace> getSs() const;
 	protected:
 		std::shared_ptr<base::StateSpace> ss;
+		std::shared_ptr<PlannerInfo> plannerInfo;
 	};
 }
 #endif //RPMPL_ABSTRACTPLANNER_H

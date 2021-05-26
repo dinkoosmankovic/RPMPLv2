@@ -39,6 +39,7 @@ namespace planning
 			void computePath();
 			std::shared_ptr<KdTree> startKdTree;
 			std::shared_ptr<KdTree> goalKdTree;
+			//TODO: Read from configuration file
 			double step = 10;
 			std::vector<std::shared_ptr<base::State>> path;
 		};
