@@ -34,11 +34,29 @@ namespace base
 	class Tree
 	{
 		std::shared_ptr<std::vector<std::shared_ptr<base::State>>> states;
+		std::string treeName;
+	public:
+		const std::string &getTreeName() const
+		{
+			return treeName;
+		}
+
+		void setTreeName(const std::string &treeName)
+		{
+			Tree::treeName = treeName;
+		}
+
 	public:
 		Tree(std::shared_ptr<std::vector<std::shared_ptr<base::State> > > states_) : states(states_) {}
 		~Tree(){}
 		Tree()
 		{
+			states = std::make_shared<std::vector<std::shared_ptr<State>>>();
+		}
+
+		Tree(std::string& name_)
+		{
+			treeName = name_;
 			states = std::make_shared<std::vector<std::shared_ptr<State>>>();
 		}
 
@@ -68,10 +86,10 @@ namespace base
 
 		friend std::ostream& operator<<(std::ostream& os, const Tree& tree)
 		{
-			os << "Tree: " << std::endl;
+			os << "Tree: " << tree.getTreeName() << std::endl;
 			for (int i = 0; i < tree.getStates()->size(); ++i)
 			{
-				os << tree.getStates()->at(i);
+				os << tree.getStates()->at(i) << std::endl;
 
 			}
 			return os;

@@ -22,6 +22,7 @@ namespace planning
 		virtual ~AbstractPlanner() = 0;
 		virtual bool solve() = 0;
 		std::shared_ptr<base::StateSpace> getSs() const;
+		virtual void outputPlannerData(std::string filename) const = 0;
 	protected:
 		std::shared_ptr<base::StateSpace> ss;
 		std::shared_ptr<PlannerInfo> plannerInfo;

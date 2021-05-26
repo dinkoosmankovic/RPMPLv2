@@ -6,8 +6,8 @@
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 #include <nanoflann.hpp>
-#include <iostream>
 #include <chrono>
+#include <fstream>
 
 planning::rrt::RRTConnect::RRTConnect(std::shared_ptr<base::StateSpace> ss_) : AbstractPlanner(ss_)
 {
@@ -35,6 +35,8 @@ void planning::rrt::RRTConnect::initPlanner()
 {
 	LOG(INFO) << "Initializing planner...";
 	plannerInfo = std::make_shared<PlannerInfo>();
+	startTree.setTreeName("start");
+	goalTree.setTreeName("goal");
 	startTree.emptyTree();
 	goalTree.emptyTree();
 	startTree.getStates()->emplace_back(start);
@@ -183,6 +185,28 @@ void planning::rrt::RRTConnect::computePath()
 const std::vector<std::shared_ptr<base::State>> &planning::rrt::RRTConnect::getPath() const
 {
 	return path;
+}
+
+void planning::rrt::RRTConnect::outputPlannerData(std::string filename) const
+{
+	std::ofstream outputFile;
+	outputFile.open(filename);
+	if (outputFile.is_open())
+	{
+		outputFile << "Planner type:\t" << "RRTConnect" << std::endl;
+		outputFile << startTree;
+		outputFile << goalTree;
+		outputFile << "Path:" << std::endl;
+		for (int i = 0; i < path.size(); i++)
+		{
+			outputFile << path.at(i) << std::endl;
+		}
+		outputFile.close();
+	}
+	else
+	{
+		throw "Cannot open file";
+	}
 }
 
 

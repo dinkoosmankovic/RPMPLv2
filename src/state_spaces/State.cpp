@@ -30,9 +30,9 @@ void base::State::setStateSpaceType(StateSpaceType stateSpaceType)
 std::ostream &base::operator<<(std::ostream &os, const base::State* state)
 {
 	if (state->getParent() == nullptr)
-		os << "point: (" << state->getCoord().transpose() << "); parent: NONE" << std::endl;
+		os << "q: (" << state->getCoord().transpose() << "); parent q: NONE";
 	else
-		os << "point: (" << state->getCoord().transpose() << "); parent: (" <<
-		   state->getParent()->getCoord().transpose() << ")" << std::endl;
+		os << "q: (" << state->getCoord().transpose() << "); parent q: (" <<
+		   state->getParent()->getCoord().transpose() << ")";
 	return os;
 }

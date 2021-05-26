@@ -27,7 +27,7 @@ namespace planning
 			std::shared_ptr<base::State> get_q_near(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q);
 			void addNode(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q);
 			const std::vector<std::shared_ptr<base::State>> &getPath() const;
-
+			void outputPlannerData(std::string filename) const override;
 		private:
 			std::shared_ptr<base::StateSpace> ss;
 			std::shared_ptr<base::State> start;
