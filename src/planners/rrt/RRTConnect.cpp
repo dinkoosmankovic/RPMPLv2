@@ -205,7 +205,7 @@ void planning::rrt::RRTConnect::outputPlannerData(std::string filename) const
 	}
 	else
 	{
-		throw "Cannot open file";
+		throw "Cannot open file"; // std::something exception perhaps?
 	}
 }
 

@@ -42,12 +42,6 @@ std::shared_ptr<base::State> base::RealVectorSpace::randomState()
 	return state;
 }
 
-std::shared_ptr<base::Motion> base::RealVectorSpace::getMotion(std::shared_ptr<base::State> s1, std::shared_ptr<base::State> s2)
-{
-	//base::Motion* motion = new base::Motion(s1, s2);
-	return nullptr;
-}
-
 std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, double t)
 {
 	std::shared_ptr<base::State> q_t = randomState();
@@ -66,4 +60,16 @@ bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const s
 	if (d < 5)
 		return true;
 	return false;
+}
+
+bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
+{
+	int numChecks = 10;
+	for (double t = 1./numChecks; t <= 1; t += 1./numChecks)
+	{
+		std::shared_ptr<base::State> q_t = interpolate(q1, q2, t);
+		if (!isValid(q_t))
+			return false;
+	}
+	return true;
 }
