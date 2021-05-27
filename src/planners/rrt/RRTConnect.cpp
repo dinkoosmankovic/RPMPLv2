@@ -112,7 +112,7 @@ planning::rrt::Status planning::rrt::RRTConnect::extend(std::shared_ptr<base::Tr
 {
 	std::shared_ptr<base::State> q_near = get_q_near(tree, kdtree, q_rand);
 	std::shared_ptr<base::State> q_new = ss->interpolate(q_near, q_rand, step);
-	if (q_new != nullptr)
+	if (q_new != nullptr && ss->isValid(q_near, q_new))
 	{
 		q_new->setParent(q_near);
 		addNode(tree, kdtree, q_new);
@@ -193,6 +193,8 @@ void planning::rrt::RRTConnect::outputPlannerData(std::string filename) const
 	outputFile.open(filename);
 	if (outputFile.is_open())
 	{
+		outputFile << "Space Type: " << ss->getStateSpaceType() << std::endl;
+		outputFile << "Space dimension: " << ss->getDimensions() << std::endl;
 		outputFile << "Planner type:\t" << "RRTConnect" << std::endl;
 		outputFile << startTree;
 		outputFile << goalTree;

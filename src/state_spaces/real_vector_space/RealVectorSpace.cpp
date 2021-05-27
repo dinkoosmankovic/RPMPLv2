@@ -5,6 +5,8 @@
 #include "RealVectorSpaceState.h"
 #include <ostream>
 #include <Eigen/Dense>
+#include <glog/log_severity.h>
+#include <glog/logging.h>
 
 base::RealVectorSpace::RealVectorSpace(int dimensions) : dimensions(dimensions)
 {
@@ -47,6 +49,8 @@ std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::share
 	std::shared_ptr<base::State> q_t = randomState();
 	Eigen::VectorXf eig = ( q2->getCoord() - q1->getCoord() ) / (q2->getCoord() - q1->getCoord()).norm();
 	q_t->setCoord( q1->getCoord() + t * eig );
+
+	// here we check the validity of the motion q1->q_t
 	if (isValid(q_t))
 		return q_t;
 	else
@@ -56,8 +60,8 @@ std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::share
 bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
 	double d = (q1->getCoord() - q2->getCoord()).norm();
-	// TODO: needs to be obtained from configuration file
-	if (d < 5)
+	double stateEqualityThreshold = 5; // TODO: needs to be obtained from configuration file
+	if (d < stateEqualityThreshold)
 		return true;
 	return false;
 }
