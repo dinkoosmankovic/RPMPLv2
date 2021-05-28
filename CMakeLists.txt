@@ -41,6 +41,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
+add_subdirectory(external/googletest)
 
 find_package(nanoflann)
 
