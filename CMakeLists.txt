@@ -42,9 +42,9 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
 add_subdirectory(external/googletest)
+add_subdirectory(external/rapidyaml)
 
 find_package(nanoflann)
-
 
 # The compiled library code is here
 add_subdirectory(src)
