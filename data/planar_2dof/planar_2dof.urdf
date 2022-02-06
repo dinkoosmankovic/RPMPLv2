@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+
+<robot name="2dof" xmlns:xacro="http://ros.org/wiki/xacro">
+  <gazebo>
+    <plugin filename="libgazebo_ros_control.so" name="ros_control">
+    </plugin>
+    
+  </gazebo>
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.1"/>
+      </geometry>
+      <material name="White">
+       <color rgba="1.0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <link name="link1">
+    <visual>
+      <origin xyz="0.5 0 0"/>
+      <geometry>
+        <box size="1 0.05 0.05"/>
+      </geometry>
+      <material name="Red">
+       <color rgba="0.9 0.9 0.9 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <link name="link2">
+    <visual>
+      <origin xyz="0.25 0 0"/>
+      <geometry>
+        <box size="0.5 0.05 0.05"/>
+      </geometry>
+      <material name="Blue">
+       <color rgba="0.8 0.8 0.8 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+<!-- Joints -->
+
+  <joint name="joint1" type="continuous">
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <joint name="joint2" type="continuous">
+    <parent link="link1"/>
+    <child link="link2"/>
+    <origin xyz="1 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+</robot>
