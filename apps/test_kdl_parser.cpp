@@ -9,7 +9,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+
 #include <kdl_parser/kdl_parser.hpp>
+#include <kdl/chainfksolverpos_recursive.hpp>
+#include <kdl/frames_io.hpp>
 
 #include <glog/logging.h>
 
@@ -23,6 +26,25 @@ bool parse_file(std::string filename)
 	}
 	LOG(INFO) << "Number of joints: " << robot_tree.getNrOfJoints();
 	LOG(INFO) << "Number of segments: " << robot_tree.getNrOfSegments();
+	KDL::Chain robot_chain;
+	robot_tree.getChain("base_link", "link2", robot_chain);
+	KDL::ChainFkSolverPos_recursive fksolver = KDL::ChainFkSolverPos_recursive(robot_chain);
+
+	KDL::JntArray jointpositions = KDL::JntArray(2);
+	jointpositions(0) = 0.1;
+	jointpositions(1) = -0.1;
+	KDL::Frame cartpos; 
+
+	bool kinematics_status = fksolver.JntToCart(jointpositions, cartpos);
+	if(kinematics_status >= 0)
+	{
+        LOG(INFO) << "x: " << cartpos.p.x() << ";" << "y: " << cartpos.p.y() << ";" << "z: " << cartpos.p.z() ;
+    }
+	else
+	{
+        LOG(INFO) << "Error: could not calculate forward kinematics!";
+    }
+
 	return true;
 }
 

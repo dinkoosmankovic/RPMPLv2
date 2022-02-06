@@ -40,7 +40,9 @@ find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(kdl_parser REQUIRED)
+
 find_package(orocos_kdl REQUIRED)
+include_directories(${OROCOS_KDL_INCLUDE_DIR})
 
 add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
