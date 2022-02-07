@@ -1,10 +1,10 @@
 name: CMake
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    schedule:
+      - cron: "0 0 * * *"
+    workflow_dispatch:
+      branches: main
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -39,5 +39,5 @@ jobs:
       working-directory: ${{github.workspace}}/build
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: echo "This is for tests"
+      run: ${{github.workspace}}/build/tests/simple
       
