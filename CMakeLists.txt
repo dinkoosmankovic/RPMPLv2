@@ -48,7 +48,7 @@ add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
 add_subdirectory(external/googletest)
 
-find_package(nanoflann)
+#find_package(nanoflann)
 
 
 # The compiled library code is here
