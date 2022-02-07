@@ -41,6 +41,7 @@ float base::RealVectorSpace::getDistance(const std::shared_ptr<base::State> q)
 std::shared_ptr<base::State> base::RealVectorSpace::randomState()
 {
 	std::shared_ptr<base::State> state = std::make_shared<base::RealVectorSpaceState>(dimensions);
+	state->setCoord(Eigen::VectorXf::Random(dimensions));
 	return state;
 }
 
