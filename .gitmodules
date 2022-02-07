@@ -7,3 +7,8 @@
 [submodule "external/googletest"]
 	path = external/googletest
 	url = https://github.com/google/googletest
+[submodule "external/URDF_Parser"]
+	path = external/URDF_Parser
+	url = https://github.com/ORB-HD/URDF_Parser.git
+
+

@@ -44,6 +44,8 @@ find_package(kdl_parser REQUIRED)
 find_package(orocos_kdl REQUIRED)
 include_directories(${OROCOS_KDL_INCLUDE_DIR})
 
+find_package(fcl REQUIRED)
+
 add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
 add_subdirectory(external/googletest)

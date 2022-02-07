@@ -11,7 +11,7 @@
 
 namespace base
 {
-class RealVectorSpace : public base::StateSpace
+	class RealVectorSpace : public base::StateSpace
 	{
 	public:
 		RealVectorSpace(int dimensions);

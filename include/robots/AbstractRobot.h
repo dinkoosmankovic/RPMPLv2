@@ -14,7 +14,7 @@ namespace robots
 	class AbstractRobot
 	{
 	public:
-		explicit AbstractRobot();
+		explicit AbstractRobot() {};
 		virtual ~AbstractRobot() = 0;
 		virtual void computeForwardKinematics(std::shared_ptr<base::State> q) = 0;
 	};

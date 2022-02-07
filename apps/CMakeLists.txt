@@ -4,7 +4,7 @@ target_link_libraries(test_state_spaces PUBLIC rpmpl_library)
 
 add_executable(test_rrtconnect test_rrtconnect.cpp)
 target_compile_features(test_rrtconnect PRIVATE cxx_std_17)
-target_link_libraries(test_rrtconnect PUBLIC rpmpl_library glog::glog)
+target_link_libraries(test_rrtconnect PUBLIC rpmpl_library glog::glog kdl_parser)
 
 
 add_executable(test_nanoflann test_nanoflann.cpp)
@@ -15,3 +15,7 @@ target_link_libraries(test_nanoflann PUBLIC rpmpl_library glog::glog nanoflann)
 add_executable(test_kdl_parser test_kdl_parser.cpp)
 target_compile_features(test_kdl_parser PRIVATE cxx_std_17)
 target_link_libraries(test_kdl_parser PUBLIC rpmpl_library glog::glog nanoflann kdl_parser orocos-kdl)
+
+add_executable(test_planar_2dof test_planar_2dof.cpp)
+target_compile_features(test_planar_2dof PRIVATE cxx_std_17)
+target_link_libraries(test_planar_2dof PUBLIC rpmpl_library glog::glog nanoflann kdl_parser orocos-kdl)
