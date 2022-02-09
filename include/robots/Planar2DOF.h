@@ -25,9 +25,7 @@ namespace robots
 		const KDL::Tree& getRobotTree() const; 
 	
 	private:
-
-		std::vector<std::shared_ptr<fcl::CollisionGeometry> > part_meshes_;
-  		std::vector<std::unique_ptr<fcl::CollisionObject> > parts_;
+		std::vector<std::unique_ptr<fcl::CollisionObject> > parts_;
 		KDL::Tree robot_tree;
 		KDL::Chain robot_chain;
 	};

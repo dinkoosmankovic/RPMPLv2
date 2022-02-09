@@ -49,7 +49,6 @@ find_package(fcl REQUIRED)
 add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
 add_subdirectory(external/googletest)
-add_subdirectory(external/URDF_Parser)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data/
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)

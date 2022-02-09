@@ -2,8 +2,8 @@
 // Created by dinko on 07.02.22.
 //
 
-#include <fstream>
 #include <iostream>
+#include <vector>
 
 #include "Planar2DOF.h"
 #include "urdf/model.h"
@@ -21,13 +21,28 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 	{
 		throw std::runtime_error("Failed to construct kdl tree");
 	}
-	std::ifstream t(robot_desc);
-	std::stringstream buffer;
-	buffer << t.rdbuf();
 
-	std::shared_ptr<urdf::UrdfModel> model = urdf::UrdfModel::fromUrdfStr(buffer.str());
-	std::cout << model->getName();
+	urdf::Model model;
+	if (!model.initFile(robot_desc))
+	{
+    	throw std::runtime_error("Failed to parse urdf file");
+	}
+	std::cout << model.getName() << std::endl;
+	std::vector<urdf::LinkSharedPtr > links;
+	model.getLinks(links);
 
+	for (size_t i = 0; i < links.size()-1; ++i)
+	{
+		if (links[i]->visual->geometry->type == urdf::Geometry::BOX)
+		{
+			auto box = (std::shared_ptr<urdf::Box>&) links[i]->visual->geometry;
+			fcl::Box fclBox(box->dim.x, box->dim.y, box->dim.z);
+			parts_.emplace_back(new fcl::CollisionObject(
+				fclBox, fcl::Transform3f() 
+			));
+		}
+	}
+	
 	robot_tree.getChain("base_link", "tool", robot_chain);
 	
 }
