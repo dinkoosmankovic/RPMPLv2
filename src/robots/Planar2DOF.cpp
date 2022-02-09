@@ -8,6 +8,8 @@
 #include "Planar2DOF.h"
 #include "urdf/model.h"
 
+typedef std::shared_ptr <fcl::CollisionGeometry> CollisionGeometryPtr;
+
 robots::Planar2DOF::~Planar2DOF() {}
 
 void robots::Planar2DOF::computeForwardKinematics(std::shared_ptr<base::State> q)
@@ -36,8 +38,8 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 		if (links[i]->visual->geometry->type == urdf::Geometry::BOX)
 		{
 			auto box = (std::shared_ptr<urdf::Box>&) links[i]->visual->geometry;
-			fcl::Box fclBox(box->dim.x, box->dim.y, box->dim.z);
-			parts_.emplace_back(new fcl::CollisionObject(
+			CollisionGeometryPtr fclBox(new fcl::Box(box->dim.x, box->dim.y, box->dim.z));
+			parts_.emplace_back( new fcl::CollisionObject(
 				fclBox, fcl::Transform3f() 
 			));
 		}
