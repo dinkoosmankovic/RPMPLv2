@@ -14,9 +14,12 @@ namespace robots
 	class AbstractRobot
 	{
 	public:
-		explicit AbstractRobot() {};
+		explicit AbstractRobot() { q == nullptr; };
 		virtual ~AbstractRobot() = 0;
-		virtual void computeForwardKinematics(std::shared_ptr<base::State> q) = 0;
+		//virtual void computeForwardKinematics(std::shared_ptr<base::State> q) = 0;
+		virtual void setState(std::shared_ptr<base::State> q_) = 0;
+	protected:
+		std::shared_ptr<base::State> q;
 	};
 }
 #endif //RPMPL_ABSTRACTPLANNER_H

@@ -12,11 +12,6 @@ typedef std::shared_ptr <fcl::CollisionGeometry> CollisionGeometryPtr;
 
 robots::Planar2DOF::~Planar2DOF() {}
 
-void robots::Planar2DOF::computeForwardKinematics(std::shared_ptr<base::State> q)
-{
-    
-}
-
 robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 {
     if (!kdl_parser::treeFromFile(robot_desc, robot_tree))
@@ -52,4 +47,73 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 const KDL::Tree& robots::Planar2DOF::getRobotTree() const 
 {
     return robot_tree;
+}
+
+const std::vector<std::unique_ptr<fcl::CollisionObject> >& robots::Planar2DOF::getParts() const
+{
+	return parts_;
+}
+
+std::vector<KDL::Frame> robots::Planar2DOF::computeForwardKinematics(std::shared_ptr<base::State> q)
+{
+	KDL::Chain robot_chain;
+	KDL::TreeFkSolverPos_recursive treefksolver = KDL::TreeFkSolverPos_recursive(robot_tree);
+	std::vector<KDL::Frame> framesFK;
+	robot_tree.getChain("base_link", "tool", robot_chain);
+	KDL::JntArray jointpositions = KDL::JntArray(q->getDimension() );
+
+	for (size_t i = 0; i < q->getDimension(); ++i)
+	{
+		jointpositions(i) = q->getCoord()(i);
+	}
+	
+	for (size_t i = 0; i < robot_tree.getNrOfSegments(); ++i)
+	{
+		KDL::Frame cartpos;
+		bool kinematics_status = treefksolver.JntToCart(jointpositions, cartpos, robot_chain.getSegment(i).getName());
+		if (kinematics_status >= 0)
+			framesFK.emplace_back(cartpos);		
+	}
+	return framesFK;
+    
+}
+
+void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
+{
+	q = q_;
+	KDL::JntArray jointpositions = KDL::JntArray(q->getDimension());
+
+	//computeForwardKinematics()
+	std::vector<KDL::Frame> framesFK = computeForwardKinematics(q_);
+	for (size_t i = 0; i < parts_.size(); ++i)
+	{
+		parts_[i]->computeAABB(); 
+		// TODO: Have to move this somehow to (0,0,0)
+		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl;
+	}
+	//	std::cout << i << ":\np:" << framesFK[i].p << "\nM:\n" << framesFK[i].M << std::endl;
+	//transform Collision geometries
+	std::cout << parts_.size();
+	fcl::Transform3f tf; //tf.setTranslation(fcl::Vec3f(0.5, 0, 0));
+	for (size_t i = 0; i < parts_.size(); ++i)
+	{
+		fcl::Transform3f tf_link = KDL2fcl(framesFK[i]);
+		tf *= tf_link;
+		parts_[i]->setTransform(tf);
+		parts_[i]->computeAABB(); 
+		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl;
+	}
+    
+}
+
+fcl::Transform3f robots::Planar2DOF::KDL2fcl(const KDL::Frame &in)
+{
+	fcl::Transform3f out;
+    double x,y,z,w;
+    in.M.GetQuaternion(x, y, z, w);
+    fcl::Vec3f t(in.p[0], in.p[1], in.p[2]);
+    fcl::Quaternion3f q(w, x, y, z);
+    out.setQuatRotation(q);
+    out.setTranslation(t);
+    return out;
 }
