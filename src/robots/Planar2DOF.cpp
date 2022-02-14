@@ -7,6 +7,9 @@
 
 #include "Planar2DOF.h"
 #include "urdf/model.h"
+#include "RealVectorSpaceState.h"
+
+#include <fcl/distance.h>
 
 typedef std::shared_ptr <fcl::CollisionGeometry> CollisionGeometryPtr;
 
@@ -33,15 +36,27 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 		if (links[i]->visual->geometry->type == urdf::Geometry::BOX)
 		{
 			auto box = (std::shared_ptr<urdf::Box>&) links[i]->visual->geometry;
+			fcl::Vec3f origin(links[i]->visual->origin.position.x, 
+							  links[i]->visual->origin.position.y,
+							  links[i]->visual->origin.position.z);
+
+			
 			CollisionGeometryPtr fclBox(new fcl::Box(box->dim.x, box->dim.y, box->dim.z));
+			fcl::Transform3f tf; //tf.setTranslation(origin);
+			std::cout << "origin: " << origin << std::endl;
+			std::cout << "tf: " << tf.getTranslation() << std::endl;
+			
+			if (i > 1)
+				origin *= -1;
+
+			init_poses.emplace_back(fcl::Transform3f(origin));
 			parts_.emplace_back( new fcl::CollisionObject(
-				fclBox, fcl::Transform3f() 
+				fclBox, tf
 			));
 		}
 	}
-	
 	robot_tree.getChain("base_link", "tool", robot_chain);
-	
+	setState(std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({0.0, 0.0})));
 }
 
 const KDL::Tree& robots::Planar2DOF::getRobotTree() const 
@@ -84,26 +99,45 @@ void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
 	KDL::JntArray jointpositions = KDL::JntArray(q->getDimension());
 
 	//computeForwardKinematics()
+	std::cout << "+++++++++++++++++++++++++++++++++++++++\n";
 	std::vector<KDL::Frame> framesFK = computeForwardKinematics(q_);
-	for (size_t i = 0; i < parts_.size(); ++i)
+	/*for (size_t i = 0; i < parts_.size(); ++i)
 	{
 		parts_[i]->computeAABB(); 
 		// TODO: Have to move this somehow to (0,0,0)
 		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl;
-	}
-	//	std::cout << i << ":\np:" << framesFK[i].p << "\nM:\n" << framesFK[i].M << std::endl;
+	}*/
 	//transform Collision geometries
 	std::cout << parts_.size();
-	fcl::Transform3f tf; //tf.setTranslation(fcl::Vec3f(0.5, 0, 0));
+	fcl::Transform3f tf;
 	for (size_t i = 0; i < parts_.size(); ++i)
 	{
 		fcl::Transform3f tf_link = KDL2fcl(framesFK[i]);
-		tf *= tf_link;
+		std::cout << tf_link.getTranslation() << "\t" << tf_link.getRotation() << std::endl << std::endl;
+		std::cout << init_poses[i].getTranslation() << "\t" << init_poses[i].getRotation() << std::endl << std::endl;
+		tf *= tf_link * init_poses[i];
+		
 		parts_[i]->setTransform(tf);
 		parts_[i]->computeAABB(); 
-		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl;
+		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
 	}
     
+}
+
+void robots::Planar2DOF::test()
+{
+	CollisionGeometryPtr fclBox(new fcl::Box(1.0, 0.001, 0.001));
+	fcl::Transform3f tf; tf.setTranslation(fcl::Vec3f(2.6,0.0,0.0));
+	std::unique_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, tf));
+
+	for (size_t i = 0; i < parts_.size(); ++i)
+	{
+		fcl::DistanceRequest request;
+		fcl::DistanceResult result;
+		fcl::distance(parts_[i].get(), ob.get(), request, result);
+		std::cout << "distance from " << i << ": " << result.min_distance << std::endl;
+	}
+
 }
 
 fcl::Transform3f robots::Planar2DOF::KDL2fcl(const KDL::Frame &in)

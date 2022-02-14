@@ -19,8 +19,13 @@ int main(int argc, char **argv)
 	LOG(INFO) << robot->getParts().at(0)->getAABB().height() << ";" << robot->getParts().at(0)->getAABB().depth() << ";" <<
 				 robot->getParts().at(0)->getAABB().width();
 
-	std::shared_ptr<base::State> state = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({0.0, 0.0}));
+	std::shared_ptr<base::State> state = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({0, 0}));
 	robot->setState(state);
+	robot->test();
+
+	std::shared_ptr<base::State> state1 = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({0, M_PI/2}));
+	robot->setState(state1);
+	robot->test();
 
 
 	return 0;

@@ -27,12 +27,14 @@ namespace robots
 		const KDL::Tree& getRobotTree() const;
 		const std::vector<std::unique_ptr<fcl::CollisionObject> >& getParts() const;
 		void setState(std::shared_ptr<base::State> q_) override;
+		void test();
 
 	private:
 		fcl::Transform3f KDL2fcl(const KDL::Frame &in);
 	
 	private:
 		std::vector<std::unique_ptr<fcl::CollisionObject> > parts_;
+		std::vector<fcl::Transform3f> init_poses;
 		KDL::Tree robot_tree;
 		KDL::Chain robot_chain;
 	};
