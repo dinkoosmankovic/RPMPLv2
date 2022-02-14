@@ -15,7 +15,7 @@ namespace base
 	{
 	public:
 		RealVectorSpace(int dimensions);
-		~RealVectorSpace();
+		virtual ~RealVectorSpace();
 		int getDimensions() override;
 		friend std::ostream &operator<<(std::ostream &os, const RealVectorSpace &space);
 
@@ -24,12 +24,12 @@ namespace base
 		virtual bool isValid(const std::shared_ptr<base::State> q) override;
 		virtual float getDistance(const std::shared_ptr<base::State>q) override;
 		// this one if cont. collision vs. discrete collision check is used
-		virtual bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
+		bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
 
 		std::shared_ptr<base::State> interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, double t) override;
 		bool equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
 		std::shared_ptr<base::State> randomState() override;
-	private:
+	protected:
 		int dimensions;
 	};
 }

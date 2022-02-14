@@ -12,6 +12,7 @@ enum class StateSpaceType
 {
 	Abstract, // only here for placeholding
 	RealVectorSpace,
+	RealVectorSpaceFCL,
 	SO2,
 	SO3
 };

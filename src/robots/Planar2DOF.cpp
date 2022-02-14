@@ -36,25 +36,21 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 		if (links[i]->visual->geometry->type == urdf::Geometry::BOX)
 		{
 			auto box = (std::shared_ptr<urdf::Box>&) links[i]->visual->geometry;
-			fcl::Vec3f origin(links[i]->visual->origin.position.x, 
+			KDL::Vector origin(links[i]->visual->origin.position.x, 
 							  links[i]->visual->origin.position.y,
 							  links[i]->visual->origin.position.z);
 
 			
 			CollisionGeometryPtr fclBox(new fcl::Box(box->dim.x, box->dim.y, box->dim.z));
-			fcl::Transform3f tf; //tf.setTranslation(origin);
-			std::cout << "origin: " << origin << std::endl;
-			std::cout << "tf: " << tf.getTranslation() << std::endl;
+			//std::cout << "origin: " << origin << std::endl;
 			
-			if (i > 1)
-				origin *= -1;
-
-			init_poses.emplace_back(fcl::Transform3f(origin));
+			init_poses.emplace_back( KDL::Frame(origin));
 			parts_.emplace_back( new fcl::CollisionObject(
-				fclBox, tf
+				fclBox, fcl::Transform3f()
 			));
 		}
 	}
+	//std::cout << "constructor----------------------\n";
 	robot_tree.getChain("base_link", "tool", robot_chain);
 	setState(std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({0.0, 0.0})));
 }
@@ -98,28 +94,20 @@ void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
 	q = q_;
 	KDL::JntArray jointpositions = KDL::JntArray(q->getDimension());
 
-	//computeForwardKinematics()
-	std::cout << "+++++++++++++++++++++++++++++++++++++++\n";
-	std::vector<KDL::Frame> framesFK = computeForwardKinematics(q_);
-	/*for (size_t i = 0; i < parts_.size(); ++i)
-	{
-		parts_[i]->computeAABB(); 
-		// TODO: Have to move this somehow to (0,0,0)
-		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl;
-	}*/
+	std::vector<KDL::Frame> framesFK = computeForwardKinematics(q);
+	
 	//transform Collision geometries
-	std::cout << parts_.size();
-	fcl::Transform3f tf;
+	//std::cout << parts_.size() << std::endl;
+	KDL::Frame tf;
 	for (size_t i = 0; i < parts_.size(); ++i)
 	{
-		fcl::Transform3f tf_link = KDL2fcl(framesFK[i]);
-		std::cout << tf_link.getTranslation() << "\t" << tf_link.getRotation() << std::endl << std::endl;
-		std::cout << init_poses[i].getTranslation() << "\t" << init_poses[i].getRotation() << std::endl << std::endl;
-		tf *= tf_link * init_poses[i];
-		
-		parts_[i]->setTransform(tf);
+		tf = framesFK[i] * init_poses[i];
+		//std::cout << tf.p << "\n" << tf.M << "\n++++++++++++++++++++++++\n";
+						
+		//std::cout << "fcl\n";
+		parts_[i]->setTransform(KDL2fcl(tf));
 		parts_[i]->computeAABB(); 
-		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
+		//std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
 	}
     
 }
@@ -150,4 +138,16 @@ fcl::Transform3f robots::Planar2DOF::KDL2fcl(const KDL::Frame &in)
     out.setQuatRotation(q);
     out.setTranslation(t);
     return out;
+}
+
+KDL::Frame robots::Planar2DOF::fcl2KDL(const fcl::Transform3f &in)
+{
+    fcl::Quaternion3f q = in.getQuatRotation();
+    fcl::Vec3f t = in.getTranslation();
+
+    KDL::Frame f;
+    f.p = KDL::Vector(t[0],t[1],t[2]);
+    f.M = KDL::Rotation::Quaternion(q.getX(), q.getY(), q.getZ(), q.getW());
+
+    return f;
 }

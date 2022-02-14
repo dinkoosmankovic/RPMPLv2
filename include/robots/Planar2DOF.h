@@ -10,7 +10,6 @@
 #include <vector>
 #include <string>
 
-#include <fcl/collision.h>
 #include <fcl/broadphase/broadphase.h>
 #include <kdl_parser/kdl_parser.hpp>
 #include <kdl/frames_io.hpp>
@@ -25,16 +24,17 @@ namespace robots
 		~Planar2DOF();
 		std::vector<KDL::Frame> computeForwardKinematics(std::shared_ptr<base::State> q);
 		const KDL::Tree& getRobotTree() const;
-		const std::vector<std::unique_ptr<fcl::CollisionObject> >& getParts() const;
+		const std::vector<std::unique_ptr<fcl::CollisionObject> >& getParts() const override;
 		void setState(std::shared_ptr<base::State> q_) override;
 		void test();
 
 	private:
 		fcl::Transform3f KDL2fcl(const KDL::Frame &in);
+		KDL::Frame fcl2KDL(const fcl::Transform3f &in);
 	
 	private:
 		std::vector<std::unique_ptr<fcl::CollisionObject> > parts_;
-		std::vector<fcl::Transform3f> init_poses;
+		std::vector<KDL::Frame> init_poses;
 		KDL::Tree robot_tree;
 		KDL::Chain robot_chain;
 	};
