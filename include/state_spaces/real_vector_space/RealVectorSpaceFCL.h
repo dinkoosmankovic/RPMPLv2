@@ -7,6 +7,7 @@
 
 #include <ostream>
 #include <memory>
+#include <vector>
 #include "StateSpace.h"
 #include "RealVectorSpaceState.h"
 #include "RealVectorSpace.h"
@@ -22,6 +23,8 @@ namespace base
 		~RealVectorSpaceFCL();
 		bool isValid(const std::shared_ptr<base::State> q) override;
 		float getDistance(const std::shared_ptr<base::State>q) override;
+		bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
+		std::shared_ptr<base::State> randomState() override;
 
 	private:
 		std::shared_ptr<robots::AbstractRobot> robot;

@@ -13,6 +13,8 @@ std::ostream& operator<<(std::ostream &os, const StateSpaceType& v) {
 			strss = "Abstract Type"; break;
 		case StateSpaceType::RealVectorSpace:
 			strss = "RealVectorSpace Type"; break;
+		case StateSpaceType::RealVectorSpaceFCL:
+			strss = "RealVectorSpaceFCL Type"; break;
 		case StateSpaceType::SO2:
 			strss =  "SO2 Type"; break;
 		case StateSpaceType::SO3:

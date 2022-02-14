@@ -13,6 +13,7 @@
 
 namespace robots
 {
+	typedef std::vector<float> LinkLimits;
 	class AbstractRobot
 	{
 	public:
@@ -21,6 +22,7 @@ namespace robots
 		//virtual void computeForwardKinematics(std::shared_ptr<base::State> q) = 0;
 		virtual void setState(std::shared_ptr<base::State> q_) = 0;
 		virtual const std::vector<std::unique_ptr<fcl::CollisionObject> >& getParts() const = 0;
+		virtual std::vector<LinkLimits> getLimits() const = 0;
 	protected:
 		std::shared_ptr<base::State> q;
 	};

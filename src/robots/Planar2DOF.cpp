@@ -11,6 +11,8 @@
 
 #include <fcl/distance.h>
 
+#include <glog/logging.h>
+
 typedef std::shared_ptr <fcl::CollisionGeometry> CollisionGeometryPtr;
 
 robots::Planar2DOF::~Planar2DOF() {}
@@ -31,8 +33,16 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 	std::vector<urdf::LinkSharedPtr > links;
 	model.getLinks(links);
 
+	for (size_t i = 0; i < 2; ++i)
+	{
+		float lower = model.getJoint("joint"+std::to_string(i+1))->limits->lower;
+		float upper = model.getJoint("joint"+std::to_string(i+1))->limits->upper;
+		limits_.emplace_back(std::vector<float>({lower, upper}));
+	}
+
 	for (size_t i = 0; i < links.size()-1; ++i)
 	{
+		
 		if (links[i]->visual->geometry->type == urdf::Geometry::BOX)
 		{
 			auto box = (std::shared_ptr<urdf::Box>&) links[i]->visual->geometry;
@@ -114,8 +124,8 @@ void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
 
 void robots::Planar2DOF::test()
 {
-	CollisionGeometryPtr fclBox(new fcl::Box(1.0, 0.001, 0.001));
-	fcl::Transform3f tf; tf.setTranslation(fcl::Vec3f(2.6,0.0,0.0));
+	CollisionGeometryPtr fclBox(new fcl::Box(1.2, 0.5, 0.1));
+	fcl::Transform3f tf; tf.setTranslation(fcl::Vec3f(0,1.1+0.25, 0));
 	std::unique_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, tf));
 
 	for (size_t i = 0; i < parts_.size(); ++i)
@@ -123,6 +133,7 @@ void robots::Planar2DOF::test()
 		fcl::DistanceRequest request;
 		fcl::DistanceResult result;
 		fcl::distance(parts_[i].get(), ob.get(), request, result);
+		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
 		std::cout << "distance from " << i << ": " << result.min_distance << std::endl;
 	}
 
@@ -150,4 +161,9 @@ KDL::Frame robots::Planar2DOF::fcl2KDL(const fcl::Transform3f &in)
     f.M = KDL::Rotation::Quaternion(q.getX(), q.getY(), q.getZ(), q.getW());
 
     return f;
+}
+
+std::vector<robots::LinkLimits> robots::Planar2DOF::getLimits() const
+{
+	return limits_;
 }

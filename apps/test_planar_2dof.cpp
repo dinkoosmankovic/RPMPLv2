@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 	//robot->setState(state);
 	//robot->test();
 
-	std::shared_ptr<base::State> state1 = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({0, M_PI/4}));
+	std::shared_ptr<base::State> state1 = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({M_PI/2, -M_PI/2}));
 	robot->setState(state1);
 	robot->test();
 

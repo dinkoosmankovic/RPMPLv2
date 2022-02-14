@@ -9,6 +9,10 @@
 #include <chrono>
 #include <fstream>
 
+#include "RealVectorSpaceState.h"
+
+#include <glog/logging.h>
+
 planning::rrt::RRTConnect::RRTConnect(std::shared_ptr<base::StateSpace> ss_) : AbstractPlanner(ss_)
 {
 	initPlanner();
@@ -42,6 +46,12 @@ void planning::rrt::RRTConnect::initPlanner()
 	startTree.getStates()->emplace_back(start);
 	goalTree.getStates()->emplace_back(goal);
 	prepareKdTrees();
+
+	//std::shared_ptr<base::State> test = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({M_PI/2,0}));
+
+	//LOG(INFO) << "Min distance start: " << ss->getDistance(start);
+	//LOG(INFO) << "Min distance goal: " << ss->getDistance(goal);
+	//LOG(INFO) << "Min distance test: " << ss->getDistance(test);
 	LOG(INFO) << "Planner initialized!";
 }
 
@@ -54,15 +64,20 @@ bool planning::rrt::RRTConnect::solve()
 	std::shared_ptr<base::Tree> Tb = std::make_shared<base::Tree>(goalTree);
 	std::shared_ptr<KdTree> Kd_Ta = startKdTree;
 	std::shared_ptr<KdTree> Kd_Tb = goalKdTree;
-	int MAX_ITER = 3; // TODO: read from configuration file
+	int MAX_ITER = 1000; // TODO: read from configuration file
 	for (size_t i = 0; i < MAX_ITER; ++i)
 	{
 		std::shared_ptr<base::State> q_rand = getSs()->randomState();
+		//LOG(INFO) << "Iteration: " << i;
+		//LOG(INFO) << "Tree: " << Ta->getTreeName();
 		if (extend(Ta, Kd_Ta, q_rand) != Trapped)
 		{
+			//LOG(INFO) << "Not Trapped";
 			std::shared_ptr<base::State> q_new = Ta->getStates()->back();
+			//LOG(INFO) << "Trying to connect to: " << q_new->getCoord().transpose() << " from " << Tb->getTreeName();
 			if (connect(Tb, Kd_Tb, q_new) == Reached)
 			{
+				LOG(INFO) << "Connected after " << i + 1 << " iterations!";
 				computePath();
 				auto end = std::chrono::steady_clock::now();
 				double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -70,7 +85,7 @@ bool planning::rrt::RRTConnect::solve()
 				return true;
 			}
 		}
-		if (i % 2 == 0)
+		/*if (i % 2 == 0)
 		{
 			Ta = std::make_shared<base::Tree>(startTree);
 			Tb = std::make_shared<base::Tree>(goalTree);
@@ -83,10 +98,14 @@ bool planning::rrt::RRTConnect::solve()
 			Ta = std::make_shared<base::Tree>(goalTree);
 			Kd_Ta = goalKdTree;
 			Kd_Tb = startKdTree;
-		}
+		}*/
+		std::swap(Ta, Tb);
+		std::swap(Kd_Ta, Kd_Tb);
+		//LOG(INFO) << "Trees swapped!";
 		auto end = std::chrono::steady_clock::now();
 		double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 		plannerInfo->addIterationTime(elapsed);
+		plannerInfo->setNumNodes(Ta->getStates()->size() + Tb->getStates()->size());
 	}
 	return false;
 }
@@ -112,16 +131,19 @@ planning::rrt::Status planning::rrt::RRTConnect::extend(std::shared_ptr<base::Tr
 {
 	std::shared_ptr<base::State> q_near = get_q_near(tree, kdtree, q_rand);
 	std::shared_ptr<base::State> q_new = ss->interpolate(q_near, q_rand, step);
+	//LOG(INFO) << q_near->getCoord().transpose();
 	if (q_new != nullptr && ss->isValid(q_near, q_new))
 	{
 		q_new->setParent(q_near);
 		addNode(tree, kdtree, q_new);
 		if (ss->equal(q_new, q_rand))
 		{
+			//LOG(INFO) << "Reached";
 			return planning::rrt::Reached;
 		}
 		else
 		{
+			//LOG(INFO) << "Advanced.";
 			return planning::rrt::Advanced;
 		}
 	}
@@ -130,11 +152,14 @@ planning::rrt::Status planning::rrt::RRTConnect::extend(std::shared_ptr<base::Tr
 
 planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q)
 {
+	//LOG(INFO) << "Inside connect.";
 	Status s = planning::rrt::Advanced;
-	while (s == planning::rrt::Advanced)
+	int num_ext = 0;  // TODO: should be read from configuration
+	while (s == planning::rrt::Advanced && num_ext++ < 20)
 	{
 		s = extend(tree, kdtree, q);
 	}
+	//LOG(INFO) << "extended.";
 	return s;
 }
 
@@ -198,10 +223,13 @@ void planning::rrt::RRTConnect::outputPlannerData(std::string filename) const
 		outputFile << "Planner type:\t" << "RRTConnect" << std::endl;
 		outputFile << startTree;
 		outputFile << goalTree;
-		outputFile << "Path:" << std::endl;
-		for (int i = 0; i < path.size(); i++)
+		if (path.size() > 0)
 		{
-			outputFile << path.at(i) << std::endl;
+			outputFile << "Path:" << std::endl;
+			for (int i = 0; i < path.size(); i++)
+			{
+				outputFile << path.at(i) << std::endl;
+			}
 		}
 		outputFile.close();
 	}

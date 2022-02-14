@@ -61,7 +61,7 @@ std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::share
 bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
 	double d = (q1->getCoord() - q2->getCoord()).norm();
-	double stateEqualityThreshold = 5; // TODO: needs to be obtained from configuration file
+	double stateEqualityThreshold = 0.01; // TODO: needs to be obtained from configuration file
 	if (d < stateEqualityThreshold)
 		return true;
 	return false;
@@ -73,7 +73,7 @@ bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q1, const
 	for (double t = 1./numChecks; t <= 1; t += 1./numChecks)
 	{
 		std::shared_ptr<base::State> q_t = interpolate(q1, q2, t);
-		if (!isValid(q_t))
+		if (q_t != nullptr && !isValid(q_t))
 			return false;
 	}
 	return true;

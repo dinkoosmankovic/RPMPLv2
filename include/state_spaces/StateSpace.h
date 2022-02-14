@@ -1,6 +1,7 @@
 #pragma once
 #include "State.h"
 #include "StateSpaceType.h"
+#include <vector>
 
 namespace base
 {
@@ -18,6 +19,7 @@ namespace base
 		virtual void setStateSpaceType(StateSpaceType stateSpaceType);
 		virtual std::shared_ptr<base::State> interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, double t) = 0;
 		virtual bool equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) = 0;
+		
 	protected:
 		StateSpaceType stateSpaceType;
 	};

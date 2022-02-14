@@ -24,11 +24,11 @@ namespace base
 		virtual bool isValid(const std::shared_ptr<base::State> q) override;
 		virtual float getDistance(const std::shared_ptr<base::State>q) override;
 		// this one if cont. collision vs. discrete collision check is used
-		bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
+		virtual bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
 
 		std::shared_ptr<base::State> interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, double t) override;
 		bool equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
-		std::shared_ptr<base::State> randomState() override;
+		virtual std::shared_ptr<base::State> randomState() override;
 	protected:
 		int dimensions;
 	};
