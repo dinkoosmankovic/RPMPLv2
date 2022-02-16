@@ -14,6 +14,7 @@ int main(int argc, char **argv)
 	FLAGS_logtostderr = true;
 
 	env::Environment environment("data/planar_2dof/obstacles_easy.yaml");
+	
 
 	return 0;
 }

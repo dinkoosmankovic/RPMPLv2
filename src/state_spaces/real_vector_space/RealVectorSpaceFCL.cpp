@@ -30,6 +30,7 @@ base::RealVectorSpaceFCL::RealVectorSpaceFCL(int dimensions_, const std::shared_
 
 bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q)
 {
+
 	robot->setState(q);
 	//LOG(INFO) << "robot  parts: " << robot->getParts().size();
 	//LOG(INFO) << "env  parts: "<< env->getParts().size() << "\n";
@@ -73,7 +74,7 @@ std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
 		float llimit = robot->getLimits()[i][0];
 		float ulimit = robot->getLimits()[i][1];
 
-		rand[i] = llimit + rand[i] * (ulimit - llimit) / 2;
+		rand[i] = (ulimit + llimit)/2 + rand[i] * (ulimit - llimit) / 2;
 	}
 	//LOG(INFO) << "random coord: " << rand.transpose();
 	state->setCoord(rand);
