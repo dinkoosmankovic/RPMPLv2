@@ -46,11 +46,13 @@ find_package(kdl_parser REQUIRED)
 find_package(orocos_kdl REQUIRED)
 include_directories(${OROCOS_KDL_INCLUDE_DIR})
 
+find_package(yaml-cpp REQUIRED)
+
 add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
 add_subdirectory(external/googletest)
 
-set(PROJECT_LIBRARIES gtest glog::glog nanoflann kdl_parser orocos-kdl fcl)
+set(PROJECT_LIBRARIES gtest glog::glog nanoflann kdl_parser orocos-kdl fcl yaml-cpp)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data/
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
