@@ -14,6 +14,7 @@ class Planar2DOF(RealVectorSpace):
         self.robot_cm = CollisionManager()
         self.env_cm = CollisionManager()
         self.start_config = [0, 0]
+        self.camera_pos_z = 3.0
 
         self.traj = []
         self.count_i = 0
@@ -128,14 +129,11 @@ class Planar2DOF(RealVectorSpace):
             mesh.visual.face_colors = tm.visuals[0].material.color
             return init_pose, mesh
 
-    def show(self, q=None, obstacles=None):
-        print("showing")
+    def show(self, q=None, obstacles=None, image_file=None):
         cfg = self.get_config(q)
-        print(cfg)
-
         fk = self.robot.link_fk(cfg=cfg)
 
-        scene = pyrender.Scene()
+        scene = pyrender.Scene(ambient_light=[0.02, 0.02, 0.02, 1.0])
         # adding robot to the scene
         for i, tm in enumerate(fk):
             if i == 3:
@@ -153,8 +151,11 @@ class Planar2DOF(RealVectorSpace):
         # nc = pyrender.Node(camera=cam, matrix=np.eye(4))
         # scene.add_node(nc)
         init_cam_pose = np.eye(4)
-        init_cam_pose[2, 3] = 2.5
+        init_cam_pose[2, 3] = self.camera_pos_z
         scene.add(cam, pose=init_cam_pose)
+
+        light = pyrender.DirectionalLight(color=np.ones(3), intensity=1.0)
+        scene.add(light, pose=init_cam_pose)
 
         # scene.add(pyrender.Mesh.from_trimesh(table))
 
@@ -162,19 +163,19 @@ class Planar2DOF(RealVectorSpace):
         for ob in obstacles:
             scene.add(pyrender.Mesh.from_trimesh(ob, smooth=False))
 
-        pyrender.Viewer(scene, use_raymond_lighting=True)
-        #r = pyrender.OffscreenRenderer(viewport_width=640*2, viewport_height=480*2)
-        #color, depth = r.render(scene)
-        #r.delete()
-        #print("showing")
-        #import matplotlib.pyplot as plt
-        #plt.figure(figsize=(20,20))
-        #plt.imshow(color)
-        #plt.show()
+        if (image_file is not None):
+            from matplotlib import pyplot as plt
+            r = pyrender.OffscreenRenderer(640, 480, point_size=1.0)
+            color, _ = r.render(scene)
+            plt.figure(figsize=(20,20))
+            plt.axis('off')
+            plt.imshow(color)
+            plt.savefig(image_file)
+        else:
+            pyrender.Viewer(scene, use_raymond_lighting=True)
 
-    def animate(self, q_traj=None, obstacles=None):
+    def animate(self, q_traj=None, obstacles=None, fps=10.0, image_file=None):
         import time
-        fps = 10.0
         cfgs = [self.get_config(q) for q in q_traj]
 
         # Create the scene
@@ -182,8 +183,10 @@ class Planar2DOF(RealVectorSpace):
 
         node_map = {}
         init_pose_map = {}
-        scene = pyrender.Scene(ambient_light=[0.02, 0.02, 0.02], bg_color=[1.0, 1.0, 1.0])
-        for tm in fk:
+        scene = pyrender.Scene(ambient_light=[0.02, 0.02, 0.02, 1.0])
+        for i, tm in enumerate(fk):
+            if i == 3:
+                break
             pose = fk[tm]
             init_pose, link_mesh = self.get_link_mesh(tm)
             mesh = pyrender.Mesh.from_trimesh(link_mesh, smooth=False)
@@ -193,29 +196,39 @@ class Planar2DOF(RealVectorSpace):
 
         cam = pyrender.PerspectiveCamera(yfov=np.pi / 3.0, aspectRatio=1.414)
         init_cam_pose = np.eye(4)
-        init_cam_pose[2, 3] = 2.5
+        init_cam_pose[2, 3] = self.camera_pos_z
         scene.add(cam, pose=init_cam_pose)
+
+        light = pyrender.DirectionalLight(color=np.ones(3), intensity=1.0)
+        scene.add(light, pose=init_cam_pose)
 
         for ob in obstacles:
             scene.add(pyrender.Mesh.from_trimesh(ob, smooth=False))
 
         # Pop the visualizer asynchronously
         v = pyrender.Viewer(scene, run_in_thread=True,
-                            use_raymond_lighting=True)
+                            use_raymond_lighting=True, record=True)
         time.sleep(1.0)
         # Now, run our loop
+        saved = False
         i = 0
         while v.is_active:
-            cfg = cfgs[i]
-            fk = self.robot.link_fk(cfg=cfg)
             if i < len(cfgs) - 1:
                 i += 1
             else:
                 i = 0
+                if not saved:
+                    saved = True
+                    if image_file is not None:
+                        v.close_external()
+                        v.save_gif(image_file)
                 time.sleep(1.0)
+            cfg = cfgs[i]
+            fk = self.robot.link_fk(cfg=cfg)
             v.render_lock.acquire()
-            for mesh in fk:
-                pose = fk[mesh]
-                node_map[mesh].matrix = np.matmul(pose, init_pose_map[mesh])
+            for j, mesh in enumerate(fk):
+                if j < 3:
+                    pose = fk[mesh]
+                    node_map[mesh].matrix = np.matmul(pose, init_pose_map[mesh])
             v.render_lock.release()
             time.sleep(1.0 / fps)

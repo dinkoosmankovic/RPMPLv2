@@ -23,7 +23,8 @@ class LogParser:
         path_string = self._extract_path(log_file_text)
         path = []
         for p in path_string:
-            path.append(self._parse_configuration(p))
+            con = self._parse_configuration(p)
+            path.append(con[0])
         file.close()
         return path
 
