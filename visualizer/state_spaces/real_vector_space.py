@@ -25,3 +25,6 @@ class RealVectorSpace(StateSpace):
 
     def distance(self, s1, s2):
         return np.linalg.norm(s2-s1)
+        
+    def show(self, q=None, obstacles=None):
+    	pass

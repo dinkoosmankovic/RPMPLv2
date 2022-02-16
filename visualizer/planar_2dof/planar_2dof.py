@@ -40,14 +40,6 @@ class Planar2DOF(RealVectorSpace):
         self.curr_q = path[0]
         self.count_i = 0
 
-    # def get_next_q(self):
-    #     if len(self.traj) == 0:
-    #         return None
-    #     self.traj.pop()
-    #     self.curr_q = self.traj[-1]
-    #     # print(self.traj)
-    #     return self.curr_q
-
     def get_next_q(self):
         self.count_i += 1
         if self.count_i >= len(self.traj):
@@ -139,13 +131,15 @@ class Planar2DOF(RealVectorSpace):
     def show(self, q=None, obstacles=None):
         print("showing")
         cfg = self.get_config(q)
-        # print(cfg)
+        print(cfg)
 
         fk = self.robot.link_fk(cfg=cfg)
 
         scene = pyrender.Scene()
         # adding robot to the scene
-        for tm in fk:
+        for i, tm in enumerate(fk):
+            if i == 3:
+                break
             pose = fk[tm]
             init_pose, link_mesh = self.get_link_mesh(tm)
             mesh = pyrender.Mesh.from_trimesh(link_mesh, smooth=False)
@@ -168,15 +162,15 @@ class Planar2DOF(RealVectorSpace):
         for ob in obstacles:
             scene.add(pyrender.Mesh.from_trimesh(ob, smooth=False))
 
-        #pyrender.Viewer(scene, use_raymond_lighting=True)
-        r = pyrender.OffscreenRenderer(viewport_width=640*2, viewport_height=480*2)
-        color, depth = r.render(scene)
-        r.delete()
-        print("showing")
-        import matplotlib.pyplot as plt
-        plt.figure(figsize=(20,20))
-        plt.imshow(color)
-        plt.show()
+        pyrender.Viewer(scene, use_raymond_lighting=True)
+        #r = pyrender.OffscreenRenderer(viewport_width=640*2, viewport_height=480*2)
+        #color, depth = r.render(scene)
+        #r.delete()
+        #print("showing")
+        #import matplotlib.pyplot as plt
+        #plt.figure(figsize=(20,20))
+        #plt.imshow(color)
+        #plt.show()
 
     def animate(self, q_traj=None, obstacles=None):
         import time
@@ -188,7 +182,7 @@ class Planar2DOF(RealVectorSpace):
 
         node_map = {}
         init_pose_map = {}
-        scene = pyrender.Scene()
+        scene = pyrender.Scene(ambient_light=[0.02, 0.02, 0.02], bg_color=[1.0, 1.0, 1.0])
         for tm in fk:
             pose = fk[tm]
             init_pose, link_mesh = self.get_link_mesh(tm)

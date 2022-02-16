@@ -1,5 +1,5 @@
-import os
-os.environ["PYOPENGL_PLATFORM"] = "egl"
+#import os
+#os.environ["PYOPENGL_PLATFORM"] = "egl"
 
 from trimesh.creation import box
 from planar_2dof.planar_2dof import Planar2DOF
@@ -18,4 +18,4 @@ for link in robot.actuated_joints:
 
 print("Number of joints: ", len(robot.actuated_joints))
 
-robot.show( [-pi/4, pi/6], obstacles )
+planar_2dof.show( [-pi/4, pi/6], obstacles )
