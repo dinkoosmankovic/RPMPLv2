@@ -13,5 +13,5 @@ if __name__ == "__main__":
     with open('../data/planar_2dof/obstacles_easy.yaml', 'r') as file:
         obstacles = yaml.safe_load(file)     
     
-    visualize(path, obstacles=obstacles, image_file="test.gif", is_trajectory=True, fps=10.0)
+    visualize(path, obstacles=obstacles, image_file="easy_planar_2dof.gif", is_trajectory=True, fps=10.0)
     
