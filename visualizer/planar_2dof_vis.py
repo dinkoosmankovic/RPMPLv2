@@ -9,7 +9,6 @@ import time
 def visualize(q=None, obstacles=None, image_file=None, is_trajectory=False, fps=10.0):
     #obstacles = [box([0.2, 1.2, 0.1])]
     #obstacles[0].apply_translation([1.3+0.25, 0, 0])
-    print(obstacles)
     obstacles = obstacles['obstacles']
     for i, obs in enumerate(obstacles):
         obs = obs['box']

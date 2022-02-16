@@ -57,6 +57,9 @@ set(PROJECT_LIBRARIES gtest glog::glog nanoflann kdl_parser orocos-kdl fcl yaml-
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data/
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
 
+     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/visualizer/
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/visualizer)
+
 # The compiled library code is here
 add_subdirectory(src)
 

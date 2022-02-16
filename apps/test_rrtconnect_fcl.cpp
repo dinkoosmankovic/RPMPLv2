@@ -15,12 +15,7 @@ int main(int argc, char **argv)
 	LOG(INFO) << "GLOG successfully initialized!";
 	//base::RealVectorSpace *space = new base::RealVectorSpace(2);
 	std::shared_ptr<robots::Planar2DOF> robot = std::make_shared<robots::Planar2DOF>("data/planar_2dof/planar_2dof.urdf");
-
-	std::vector<env::Obstacle> obstacles({
-		std::make_pair(fcl::Box(0.2, 1.2, 0.1), fcl::Transform3f(fcl::Vec3f(1.3+0.25,0, 0)))
-	});
-
-	std::shared_ptr<env::Environment> env = std::make_shared<env::Environment>( obstacles );
+	std::shared_ptr<env::Environment> env = std::make_shared<env::Environment>( "data/planar_2dof/obstacles_easy.yaml" );
 
 	LOG(INFO) << "env  parts: " << env->getParts().size();
 

@@ -4,7 +4,7 @@ import yaml
 
 
 if __name__ == "__main__":
-    parser = LogParser("plannerData.log")
+    parser = LogParser("/tmp/plannerData.log")
     path = parser.get_path()
     #for p in path:
     #    print(p)
