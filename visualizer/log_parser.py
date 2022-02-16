@@ -1,38 +1,74 @@
 import re
 from copy import deepcopy
+from sre_parse import FLAGS
 
 class LogParser:
     def __init__(self, file_name=None) -> None:
         if file_name is None:
             raise RuntimeError("No filename provided!")
-        
+
+        self.path = None
+
         with open(file_name) as file:
-            self.parse_file(file)
+            self.path = self.parse_file(file)
+
+    def get_path(self):
+        return self.path
 
     def parse_file(self, file=None):
         if file is None:
             return
         
-        line_nums_path = self.search_string_in_file(deepcopy(file), "Path:")
-        print(line_nums_path)       
+        log_file_text = file.read()
+        path_string = self._extract_path(log_file_text)
+        path = []
+        for p in path_string:
+            path.append(self._parse_configuration(p))
         file.close()
+        return path
 
-    def search_string_in_file(self, file, string_to_search):
-        line_number = 0
-        list_of_results = []
-        for line in file:
-            line_number += 1
-            if string_to_search in line:
-                list_of_results.append((line_number, line.rstrip()))
-        return list_of_results
+    def _extract_path(self, log_file_text):
+        log_file_text = log_file_text.replace("NONE", "None")
+        path_string = re.findall(r"Path:\n(.*\n)+", log_file_text, flags=re.DOTALL)[0]
+        path_string = path_string.split("\n")
+        for i, p in enumerate(path_string):
+            p = p.replace("parent q: ", "")
+            p = p.replace("q: ", "")
+            path_string[i] = p
+            if len(p) == 0:
+                path_string.remove(p)
+        return path_string
 
-    def _parse_line(self, line):
-        pass
+    def _parse_configuration(self, p):
+        line = p.split("; ")
+        p1 = line[0]
+        p2 = line[1]
+        p1 = p1.replace("(", "")
+        p1 = p1.replace(")", "")
+
+        p2 = p2.replace("(", "")
+        p2 = p2.replace(")", "")
+
+        p1_s = p1.split(" ")
+        p2_s = p2.split(" ")
+
+        if len(p1_s) == 1:
+            p1_s = None
+        else:
+            p1_s = [float(i) for i in list(filter(None, p1_s))]
+        if len(p2_s) == 1:
+            p2_s = None
+        else:
+            p2_s = [float(i) for i in list(filter(None, p2_s))]
+        return p1_s, p2_s
 
 
 
 if __name__ == "__main__":
     parser = LogParser("/home/dinko/RPMPLv2/visualizer/plannerData.log")
+    path = parser.get_path()
+    for p in path:
+        print(p)
 
 
 
