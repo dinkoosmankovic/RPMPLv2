@@ -4,8 +4,10 @@
 
 #include "RealVectorSpaceState.h"
 
+#include <glog/logging.h>
+
 base::RealVectorSpaceState::RealVectorSpaceState(Eigen::VectorXf state_)
-{
+{	
 	dimensions = state_.size();
 	coord = state_;
 	stateSpaceType = StateSpaceType::RealVectorSpace;

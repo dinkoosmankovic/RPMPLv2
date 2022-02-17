@@ -37,7 +37,6 @@ env::Environment::Environment(const std::string& filename)
             fcl::Transform3f tf(fcl::Vec3f(tx, ty, tz));
             std::shared_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, tf));
             ob->computeAABB();
-            LOG(INFO) << ob->getAABB().min_ << "\t" << ob->getAABB().max_;
             parts_.emplace_back(ob);
         }
     }        

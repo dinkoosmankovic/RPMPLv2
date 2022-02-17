@@ -221,6 +221,9 @@ void planning::rrt::RRTConnect::outputPlannerData(std::string filename) const
 		outputFile << "Space Type: " << ss->getStateSpaceType() << std::endl;
 		outputFile << "Space dimension: " << ss->getDimensions() << std::endl;
 		outputFile << "Planner type:\t" << "RRTConnect" << std::endl;
+		outputFile << "Planner info: \n";
+		outputFile << "\t\t Number of nodes:\t" << plannerInfo->getNumNodes() << std::endl;
+		outputFile << "\t\t Planning time(ms):\t" << plannerInfo->getPlanningTime() << std::endl;
 		outputFile << startTree;
 		outputFile << goalTree;
 		if (path.size() > 0)
