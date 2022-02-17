@@ -1,4 +1,4 @@
 obstacles:
   - box:
       dim: [0.2, 1.2, 0.1]
-      trans: [1.55, 0, 0]
+      trans: [1.15, 0, 0]

@@ -180,13 +180,19 @@ class Xarm6(RealVectorSpace):
         scene.add(pyrender.Mesh.from_trimesh(table))
 
         cam = pyrender.PerspectiveCamera(yfov=np.pi / 3.0, aspectRatio=1.414)
-        init_cam_pose = np.eye(4)
-        init_cam_pose[2, 3] = 2.5
+        init_cam_pose = np.array([[ 0.86595061,  0.28855402, -0.81698498, -0.76317579],\
+                                  [-0.49829176,  0.567737,   -1.3105419,  -1.27955438],\
+                                  [ 0.04283523,  0.77098072,  1.27083259,  1.64027461],\
+                                   [ 0.,          0.,          0.,          1.        ] ]
+
+        )
+        #init_cam_pose[2, 3] = 2.0
+        #init_cam_pose[2, 2] = 2.0
         scene.add(cam, pose=init_cam_pose)
 
         # adding obstacles to the scene
         for i, ob in enumerate(obstacles):
-            ob.visual.vertex_colors = [255, 0, 0, 230]
+            ob.visual.vertex_colors = [1, 1, 1, 230]
             scene.add(pyrender.Mesh.from_trimesh(ob, smooth=False))
 
         # Pop the visualizer asynchronously
