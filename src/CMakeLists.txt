@@ -9,6 +9,7 @@ set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/external/nanoflann/include
         ${PROJECT_SOURCE_DIR}/include/robots
         ${PROJECT_SOURCE_DIR}/include/environments
+        ${PROJECT_SOURCE_DIR}/include/scenario
 )
 
 # Optionally glob, but only for CMake 3.12 or later:

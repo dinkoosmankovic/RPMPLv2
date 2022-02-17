@@ -18,6 +18,7 @@ env::Environment::~Environment() {}
 env::Environment::Environment(const std::string& filename)
 {
     YAML::Node node = YAML::LoadFile(filename);
+    std::vector<std::shared_ptr<fcl::CollisionObject> > parts_;
 	for (size_t i = 0; i < node["obstacles"].size(); ++i)
 	{
         YAML::Node obstacle = node["obstacles"][i];
@@ -48,10 +49,7 @@ env::Environment::Environment(const fcl::Box& box, const fcl::Transform3f& tf)
 	std::shared_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, tf));
 
     ob->computeAABB();
-    LOG(INFO) << ob->getAABB().min_ << "\t" << ob->getAABB().max_;
-
     parts_.emplace_back(ob);
-
 }
 
 env::Environment::Environment(const std::vector<env::Obstacle>& obs)
