@@ -197,18 +197,24 @@ class Xarm6(RealVectorSpace):
 
         # Pop the visualizer asynchronously
         v = pyrender.Viewer(scene, run_in_thread=True,
-                            use_raymond_lighting=True)
+                            use_raymond_lighting=True, record=True)
         time.sleep(1.0)
         # Now, run our loop
+        saved = False
         i = 0
         while v.is_active:
-            cfg = cfgs[i]
-            fk = self.robot.visual_trimesh_fk(cfg=cfg)
             if i < len(cfgs) - 1:
                 i += 1
             else:
                 i = 0
+                if not saved:
+                    saved = True
+                    if image_file is not None:
+                        v.close_external()
+                        v.save_gif(image_file)
                 time.sleep(1.0)
+            cfg = cfgs[i]
+            fk = self.robot.visual_trimesh_fk(cfg=cfg)
             v.render_lock.acquire()
             for mesh in fk:
                 pose = fk[mesh]
