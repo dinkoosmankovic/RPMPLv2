@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 #include <glog/log_severity.h>
 #include <glog/logging.h>
+#include "ConfigurationReader.h"
 
 base::RealVectorSpace::RealVectorSpace(int dimensions) : dimensions(dimensions)
 {
@@ -61,7 +62,7 @@ std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::share
 bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
 	double d = (q1->getCoord() - q2->getCoord()).norm();
-	double stateEqualityThreshold = 0.01; // TODO: needs to be obtained from configuration file
+	double stateEqualityThreshold = RealVectorSpaceConfig::EQUALITY_THRESHOLD;
 	if (d < stateEqualityThreshold)
 		return true;
 	return false;
@@ -69,7 +70,7 @@ bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const s
 
 bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
-	int numChecks = 10;
+	int numChecks = RealVectorSpaceConfig::NUM_INTERPOLATION_VALIDITY_CHECKS;
 	for (double t = 1./numChecks; t <= 1; t += 1./numChecks)
 	{
 		std::shared_ptr<base::State> q_t = interpolate(q1, q2, t);

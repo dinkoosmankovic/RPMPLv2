@@ -1,0 +1,4 @@
+RRTConnectConfig:
+  MAX_ITER: 1000
+  MAX_EXTENSION_STEPS: 20
+  EPS_STEP: 0.2

@@ -1,6 +1,7 @@
 #include <RRTConnect.h>
 #include <iostream>
 #include <Scenario.h>
+#include <ConfigurationReader.h>
 
 #include <glog/logging.h>
 
@@ -11,6 +12,8 @@ int main(int argc, char **argv)
 	std::srand((unsigned int) time(0));
 	FLAGS_logtostderr = true;
 	LOG(INFO) << "GLOG successfully initialized!";
+
+	ConfigurationReader::initConfiguration();
 	
 	scenario::Scenario scenario("data/xarm6/scenario_easy.yaml");
 	

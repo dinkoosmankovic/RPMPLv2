@@ -1,6 +1,7 @@
 #include <RRTConnect.h>
 #include <iostream>
 #include <Scenario.h>
+#include <ConfigurationReader.h>
 
 #include <glog/logging.h>
 
@@ -11,7 +12,9 @@ int main(int argc, char **argv)
 	std::srand((unsigned int) time(0));
 	FLAGS_logtostderr = true;
 	LOG(INFO) << "GLOG successfully initialized!";
-	//base::RealVectorSpace *space = new base::RealVectorSpace(2);
+
+	ConfigurationReader::initConfiguration();
+	
 	scenario::Scenario scenario("data/planar_2dof/scenario_easy.yaml");
 	
 	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();

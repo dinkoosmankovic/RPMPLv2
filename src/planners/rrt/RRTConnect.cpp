@@ -8,8 +8,8 @@
 #include <nanoflann.hpp>
 #include <chrono>
 #include <fstream>
-
 #include "RealVectorSpaceState.h"
+#include "ConfigurationReader.h"
 
 #include <glog/logging.h>
 
@@ -39,6 +39,7 @@ void planning::rrt::RRTConnect::initPlanner()
 {
 	LOG(INFO) << "Initializing planner...";
 	plannerInfo = std::make_shared<PlannerInfo>();
+	step = RRTConnectConfig::EPS_STEP;
 	startTree.setTreeName("start");
 	goalTree.setTreeName("goal");
 	startTree.emptyTree();
@@ -64,7 +65,7 @@ bool planning::rrt::RRTConnect::solve()
 	std::shared_ptr<base::Tree> Tb = std::make_shared<base::Tree>(goalTree);
 	std::shared_ptr<KdTree> Kd_Ta = startKdTree;
 	std::shared_ptr<KdTree> Kd_Tb = goalKdTree;
-	int MAX_ITER = 1000; // TODO: read from configuration file
+	int MAX_ITER = RRTConnectConfig::MAX_ITER;
 	for (size_t i = 0; i < MAX_ITER; ++i)
 	{
 		std::shared_ptr<base::State> q_rand = getSs()->randomState();
@@ -154,8 +155,9 @@ planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::T
 {
 	//LOG(INFO) << "Inside connect.";
 	Status s = planning::rrt::Advanced;
-	int num_ext = 0;  // TODO: should be read from configuration
-	while (s == planning::rrt::Advanced && num_ext++ < 20)
+	int num_ext = 0; 
+	int MAX_EXTENSION_STEPS = RRTConnectConfig::MAX_EXTENSION_STEPS;
+	while (s == planning::rrt::Advanced && num_ext++ < MAX_EXTENSION_STEPS)
 	{
 		s = extend(tree, kdtree, q);
 	}
