@@ -125,7 +125,7 @@ void planning::rrt::RRTConnect::addNode(std::shared_ptr<base::Tree> tree, std::s
 {
 	int K = tree->getStates()->size();
 	tree->getStates()->emplace_back(q);
-	kdtree->addPoints(K - 1, K - 1);
+	kdtree->addPoints(K, K);
 }
 
 planning::rrt::Status planning::rrt::RRTConnect::extend(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q_rand)
