@@ -10,10 +10,8 @@
 
 namespace planning
 {
-	typedef nanoflann::KDTreeSingleIndexDynamicAdaptor<
-	nanoflann::L2_Simple_Adaptor<double, base::Tree> ,
-	base::Tree /* dim */
-	> KdTree;
+	typedef nanoflann::KDTreeSingleIndexDynamicAdaptor
+		<nanoflann::L2_Simple_Adaptor<double, base::Tree>, base::Tree /* dim */> KdTree;
 
 	class AbstractPlanner
 	{
@@ -21,7 +19,7 @@ namespace planning
 		explicit AbstractPlanner(std::shared_ptr<base::StateSpace> ss_) { ss = ss_; };
 		virtual ~AbstractPlanner() = 0;
 		virtual bool solve() = 0;
-		std::shared_ptr<base::StateSpace> getSs() const;
+		std::shared_ptr<base::StateSpace> getSS() const;
 		virtual void outputPlannerData(std::string filename) const = 0;
 		std::shared_ptr<PlannerInfo> getPlannerInfo() const;
 	protected:

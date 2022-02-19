@@ -55,6 +55,16 @@ void PlannerInfo::setNumNodes(int numNodes)
 	PlannerInfo::numNodes = numNodes;
 }
 
+int PlannerInfo::getNumIterations() const
+{
+	return numIterations;
+}
+
+void PlannerInfo::setNumIterations(int numIterations)
+{
+	PlannerInfo::numIterations = numIterations;
+}
+
 void PlannerInfo::addIterationTime(double time)
 {
 	iterationsTimesOfExecution.emplace_back(time);

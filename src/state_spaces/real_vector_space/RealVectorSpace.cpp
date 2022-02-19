@@ -45,12 +45,25 @@ std::shared_ptr<base::State> base::RealVectorSpace::randomState()
 	return state;
 }
 
-std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, double t)
+// D is distance between q1 and q2
+std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::shared_ptr<base::State> q1, 
+																const std::shared_ptr<base::State> q2, double step, double D)
 {
-	std::shared_ptr<base::State> q_t = randomState();
-	Eigen::VectorXf eig = ( q2->getCoord() - q1->getCoord() ) / (q2->getCoord() - q1->getCoord()).norm();
-	q_t->setCoord( q1->getCoord() + t * eig );
-
+	std::shared_ptr<base::State> q_t = std::make_shared<base::RealVectorSpaceState>(dimensions);
+	Eigen::VectorXf eig;
+	if (D < 0) 	// D = -1 is the default value
+	{
+		D = (q2->getCoord() - q1->getCoord()).norm();
+	}
+	if (step < D)
+	{
+		eig = (q2->getCoord() - q1->getCoord()) / D;
+		q_t->setCoord(q1->getCoord() + step * eig);
+	}
+	else
+	{
+		q_t->setCoord(q2->getCoord());
+	}
 	// here we check the validity of the motion q1->q_t
 	if (isValid(q_t))
 		return q_t;
@@ -61,7 +74,7 @@ std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::share
 bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
 	double d = (q1->getCoord() - q2->getCoord()).norm();
-	double stateEqualityThreshold = 0.01; // TODO: needs to be obtained from configuration file
+	double stateEqualityThreshold = 1e-6; // TODO: needs to be obtained from configuration file
 	if (d < stateEqualityThreshold)
 		return true;
 	return false;
@@ -70,10 +83,11 @@ bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const s
 bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
 	int numChecks = 10;
+	double D = (q2->getCoord() - q1->getCoord()).norm();
 	for (double t = 1./numChecks; t <= 1; t += 1./numChecks)
 	{
-		std::shared_ptr<base::State> q_t = interpolate(q1, q2, t);
-		if (q_t != nullptr && !isValid(q_t))
+		std::shared_ptr<base::State> q_t = interpolate(q1, q2, t, D);
+		if (q_t == nullptr)
 			return false;
 	}
 	return true;

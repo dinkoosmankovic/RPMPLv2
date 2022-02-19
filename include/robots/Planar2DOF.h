@@ -10,10 +10,6 @@
 #include <vector>
 #include <string>
 
-#include <fcl/broadphase/broadphase.h>
-#include <kdl_parser/kdl_parser.hpp>
-#include <kdl/frames_io.hpp>
-#include <kdl/treefksolverpos_recursive.hpp>
 
 namespace robots
 {
@@ -22,9 +18,9 @@ namespace robots
 	public:
 		Planar2DOF(std::string robot_desc);
 		~Planar2DOF();
-		std::vector<KDL::Frame> computeForwardKinematics(std::shared_ptr<base::State> q);
+		std::vector<KDL::Frame> computeForwardKinematics(std::shared_ptr<base::State> q) override;
 		const KDL::Tree& getRobotTree() const;
-		const std::vector<std::unique_ptr<fcl::CollisionObject> >& getParts() const override;
+		const std::vector<std::unique_ptr<fcl::CollisionObject>>& getParts() const override;
 		void setState(std::shared_ptr<base::State> q_) override;
 		void test();
 
@@ -34,8 +30,8 @@ namespace robots
 		fcl::Transform3f KDL2fcl(const KDL::Frame &in);
 		KDL::Frame fcl2KDL(const fcl::Transform3f &in);
 	
-	private:
-		std::vector<std::unique_ptr<fcl::CollisionObject> > parts_;
+	protected:
+		std::vector<std::unique_ptr<fcl::CollisionObject>> parts_;
 		std::vector<KDL::Frame> init_poses;
 		KDL::Tree robot_tree;
 		KDL::Chain robot_chain;

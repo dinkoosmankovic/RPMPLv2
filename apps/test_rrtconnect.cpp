@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 	LOG(INFO) << "Dimensions: " << ss->getDimensions();
 	LOG(INFO) << "StateSpace Type: " << ss->getStateSpaceType();
 	std::shared_ptr<base::State> start = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({0,0}));
-	std::shared_ptr<base::State> goal = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({100,100}));
+	std::shared_ptr<base::State> goal = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({1,1}));
 	try
 	{
 		std::unique_ptr<planning::rrt::RRTConnect> planner = std::make_unique<planning::rrt::RRTConnect>(ss, start, goal);
@@ -24,10 +24,10 @@ int main(int argc, char **argv)
 		if (res)
 		{
 			std::vector<std::shared_ptr<base::State>> path = planner->getPath();
-			/*for (int i = 0; i < path.size(); i++)
+			for (int i = 0; i < path.size(); i++)
 			{
 				std::cout << path.at(i) << std::endl;
-			}*/
+			}
 			// TODO: read from configuration yaml
 			planner->outputPlannerData("/tmp/plannerData.log");
 		}

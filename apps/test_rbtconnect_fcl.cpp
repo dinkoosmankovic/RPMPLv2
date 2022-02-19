@@ -1,4 +1,4 @@
-#include <RRTConnect.h>
+#include <RBTConnect.h>
 #include <iostream>
 #include <RealVectorSpaceFCL.h>
 #include <Environment.h>
@@ -26,11 +26,10 @@ int main(int argc, char **argv)
 	std::shared_ptr<base::State> goal = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({M_PI/2 ,0}));
 	try
 	{
-		std::unique_ptr<planning::rrt::RRTConnect> planner = std::make_unique<planning::rrt::RRTConnect>(ss, start, goal);
+		std::unique_ptr<planning::rbt::RBTConnect> planner = std::make_unique<planning::rbt::RBTConnect>(ss, start, goal);
 		bool res = planner->solve();
-		LOG(INFO) << "RRTConnect planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
+		LOG(INFO) << "RBTConnect planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
 		LOG(INFO) << "Number of nodes: " << planner->getPlannerInfo()->getNumNodes();
-		LOG(INFO) << "Number of iterations: " << planner->getPlannerInfo()->getNumIterations();
 		LOG(INFO) << "Planning time: " << planner->getPlannerInfo()->getPlanningTime() << " [ms]";
 			
 		if (res)

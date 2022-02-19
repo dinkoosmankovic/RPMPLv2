@@ -7,6 +7,7 @@
 #include "AbstractPlanner.h"
 #include <vector>
 #include <memory>
+#include <chrono>
 
 namespace planning
 {
@@ -20,28 +21,28 @@ namespace planning
 			RRTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> goal_);
 			~RRTConnect();
 			bool solve() override;
-			base::Tree getStartTree() const;
-			base::Tree getGoalTree() const;
-			Status extend(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q_rand);
-			Status connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q_rand);
-			std::shared_ptr<base::State> get_q_near(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q);
-			void addNode(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q);
+			base::Tree getTree(int TN) const;
+			std::tuple<Status, std::shared_ptr<base::State>> extend(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
+			Status connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			const std::vector<std::shared_ptr<base::State>> &getPath() const;
-			void outputPlannerData(std::string filename) const override;
-		private:
+			virtual void outputPlannerData(std::string filename) const override;
+
+		protected:
 			std::shared_ptr<base::StateSpace> ss;
 			std::shared_ptr<base::State> start;
 			std::shared_ptr<base::State> goal;
-			base::Tree startTree;
-			base::Tree goalTree;
-			void initPlanner();
-			void prepareKdTrees();
-			void computePath();
-			std::shared_ptr<KdTree> startKdTree;
-			std::shared_ptr<KdTree> goalKdTree;
+			std::vector<base::Tree> TREES;
+			std::vector<std::shared_ptr<KdTree>> kdtrees;
 			//TODO: Read from configuration file
-			double step = 0.2;
+			double epsilon = 0.1;							// Step in C-space used by RRT-based algorithms
+			size_t maxNumNodes = 10000;                     // Max. number of considered nodes
+			double maxPlanningTime = 60000;					// Maximal algorithm runtime in [ms]
 			std::vector<std::shared_ptr<base::State>> path;
+			
+			void initPlanner();
+			void computePath();
+			double getElapsedTime(std::chrono::steady_clock::time_point &time_start);
+			bool checkStoppingCondition(Status status, std::chrono::steady_clock::time_point &time_start);
 		};
 	}
 }

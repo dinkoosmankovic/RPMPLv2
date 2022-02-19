@@ -8,44 +8,36 @@ base::RealVectorSpaceState::RealVectorSpaceState(Eigen::VectorXf state_)
 {
 	dimensions = state_.size();
 	coord = state_;
-	stateSpaceType = StateSpaceType::RealVectorSpace;
-	setParent(nullptr);
-}
-
-base::RealVectorSpaceState::~RealVectorSpaceState()
-{
+	setStateSpaceType(StateSpaceType::RealVectorSpace);
 }
 
 base::RealVectorSpaceState::RealVectorSpaceState(int dimensions_)
 {
 	dimensions = dimensions_;
 	coord = Eigen::VectorXf::Random(dimensions);
-	stateSpaceType = StateSpaceType::RealVectorSpace;
+	setStateSpaceType(StateSpaceType::RealVectorSpace);
 }
 
 base::RealVectorSpaceState::RealVectorSpaceState(base::RealVectorSpaceState* state)
 {
 	dimensions = state->dimensions;
 	coord = state->coord;
-	stateSpaceType = StateSpaceType::RealVectorSpace;
+	planes = std::make_shared<std::vector<Eigen::MatrixXd>>();
+	setStateSpaceType(StateSpaceType::RealVectorSpace);
+	setParent(nullptr);
+	setChildren(std::make_shared<std::vector<std::shared_ptr<base::State>>>());
 }
 
-void base::RealVectorSpaceState::setDimensions(int dimensions)
+void base::RealVectorSpaceState::makeCopy(std::shared_ptr<base::State> q)
 {
-	RealVectorSpaceState::dimensions = dimensions;
-}
-
-const Eigen::VectorXf &base::RealVectorSpaceState::getCoord() const
-{
-	return coord;
-}
-
-void base::RealVectorSpaceState::setCoord(const Eigen::VectorXf &coord)
-{
-	RealVectorSpaceState::coord = coord;
-}
-
-int base::RealVectorSpaceState::getDimension() const
-{
-	return dimensions;
+	dimensions = q->getDimension();
+	coord = q->getCoord();
+	treeIdx = q->getTreeIdx();
+	idx = q->getIdx();
+	d_c = q->get_d_c();
+	cost = q->getCost();
+	planes = q->getPlanes();
+	setStateSpaceType(q->getStateSpaceType());
+	setParent(q->getParent());
+	setChildren(q->getChildren());
 }

@@ -6,6 +6,7 @@ set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/include/state_spaces/real_vector_space
         ${PROJECT_SOURCE_DIR}/include/planners
         ${PROJECT_SOURCE_DIR}/include/planners/rrt
+        ${PROJECT_SOURCE_DIR}/include/planners/rbt
         ${PROJECT_SOURCE_DIR}/external/nanoflann/include
         ${PROJECT_SOURCE_DIR}/include/robots
         ${PROJECT_SOURCE_DIR}/include/environments

@@ -50,15 +50,16 @@ bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q)
 bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
 	int numChecks = 10;
+	double D = (q2->getCoord() - q1->getCoord()).norm();
 	for (double t = 1./numChecks; t <= 1; t += 1./numChecks)
 	{
-		std::shared_ptr<base::State> q_t = interpolate(q1, q2, t);
-		/*if (q_t != nullptr) 
+		std::shared_ptr<base::State> q_t = interpolate(q1, q2, t, D);
+		/* if (q_t != nullptr) 
 		{
 			LOG(INFO) << "checking " << t << " : " << q_t->getCoord().transpose();
 			LOG(INFO) << "check: " << isValid(q_t);
-		}*/
-		if (q_t != nullptr && !isValid(q_t))
+		} */
+		if (q_t == nullptr)
 			return false;
 	}
 	return true;
@@ -73,7 +74,7 @@ std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
 		float llimit = robot->getLimits()[i][0];
 		float ulimit = robot->getLimits()[i][1];
 
-		rand[i] = llimit + rand[i] * (ulimit - llimit) / 2;
+		rand[i] = ((ulimit - llimit) * rand[i] + llimit + ulimit) / 2;
 	}
 	//LOG(INFO) << "random coord: " << rand.transpose();
 	state->setCoord(rand);
@@ -83,13 +84,12 @@ std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
 Eigen::VectorXf normalizedAngles(Eigen::VectorXf r)
 {
 	
-	
 }
 
 float base::RealVectorSpaceFCL::getDistance(const std::shared_ptr<base::State> q)
 {
 	robot->setState(q);
-	float min_dist = 1e12;
+	float min_dist = INFINITY;
 	for (size_t i = 0; i < robot->getParts().size(); ++i)
 	{	
 		//LOG(INFO) << "part " << i <<"\t:" << robot->getParts()[i]->getAABB().min_ <<"\t;\t" << robot->getParts()[i]->getAABB().max_;

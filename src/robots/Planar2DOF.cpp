@@ -10,7 +10,6 @@
 #include "RealVectorSpaceState.h"
 
 #include <fcl/distance.h>
-
 #include <glog/logging.h>
 
 typedef std::shared_ptr <fcl::CollisionGeometry> CollisionGeometryPtr;
@@ -47,8 +46,8 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 		{
 			auto box = (std::shared_ptr<urdf::Box>&) links[i]->visual->geometry;
 			KDL::Vector origin(links[i]->visual->origin.position.x, 
-							  links[i]->visual->origin.position.y,
-							  links[i]->visual->origin.position.z);
+							   links[i]->visual->origin.position.y,
+							   links[i]->visual->origin.position.z);
 
 			
 			CollisionGeometryPtr fclBox(new fcl::Box(box->dim.x, box->dim.y, box->dim.z));
@@ -70,7 +69,7 @@ const KDL::Tree& robots::Planar2DOF::getRobotTree() const
     return robot_tree;
 }
 
-const std::vector<std::unique_ptr<fcl::CollisionObject> >& robots::Planar2DOF::getParts() const
+const std::vector<std::unique_ptr<fcl::CollisionObject>>& robots::Planar2DOF::getParts() const
 {
 	return parts_;
 }
@@ -93,7 +92,7 @@ std::vector<KDL::Frame> robots::Planar2DOF::computeForwardKinematics(std::shared
 		KDL::Frame cartpos;
 		bool kinematics_status = treefksolver.JntToCart(jointpositions, cartpos, robot_chain.getSegment(i).getName());
 		if (kinematics_status >= 0)
-			framesFK.emplace_back(cartpos);		
+			framesFK.emplace_back(cartpos);
 	}
 	return framesFK;
     
@@ -124,8 +123,8 @@ void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
 
 void robots::Planar2DOF::test()
 {
-	CollisionGeometryPtr fclBox(new fcl::Box(1.2, 0.5, 0.1));
-	fcl::Transform3f tf; tf.setTranslation(fcl::Vec3f(0,1.1+0.25, 0));
+	CollisionGeometryPtr fclBox(new fcl::Box(1, 1, 0.05));
+	fcl::Transform3f tf; tf.setTranslation(fcl::Vec3f(2.5, 0, 0));
 	std::unique_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, tf));
 
 	for (size_t i = 0; i < parts_.size(); ++i)
@@ -133,8 +132,8 @@ void robots::Planar2DOF::test()
 		fcl::DistanceRequest request;
 		fcl::DistanceResult result;
 		fcl::distance(parts_[i].get(), ob.get(), request, result);
-		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
-		std::cout << "distance from " << i << ": " << result.min_distance << std::endl;
+		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl;
+		std::cout << "Distance from " << i << ": " << result.min_distance << std::endl << "-------------------------------" << std::endl;
 	}
 
 }

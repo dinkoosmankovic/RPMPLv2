@@ -11,8 +11,6 @@
 #include "StateSpace.h"
 #include "RealVectorSpaceState.h"
 #include "RealVectorSpace.h"
-#include "AbstractRobot.h"
-#include "Environment.h"
 
 namespace base
 {
@@ -25,10 +23,6 @@ namespace base
 		float getDistance(const std::shared_ptr<base::State>q) override;
 		bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
 		std::shared_ptr<base::State> randomState() override;
-
-	private:
-		std::shared_ptr<robots::AbstractRobot> robot;
-		std::shared_ptr<env::Environment> env;
 		
 	};
 }
