@@ -19,12 +19,13 @@ namespace base
 		int getDimensions() override;
 		friend std::ostream &operator<<(std::ostream &os, const RealVectorSpace &space);
 
-		// these three function needs to be reimplemented in the context
+		// these four function needs to be reimplemented in the context
 		// of collision checking (some other app with FCL)
 		virtual bool isValid(const std::shared_ptr<base::State> q) override;
-		virtual float getDistance(const std::shared_ptr<base::State>q) override;
 		// this one if cont. collision vs. discrete collision check is used
 		virtual bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
+		virtual double getDistance(const std::shared_ptr<base::State>q) override;
+		virtual std::tuple<double, std::shared_ptr<std::vector<Eigen::MatrixXd>>> getDistanceAndPlanes(const std::shared_ptr<base::State> q) override;
 
 		std::shared_ptr<base::State> interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, double step, double D) override;
 		bool equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;

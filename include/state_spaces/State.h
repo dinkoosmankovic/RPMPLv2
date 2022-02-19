@@ -27,7 +27,7 @@ namespace base
 
 		virtual uint getTreeIdx() const = 0;
 		virtual size_t getIdx() const = 0;
-		virtual double get_d_c() const = 0;
+		virtual double getDistance() const = 0;
 		virtual double getCost() const = 0;
 		virtual std::shared_ptr<std::vector<Eigen::MatrixXd>> getPlanes() const = 0;
 		virtual int getDimension() const = 0;
@@ -39,7 +39,7 @@ namespace base
 
 		virtual void setTreeIdx(uint treeIdx_) = 0;
 		virtual void setIdx(size_t idx_) = 0;
-		virtual void set_d_c(double d_c_) = 0;
+		virtual void setDistance(double d_c_) = 0;
 		virtual void setCost(double cost_) = 0;
 		virtual void setPlanes(std::shared_ptr<std::vector<Eigen::MatrixXd>> planes_) = 0;
 		virtual void setCoord(const Eigen::VectorXf &coord) = 0;
@@ -79,7 +79,7 @@ namespace base
 		inline void setState(std::shared_ptr<base::State> state, size_t idx) { states->at(idx) = state; }
 
 		void emptyTree();
-		std::shared_ptr<base::State> get_q_near(std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q);
+		std::shared_ptr<base::State> getNearestState(std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q);
 		void upgradeTree(std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q_new, std::shared_ptr<base::State> q_parent,
 						 double d_c = -1, std::shared_ptr<std::vector<Eigen::MatrixXd>> planes = nullptr, double cost = -1);
 

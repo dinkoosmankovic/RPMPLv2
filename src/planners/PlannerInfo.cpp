@@ -25,42 +25,42 @@ void PlannerInfo::setPlanningTime(double planningTime)
 	PlannerInfo::planningTime = planningTime;
 }
 
-int PlannerInfo::getNumCollisionQueries() const
+size_t PlannerInfo::getNumCollisionQueries() const
 {
 	return numCollisionQueries;
 }
 
-void PlannerInfo::setNumCollisionQueries(int numCollisionQueries)
+void PlannerInfo::setNumCollisionQueries(size_t numCollisionQueries)
 {
 	PlannerInfo::numCollisionQueries = numCollisionQueries;
 }
 
-int PlannerInfo::getNumDistanceQueries() const
+size_t PlannerInfo::getNumDistanceQueries() const
 {
 	return numDistanceQueries;
 }
 
-void PlannerInfo::setNumDistanceQueries(int numDistanceQueries)
+void PlannerInfo::setNumDistanceQueries(size_t numDistanceQueries)
 {
 	PlannerInfo::numDistanceQueries = numDistanceQueries;
 }
 
-int PlannerInfo::getNumNodes() const
+size_t PlannerInfo::getNumNodes() const
 {
 	return numNodes;
 }
 
-void PlannerInfo::setNumNodes(int numNodes)
+void PlannerInfo::setNumNodes(size_t numNodes)
 {
 	PlannerInfo::numNodes = numNodes;
 }
 
-int PlannerInfo::getNumIterations() const
+size_t PlannerInfo::getNumIterations() const
 {
 	return numIterations;
 }
 
-void PlannerInfo::setNumIterations(int numIterations)
+void PlannerInfo::setNumIterations(size_t numIterations)
 {
 	PlannerInfo::numIterations = numIterations;
 }

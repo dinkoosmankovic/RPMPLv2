@@ -34,7 +34,7 @@ void base::RealVectorSpaceState::makeCopy(std::shared_ptr<base::State> q)
 	coord = q->getCoord();
 	treeIdx = q->getTreeIdx();
 	idx = q->getIdx();
-	d_c = q->get_d_c();
+	d_c = q->getDistance();
 	cost = q->getCost();
 	planes = q->getPlanes();
 	setStateSpaceType(q->getStateSpaceType());

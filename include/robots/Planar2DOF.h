@@ -23,7 +23,6 @@ namespace robots
 		const std::vector<std::unique_ptr<fcl::CollisionObject>>& getParts() const override;
 		void setState(std::shared_ptr<base::State> q_) override;
 		void test();
-
 		std::vector<robots::LinkLimits> getLimits() const override;
 
 	private:

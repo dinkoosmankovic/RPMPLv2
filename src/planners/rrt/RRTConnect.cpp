@@ -67,7 +67,7 @@ bool planning::rrt::RRTConnect::solve()
 		/* Extend */
 		q_rand = getSS()->randomState();
 		// LOG(INFO) << q_rand->getCoord().transpose();
-		q_near = trees[treeIdx]->get_q_near(kdtrees[treeIdx], q_rand);
+		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_rand);
 		// LOG(INFO) << "Iteration: " << iter;
 		// LOG(INFO) << "Tree: " << trees[treeIdx]->getTreeName();
 		tie(status, q_new) = extend(q_near, q_rand);
@@ -80,7 +80,7 @@ bool planning::rrt::RRTConnect::solve()
 			/* Connect */
             treeIdx = 1 - treeIdx; 	// Swapping trees
 			// LOG(INFO) << "Trying to connect to: ";// << q_new->getCoord().transpose() << " from " << trees[treeIdx]->getTreeName();
-			q_near = trees[treeIdx]->get_q_near(kdtrees[treeIdx], q_new);
+			q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_new);
 			status = connect(trees[treeIdx], kdtrees[treeIdx], q_near, q_new);
 		}
 		else 
@@ -132,11 +132,11 @@ planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::T
 {
 	// LOG(INFO) << "Inside connect.";
 	std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q);
+	std::shared_ptr<base::State> q_new;
 	planning::rrt::Status status = planning::rrt::Advanced;
 	int num_ext = 0;  // TODO: should be read from configuration
 	while (status == planning::rrt::Advanced && num_ext++ < 50)
 	{
-		std::shared_ptr<base::State> q_new;
 		tie(status, q_new) = extend(q_temp, q_e);
 		if (status != planning::rrt::Trapped)
 		{

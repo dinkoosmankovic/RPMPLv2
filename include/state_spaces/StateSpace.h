@@ -19,7 +19,8 @@ namespace base
 		virtual int getDimensions() = 0;
 		virtual bool isValid(const std::shared_ptr<base::State> q) = 0;
 		virtual bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) = 0;
-		virtual float getDistance(const std::shared_ptr<base::State> q) = 0;
+		virtual double getDistance(const std::shared_ptr<base::State> q) = 0;
+		virtual std::tuple<double, std::shared_ptr<std::vector<Eigen::MatrixXd>>> getDistanceAndPlanes(const std::shared_ptr<base::State> q) = 0;
 		virtual std::shared_ptr<base::State> randomState() = 0;
 		virtual StateSpaceType getStateSpaceType() const;
 		virtual void setStateSpaceType(StateSpaceType stateSpaceType);

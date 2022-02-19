@@ -33,9 +33,14 @@ bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q)
 	return true;
 }
 
-float base::RealVectorSpace::getDistance(const std::shared_ptr<base::State> q)
+double base::RealVectorSpace::getDistance(const std::shared_ptr<base::State> q)
 {
 	return 0;
+}
+
+std::tuple<double, std::shared_ptr<std::vector<Eigen::MatrixXd>>> base::RealVectorSpace::getDistanceAndPlanes(const std::shared_ptr<base::State> q)
+{
+	return {0, nullptr};
 }
 
 std::shared_ptr<base::State> base::RealVectorSpace::randomState()
@@ -45,7 +50,7 @@ std::shared_ptr<base::State> base::RealVectorSpace::randomState()
 	return state;
 }
 
-// D is distance between q1 and q2
+// D (optional parameter) is the distance between q1 and q2
 std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::shared_ptr<base::State> q1, 
 																const std::shared_ptr<base::State> q2, double step, double D)
 {
@@ -55,6 +60,7 @@ std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::share
 	{
 		D = (q2->getCoord() - q1->getCoord()).norm();
 	}
+	
 	if (step < D)
 	{
 		eig = (q2->getCoord() - q1->getCoord()) / D;

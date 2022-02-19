@@ -12,24 +12,24 @@ class PlannerInfo
 protected:
 	std::vector<double> iterationsTimesOfExecution;
 	double planningTime;
-	int numCollisionQueries;
-	int numDistanceQueries;
-	int numNodes;
-	int numIterations;
+	size_t numCollisionQueries;
+	size_t numDistanceQueries;
+	size_t numNodes;
+	size_t numIterations;
 public:
 	void addIterationTime(double time);
 	const std::vector<double> &getIterationsTimesOfExecution() const;
 	void setIterationsTimesOfExecution(const std::vector<double> &iterationsTimesOfExecution);
 	double getPlanningTime() const;
 	void setPlanningTime(double planningTime);
-	int getNumCollisionQueries() const;
-	void setNumCollisionQueries(int numCollisionQueries);
-	int getNumDistanceQueries() const;
-	void setNumDistanceQueries(int numDistanceQueries);
-	int getNumNodes() const;
-	void setNumNodes(int numNodes);
-	int getNumIterations() const;
-	void setNumIterations(int numIterations);
+	size_t getNumCollisionQueries() const;
+	void setNumCollisionQueries(size_t numCollisionQueries);
+	size_t getNumDistanceQueries() const;
+	void setNumDistanceQueries(size_t numDistanceQueries);
+	size_t getNumNodes() const;
+	void setNumNodes(size_t numNodes);
+	size_t getNumIterations() const;
+	void setNumIterations(size_t numIterations);
 
 };
 

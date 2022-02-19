@@ -1,5 +1,5 @@
 //
-// Created by nermin on 15.02.22.
+// Created by nermin on 18.02.22.
 //
 
 #include "RBTConnect.h"
@@ -38,10 +38,10 @@ bool planning::rbt::RBTConnect::solve()
 		/* Generating bur */
 		q_e = ss->randomState();
 		//LOG(INFO) << q_rand->getCoord().transpose();
-		q_near = trees[treeIdx]->get_q_near(kdtrees[treeIdx], q_e);
+		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_e);
 		// LOG(INFO) << "Iteration: " << iter;
 		//LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
-		if (get_d_c(q_near) > d_crit)
+		if (getDistance(q_near) > d_crit)
 		{
 			for (int i = 0; i < numSpines; i++)
 			{
@@ -66,7 +66,7 @@ bool planning::rbt::RBTConnect::solve()
 		if (status != planning::rrt::Status::Trapped)
 		{
             treeIdx = 1 - treeIdx;	// Swapping trees
-			q_near = trees[treeIdx]->get_q_near(kdtrees[treeIdx], q_new);
+			q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_new);
 			status = connectSpine(trees[treeIdx], kdtrees[treeIdx], q_near, q_new);
 		}
 		else 
@@ -84,21 +84,20 @@ bool planning::rbt::RBTConnect::solve()
 			return status == planning::rrt::Status::Reached ? true : false;
 		}
     }
-	return false;
 }
 
 // Get minimal distance from 'q' (determined with the pointer 'q_p' and 'tree') to obstacles
-double planning::rbt::RBTConnect::get_d_c(std::shared_ptr<base::State> q)
+double planning::rbt::RBTConnect::getDistance(std::shared_ptr<base::State> q)
 {
 	double d_c;
-	if (q->get_d_c() > 0)
+	if (q->getDistance() > 0)
 	{
-		d_c = q->get_d_c();
+		d_c = q->getDistance();
 	}
 	else
 	{
 		d_c = ss->getDistance(q);
-		q->set_d_c(d_c);
+		q->setDistance(d_c);
 	}
 	return d_c;
 }
@@ -157,20 +156,22 @@ void planning::rbt::RBTConnect::pruneSpine(std::shared_ptr<base::State> q, std::
 
 // Spine is generated from 'q' towards 'q_e'
 // 'q_new' is the new reached node
-// 'reached' means whether 'q_e' is reached
-std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rbt::RBTConnect::extendSpine(std::shared_ptr<base::State> q, 
-																									   std::shared_ptr<base::State> q_e)
+// If 'd_c_underest' is passed, the spine is extended using the underestimation of distance-to-obstacles for 'q'
+std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rbt::RBTConnect::extendSpine
+	(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, double d_c_underest)
 {
-	double rho = 0;             // The path length in W-space
+	double d_c = (d_c_underest > 0) ? d_c_underest : getDistance(q);
 	double step;
+	double rho = 0;             // The path length in W-space
 	int k = 1;
 	int K_max = 5;              // The number of iterations for computing q*
 	std::shared_ptr<base::State> q_new = ss->randomState(); q_new->makeCopy(q);
 	std::vector<KDL::Frame> frames = ss->robot->computeForwardKinematics(q);
 	std::vector<KDL::Frame> frames_temp = frames;
+	
 	while (true)
 	{
-		step = computeStep(q_new, q_e, q->get_d_c() - rho, frames_temp);     // 'd_c - rho' is the remaining path length in W-space
+		step = computeStep(q_new, q_e, d_c - rho, frames_temp);     // 'd_c - rho' is the remaining path length in W-space
 		if (step > 1)
 		{
 			q_new->setCoord(q_e->getCoord());
@@ -198,24 +199,27 @@ planning::rrt::Status planning::rbt::RBTConnect::connectSpine(std::shared_ptr<ba
 														 	  std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
 	std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q);
+	std::shared_ptr<base::State> q_new;
 	planning::rrt::Status status = planning::rrt::Advanced;
+	double d_c = getDistance(q_temp);
 	int num_ext = 0;  // TODO: should be read from configuration
 	while (status == planning::rrt::Advanced && num_ext++ < 50)
 	{
-		std::shared_ptr<base::State> q_new;
-		if (q_temp->get_d_c() > d_crit)
+		if (d_c > d_crit)
 		{
 			tie(status, q_new) = extendSpine(q_temp, q_e);
+			tree->upgradeTree(kdtree, q_new, q_temp);
+			d_c = getDistance(q_new);
+			std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q_new);
 		}
 		else
 		{
 			tie(status, q_new) = extend(q_temp, q_e);
-		}
-
-		if (status != planning::rrt::Trapped)
-		{
-			tree->upgradeTree(kdtree, q_new, q_temp);
-			std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q_new);
+			if (status != planning::rrt::Trapped)
+			{
+				tree->upgradeTree(kdtree, q_new, q_temp);
+				std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q_new);
+			}
 		}
 	}
 	// LOG(INFO) << "extended.";
@@ -225,7 +229,7 @@ planning::rrt::Status planning::rbt::RBTConnect::connectSpine(std::shared_ptr<ba
 double planning::rbt::RBTConnect::computeStep(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, double fi, 
 											  std::vector<KDL::Frame> &frames){
 	double d = 0;
-	double r, r_temp;
+	double r;
 	// Maybe add robot name ??
 	if (ss->getDimensions() == 2)	// Assumes that number of links = number of DOFs
 	{
@@ -234,8 +238,7 @@ double planning::rbt::RBTConnect::computeStep(std::shared_ptr<base::State> q, st
 			r = (frames[i+1].p - frames[i].p).Norm(); 	// i-th segment length. Any better way to get this?? 
 			for (int k = i+1; k < ss->robot->getParts().size(); k++)
 			{
-				r_temp = (frames[k+1].p - frames[i].p).Norm();
-				r = std::max(r, r_temp);
+				r = std::max(r, (frames[k+1].p - frames[i].p).Norm());
 			}
 			d += r * std::abs(q_e->getCoord(i) - q->getCoord(i));
 		}
@@ -273,4 +276,3 @@ void planning::rbt::RBTConnect::outputPlannerData(std::string filename) const
 		throw "Cannot open file"; // std::something exception perhaps?
 	}
 }
-

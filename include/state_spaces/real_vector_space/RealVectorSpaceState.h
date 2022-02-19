@@ -32,7 +32,7 @@ namespace base
 		inline const float getCoord(int idx) const override { return coord(idx); }
 		inline uint getTreeIdx() const override { return treeIdx; }
 		inline size_t getIdx() const override { return idx; }
-		inline double get_d_c() const override { return d_c; }
+		inline double getDistance() const override { return d_c; }
 		inline double getCost() const override { return cost; }
 		inline std::shared_ptr<std::vector<Eigen::MatrixXd>> getPlanes() const override { return planes; }
 
@@ -40,7 +40,7 @@ namespace base
 		inline void setCoord(const Eigen::VectorXf &coord_) { coord = coord_; }
 		inline void setTreeIdx(uint treeIdx_) override { treeIdx = treeIdx_; }
 		inline void setIdx(size_t idx_) override { idx = idx_; }
-		inline void set_d_c(double d_c_) override { d_c = d_c_; }
+		inline void setDistance(double d_c_) override { d_c = d_c_; }
 		inline void setCost(double cost_) override { cost = cost_; }
 		inline void setPlanes(std::shared_ptr<std::vector<Eigen::MatrixXd>> planes_) override { planes = planes_; }
 

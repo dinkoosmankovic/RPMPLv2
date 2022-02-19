@@ -44,7 +44,7 @@ std::ostream& base::operator<<(std::ostream& os, const Tree& tree)
 	return os;
 }
 
-std::shared_ptr<base::State> base::Tree::get_q_near(std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q)
+std::shared_ptr<base::State> base::Tree::getNearestState(std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q)
 {
 	const size_t num_results = 1;
 	size_t q_near_idx;
@@ -70,7 +70,7 @@ void base::Tree::upgradeTree(std::shared_ptr<KdTree> kdtree, std::shared_ptr<bas
 	q_new->setTreeIdx(getTreeIdx());
 	q_new->setIdx(N);
 	q_new->setParent(q_parent);
-	q_new->set_d_c(d_c);
+	q_new->setDistance(d_c);
 	q_new->setPlanes(planes);
 	q_new->setCost(cost);
 	if (q_parent != nullptr)
