@@ -132,8 +132,8 @@ std::tuple<double, std::shared_ptr<std::vector<Eigen::MatrixXd>>> base::RealVect
 									result.nearest_points[0][0] - result.nearest_points[1][0],
 									result.nearest_points[0][1] - result.nearest_points[1][1],
 									result.nearest_points[0][2] - result.nearest_points[1][2];
-			std::cout << "i = " << i << ", j = " << j << ". NN points: " << result.nearest_points[0] 
-					<< "   " << result.nearest_points[1] << std::endl;
+			// std::cout << "i = " << i << ", j = " << j << ". Nearest points: " << result.nearest_points[0] 
+			// 		<< "   " << result.nearest_points[1] << std::endl;
 		}
 	}
 	return {min_dist, planes};
