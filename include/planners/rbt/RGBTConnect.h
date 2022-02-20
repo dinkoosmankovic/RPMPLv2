@@ -31,7 +31,7 @@ namespace planning
             planning::rrt::Status connectGenSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, 
                                                   std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
             double getDistanceUnderestimation(std::shared_ptr<base::State> q, std::shared_ptr<std::vector<Eigen::MatrixXd>> planes);
-            std::tuple<double, std::shared_ptr<std::vector<Eigen::MatrixXd>>> getDistanceAndPlanes(std::shared_ptr<base::State> q);
+            double getDistance(std::shared_ptr<base::State> q) override;
         };
 	}
 }
