@@ -28,7 +28,7 @@ namespace planning
 			double delta = M_PI;    		// Radius of hypersphere from q to q_e
 			uint numSpines = 7;       		// Number of bur spines
 
-			double getDistance(std::shared_ptr<base::State> q);
+			virtual double getDistance(std::shared_ptr<base::State> q);
 			void saturateSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			void pruneSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> extendSpine
