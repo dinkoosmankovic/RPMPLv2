@@ -14,8 +14,9 @@ protected:
 	float planningTime;
 	size_t numCollisionQueries;
 	size_t numDistanceQueries;
-	size_t numNodes;
+	size_t numStates;
 	size_t numIterations;
+	std::vector<float> statesCosts;		// Cost convergence rate (cost-state curve)
 public:
 	void addIterationTime(float time);
 	const std::vector<float> &getIterationsTimesOfExecution() const;
@@ -26,11 +27,12 @@ public:
 	void setNumCollisionQueries(size_t numCollisionQueries);
 	size_t getNumDistanceQueries() const;
 	void setNumDistanceQueries(size_t numDistanceQueries);
-	size_t getNumNodes() const;
-	void setNumNodes(size_t numNodes);
+	size_t getNumStates() const;
+	void setNumStates(size_t numStates);
 	size_t getNumIterations() const;
 	void setNumIterations(size_t numIterations);
-
+	const std::vector<float> &getStatesCosts() const;
+	void addStatesCosts(const std::vector<float> &statesCosts);
 };
 
 #endif //RPMPL_PLANNERINFO_H

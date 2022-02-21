@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 		std::unique_ptr<planning::rrt::RRTConnect> planner = std::make_unique<planning::rrt::RRTConnect>(ss, start, goal);
 		bool res = planner->solve();
 		LOG(INFO) << "RRTConnect planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
-		LOG(INFO) << "Number of nodes: " << planner->getPlannerInfo()->getNumNodes();
+		LOG(INFO) << "Number of nodes: " << planner->getPlannerInfo()->getNumStates();
 		LOG(INFO) << "Number of iterations: " << planner->getPlannerInfo()->getNumIterations();
 		LOG(INFO) << "Planning time: " << planner->getPlannerInfo()->getPlanningTime() << " [ms]";
 			

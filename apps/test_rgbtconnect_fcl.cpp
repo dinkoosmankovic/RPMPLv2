@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 		std::unique_ptr<planning::rbt::RGBTConnect> planner = std::make_unique<planning::rbt::RGBTConnect>(ss, start, goal);
 		bool res = planner->solve();
 		LOG(INFO) << "RGBTConnect planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
-		LOG(INFO) << "Number of nodes: " << planner->getPlannerInfo()->getNumNodes();
+		LOG(INFO) << "Number of nodes: " << planner->getPlannerInfo()->getNumStates();
 		LOG(INFO) << "Planning time: " << planner->getPlannerInfo()->getPlanningTime() << " [ms]";
 			
 		if (res)

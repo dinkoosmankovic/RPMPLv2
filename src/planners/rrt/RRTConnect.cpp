@@ -59,8 +59,8 @@ bool planning::rrt::RRTConnect::solve()
 													  std::make_shared<base::Tree>(TREES[1])};
 	int treeIdx = 0;  // Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal
 	std::shared_ptr<base::State> q_rand, q_near, q_new;
-	size_t iter = 1;
 	planning::rrt::Status status;
+	plannerInfo->setNumIterations(0);
 
 	while (true)
 	{
@@ -68,7 +68,7 @@ bool planning::rrt::RRTConnect::solve()
 		q_rand = getSS()->randomState();
 		// LOG(INFO) << q_rand->getCoord().transpose();
 		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_rand);
-		// LOG(INFO) << "Iteration: " << iter;
+		// LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
 		// LOG(INFO) << "Tree: " << trees[treeIdx]->getTreeName();
 		tie(status, q_new) = extend(q_near, q_rand);
 
@@ -88,22 +88,20 @@ bool planning::rrt::RRTConnect::solve()
 			treeIdx = 1 - treeIdx; 	// Swapping trees
 		}
 		
-		// LOG(INFO) << "End of iteration " << iter;
-		iter++;
+        plannerInfo->setNumIterations(plannerInfo->getNumIterations() + 1);
 		plannerInfo->addIterationTime(getElapsedTime(time_start));
-		plannerInfo->setNumNodes(trees[0]->getStates()->size() + trees[1]->getStates()->size());
+		plannerInfo->setNumStates(trees[0]->getStates()->size() + trees[1]->getStates()->size());
 		if (checkStoppingCondition(status, time_start))
 		{
 			plannerInfo->setPlanningTime(getElapsedTime(time_start));
-			plannerInfo->setNumIterations(iter);
 			return status == planning::rrt::Reached ? true : false;
 		}
 	}
 }
 
-base::Tree planning::rrt::RRTConnect::getTree(int TN) const
+base::Tree planning::rrt::RRTConnect::getTree(int treeIdx) const
 {
-	return TREES[TN];
+	return TREES[treeIdx];
 }
 
 std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rrt::RRTConnect::extend(std::shared_ptr<base::State> q, 
@@ -148,23 +146,29 @@ planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::T
 	return status;
 }
 
-void planning::rrt::RRTConnect::computePath()
+void planning::rrt::RRTConnect::computePath(std::shared_ptr<base::State> q_con0, std::shared_ptr<base::State> q_con1)
 {
-	path.empty();
-	std::shared_ptr<base::State> current = TREES[0].getStates()->back();
-	while (current->getParent() != nullptr)
+	path.clear();
+	if (q_con0 == nullptr)
 	{
-		path.emplace_back(current);
-		current = current->getParent();
+		q_con0 = TREES[0].getStates()->back();
 	}
-	path.emplace_back(current);
+	while (q_con0->getParent() != nullptr)
+	{
+		path.emplace_back(q_con0);
+		q_con0 = q_con0->getParent();
+	}
+	path.emplace_back(q_con0);
 	std::reverse(path.begin(), path.end());
 
-	current = TREES[1].getStates()->back();
-	while (current != nullptr)
+	if (q_con1 == nullptr)
 	{
-		path.emplace_back(current);
-		current = current->getParent();
+		q_con1 = TREES[1].getStates()->back();
+	}
+	while (q_con1 != nullptr)
+	{
+		path.emplace_back(q_con1);
+		q_con1 = q_con1->getParent();
 	}
 }
 
@@ -186,7 +190,7 @@ bool planning::rrt::RRTConnect::checkStoppingCondition(Status status, std::chron
 		computePath();
 		return true;
 	}
-	else if (plannerInfo->getNumNodes() >= maxNumNodes || getElapsedTime(time_start) > maxPlanningTime)
+	else if (plannerInfo->getNumStates() >= maxNumNodes || getElapsedTime(time_start) > maxPlanningTime)
 	{
 		return true;
 	}
@@ -220,6 +224,3 @@ void planning::rrt::RRTConnect::outputPlannerData(std::string filename) const
 		throw "Cannot open file"; // std::something exception perhaps?
 	}
 }
-
-
-

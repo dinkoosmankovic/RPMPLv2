@@ -31,8 +31,8 @@ bool planning::rbt::RGBTConnect::solve()
 	int treeIdx = 0;  // Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal
 	std::shared_ptr<base::State> q_e, q_near, q_new;
     std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list;
-	size_t iter = 1;
 	planning::rrt::Status status;
+	plannerInfo->setNumIterations(0);
 	std::cout << "q: " << start->getCoord().transpose() << std::endl;
 	ss->getDistanceAndPlanes(start);
 
@@ -82,13 +82,12 @@ bool planning::rbt::RGBTConnect::solve()
 	// 		treeIdx = 1 - treeIdx; 	// Swapping trees
 	// 	}
 
-	// 	iter++;
+	//  plannerInfo->setNumIterations(plannerInfo->getNumIterations() + 1);
 	// 	plannerInfo->addIterationTime(getElapsedTime(time_start));
 	// 	plannerInfo->setNumNodes(trees[0]->getStates()->size() + trees[1]->getStates()->size());
 	// 	if (checkStoppingCondition(status, time_start))
 	// 	{
 	// 		plannerInfo->setPlanningTime(getElapsedTime(time_start));
-	// 		plannerInfo->setNumIterations(iter);
 	// 		return status == planning::rrt::Status::Reached ? true : false;
 	// 	}
     // }

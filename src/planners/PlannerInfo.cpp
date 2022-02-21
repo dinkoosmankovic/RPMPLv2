@@ -45,14 +45,14 @@ void PlannerInfo::setNumDistanceQueries(size_t numDistanceQueries)
 	PlannerInfo::numDistanceQueries = numDistanceQueries;
 }
 
-size_t PlannerInfo::getNumNodes() const
+size_t PlannerInfo::getNumStates() const
 {
-	return numNodes;
+	return numStates;
 }
 
-void PlannerInfo::setNumNodes(size_t numNodes)
+void PlannerInfo::setNumStates(size_t numStates)
 {
-	PlannerInfo::numNodes = numNodes;
+	PlannerInfo::numStates = numStates;
 }
 
 size_t PlannerInfo::getNumIterations() const
@@ -68,4 +68,17 @@ void PlannerInfo::setNumIterations(size_t numIterations)
 void PlannerInfo::addIterationTime(float time)
 {
 	iterationsTimesOfExecution.emplace_back(time);
+}
+
+const std::vector<float> &PlannerInfo::getStatesCosts() const
+{
+	return statesCosts;
+}
+
+void PlannerInfo::addStatesCosts(const std::vector<float> &statesCosts)
+{
+	for (int i = 0; i < statesCosts.size(); i++)
+	{
+		PlannerInfo::statesCosts.emplace_back(statesCosts[i]);
+	}
 }

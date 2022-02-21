@@ -21,7 +21,7 @@ namespace planning
 			RRTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> goal_);
 			~RRTConnect();
 			virtual bool solve() override;
-			base::Tree getTree(int TN) const;
+			base::Tree getTree(int treeIdx) const;
 			std::tuple<Status, std::shared_ptr<base::State>> extend(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			Status connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			const std::vector<std::shared_ptr<base::State>> &getPath() const;
@@ -40,7 +40,7 @@ namespace planning
 			std::vector<std::shared_ptr<base::State>> path;
 			
 			void initPlanner();
-			void computePath();
+			void computePath(std::shared_ptr<base::State> q_con0 = nullptr, std::shared_ptr<base::State> q_con1 = nullptr);
 			float getElapsedTime(std::chrono::steady_clock::time_point &time_start);
 			bool checkStoppingCondition(Status status, std::chrono::steady_clock::time_point &time_start);
 		};
