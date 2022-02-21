@@ -16,9 +16,9 @@ planning::rbt::RBTConnect::RBTConnect(std::shared_ptr<base::StateSpace> ss_, std
 
 planning::rbt::RBTConnect::~RBTConnect()
 {
-    TREES[0].emptyTree();
-    TREES[1].emptyTree();
-    path.empty();
+    TREES[0].clearTree();
+    TREES[1].clearTree();
+    path.clear();
 }
 
 bool planning::rbt::RBTConnect::solve()
@@ -87,9 +87,9 @@ bool planning::rbt::RBTConnect::solve()
 }
 
 // Get minimal distance from 'q' (determined with the pointer 'q_p' and 'tree') to obstacles
-double planning::rbt::RBTConnect::getDistance(std::shared_ptr<base::State> q)
+float planning::rbt::RBTConnect::getDistance(std::shared_ptr<base::State> q)
 {
-	double d_c;
+	float d_c;
 	if (q->getDistance() > 0)
 	{
 		d_c = q->getDistance();
@@ -104,7 +104,7 @@ double planning::rbt::RBTConnect::getDistance(std::shared_ptr<base::State> q)
 
 void planning::rbt::RBTConnect::saturateSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
-	double d = (q_e->getCoord() - q->getCoord()).norm();
+	float d = (q_e->getCoord() - q->getCoord()).norm();
 	if (d > 0)
 	{
 		q_e->setCoord(q->getCoord() + (q_e->getCoord() - q->getCoord()) * delta / d);
@@ -119,7 +119,7 @@ void planning::rbt::RBTConnect::pruneSpine(std::shared_ptr<base::State> q, std::
 	std::vector<float> bounds(dim);
 	std::vector<int> indices;
 	std::vector<robots::LinkLimits> limits = ss->robot->getLimits();
-	double t;
+	float t;
 
 	for (int k = 0; k < dim; k++)
 	{
@@ -158,11 +158,11 @@ void planning::rbt::RBTConnect::pruneSpine(std::shared_ptr<base::State> q, std::
 // 'q_new' is the new reached node
 // If 'd_c_underest' is passed, the spine is extended using the underestimation of distance-to-obstacles for 'q'
 std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rbt::RBTConnect::extendSpine
-	(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, double d_c_underest)
+	(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float d_c_underest)
 {
-	double d_c = (d_c_underest > 0) ? d_c_underest : getDistance(q);
-	double step;
-	double rho = 0;             // The path length in W-space
+	float d_c = (d_c_underest > 0) ? d_c_underest : getDistance(q);
+	float step;
+	float rho = 0;             // The path length in W-space
 	int k = 1;
 	int K_max = 5;              // The number of iterations for computing q*
 	std::shared_ptr<base::State> q_new = ss->randomState(); q_new->makeCopy(q);
@@ -189,7 +189,7 @@ std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rbt::R
 		frames_temp = ss->robot->computeForwardKinematics(q_new);
 		for (int i = 1; i < ss->robot->getParts().size()+1; i++)
 		{
-			rho = std::max(rho, (frames[i].p - frames_temp[i].p).Norm());
+			rho = std::max(rho, (float)(frames[i].p - frames_temp[i].p).Norm());
 		}
 		k += 1;
 	}
@@ -201,7 +201,7 @@ planning::rrt::Status planning::rbt::RBTConnect::connectSpine(std::shared_ptr<ba
 	std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q);
 	std::shared_ptr<base::State> q_new;
 	planning::rrt::Status status = planning::rrt::Advanced;
-	double d_c = getDistance(q_temp);
+	float d_c = getDistance(q_temp);
 	int num_ext = 0;  // TODO: should be read from configuration
 	while (status == planning::rrt::Advanced && num_ext++ < 50)
 	{
@@ -226,10 +226,10 @@ planning::rrt::Status planning::rbt::RBTConnect::connectSpine(std::shared_ptr<ba
 	return status;
 }
 
-double planning::rbt::RBTConnect::computeStep(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, double fi, 
+float planning::rbt::RBTConnect::computeStep(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float fi, 
 											  std::vector<KDL::Frame> &frames){
-	double d = 0;
-	double r;
+	float d = 0;
+	float r;
 	// Maybe add robot name ??
 	if (ss->getDimensions() == 2)	// Assumes that number of links = number of DOFs
 	{
@@ -238,7 +238,7 @@ double planning::rbt::RBTConnect::computeStep(std::shared_ptr<base::State> q, st
 			r = (frames[i+1].p - frames[i].p).Norm(); 	// i-th segment length. Any better way to get this?? 
 			for (int k = i+1; k < ss->robot->getParts().size(); k++)
 			{
-				r = std::max(r, (frames[k+1].p - frames[i].p).Norm());
+				r = std::max(r, (float)(frames[k+1].p - frames[i].p).Norm());
 			}
 			d += r * std::abs(q_e->getCoord(i) - q->getCoord(i));
 		}

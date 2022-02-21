@@ -19,23 +19,23 @@ namespace planning
 			RBTConnect(std::shared_ptr<base::StateSpace> ss_);
 			RBTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> goal_);
 			~RBTConnect();
-			bool solve() override;
+			virtual bool solve() override;
 			virtual void outputPlannerData(std::string filename) const override;
 
 		protected:
 			//TODO: Read from configuration file
-			double d_crit = 0.01;      		// Critical distance in W-space when RBT becomes RRT
-			double delta = M_PI;    		// Radius of hypersphere from q to q_e
+			float d_crit = 0.01;      		// Critical distance in W-space when RBT becomes RRT
+			float delta = M_PI;    		// Radius of hypersphere from q to q_e
 			uint numSpines = 7;       		// Number of bur spines
 
-			virtual double getDistance(std::shared_ptr<base::State> q);
+			virtual float getDistance(std::shared_ptr<base::State> q);
 			void saturateSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			void pruneSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> extendSpine
-				(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, double d_c_underest = -1);
+				(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float d_c_underest = -1);
 			planning::rrt::Status connectSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, 
 											   std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
-			double computeStep(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, double fi, std::vector<KDL::Frame> &frames);
+			float computeStep(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float fi, std::vector<KDL::Frame> &frames);
 		};
 	}
 }

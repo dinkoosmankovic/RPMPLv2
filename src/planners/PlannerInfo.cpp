@@ -5,22 +5,22 @@
 #include <PlannerInfo.h>
 #include "PlannerInfo.h"
 
-const std::vector<double> &PlannerInfo::getIterationsTimesOfExecution() const
+const std::vector<float> &PlannerInfo::getIterationsTimesOfExecution() const
 {
 	return iterationsTimesOfExecution;
 }
 
-void PlannerInfo::setIterationsTimesOfExecution(const std::vector<double> &iterationsTimesOfExecution)
+void PlannerInfo::setIterationsTimesOfExecution(const std::vector<float> &iterationsTimesOfExecution)
 {
 	PlannerInfo::iterationsTimesOfExecution = iterationsTimesOfExecution;
 }
 
-double PlannerInfo::getPlanningTime() const
+float PlannerInfo::getPlanningTime() const
 {
 	return planningTime;
 }
 
-void PlannerInfo::setPlanningTime(double planningTime)
+void PlannerInfo::setPlanningTime(float planningTime)
 {
 	PlannerInfo::planningTime = planningTime;
 }
@@ -65,7 +65,7 @@ void PlannerInfo::setNumIterations(size_t numIterations)
 	PlannerInfo::numIterations = numIterations;
 }
 
-void PlannerInfo::addIterationTime(double time)
+void PlannerInfo::addIterationTime(float time)
 {
 	iterationsTimesOfExecution.emplace_back(time);
 }

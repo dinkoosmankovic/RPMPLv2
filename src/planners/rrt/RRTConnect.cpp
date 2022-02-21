@@ -26,9 +26,9 @@ planning::rrt::RRTConnect::RRTConnect(std::shared_ptr<base::StateSpace> ss_, std
 
 planning::rrt::RRTConnect::~RRTConnect()
 {
-	TREES[0].emptyTree();
-	TREES[1].emptyTree();
-	path.empty();
+	TREES[0].clearTree();
+	TREES[1].clearTree();
+	path.clear();
 }
 
 void planning::rrt::RRTConnect::initPlanner()
@@ -173,7 +173,7 @@ const std::vector<std::shared_ptr<base::State>> &planning::rrt::RRTConnect::getP
 	return path;
 }
 
-double planning::rrt::RRTConnect::getElapsedTime(std::chrono::steady_clock::time_point &time_start)
+float planning::rrt::RRTConnect::getElapsedTime(std::chrono::steady_clock::time_point &time_start)
 {
 	auto end = std::chrono::steady_clock::now();
 	return std::chrono::duration_cast<std::chrono::milliseconds>(end - time_start).count();

@@ -11,7 +11,7 @@
 namespace planning
 {
 	typedef nanoflann::KDTreeSingleIndexDynamicAdaptor
-		<nanoflann::L2_Simple_Adaptor<double, base::Tree>, base::Tree /* dim */> KdTree;
+		<nanoflann::L2_Simple_Adaptor<float, base::Tree>, base::Tree /* dim */> KdTree;
 
 	class AbstractPlanner
 	{

@@ -29,9 +29,9 @@ base::Tree::Tree(std::string treeName_, uint treeNum_)
 	treeIdx = treeNum_;
 }
 
-void base::Tree::emptyTree()
+void base::Tree::clearTree()
 {
-	states->empty();
+	states->clear();
 }
 
 std::ostream& base::operator<<(std::ostream& os, const Tree& tree)
@@ -48,12 +48,12 @@ std::shared_ptr<base::State> base::Tree::getNearestState(std::shared_ptr<KdTree>
 {
 	const size_t num_results = 1;
 	size_t q_near_idx;
-	double out_dist_sqr;
-	nanoflann::KNNResultSet<double> resultSet(num_results);
+	float out_dist_sqr;
+	nanoflann::KNNResultSet<float> resultSet(num_results);
 	resultSet.init(&q_near_idx, &out_dist_sqr);
-	std::vector<double> vec(q->getCoord().data(), 
+	std::vector<float> vec(q->getCoord().data(), 
 							q->getCoord().data() + q->getCoord().rows() * q->getCoord().cols());
-	double *vec_c = &vec[0];
+	float *vec_c = &vec[0];
 	kdtree->findNeighbors(resultSet, vec_c, nanoflann::SearchParams(10));
 	vec_c = nullptr;
 	return states->at(q_near_idx);
@@ -62,7 +62,7 @@ std::shared_ptr<base::State> base::Tree::getNearestState(std::shared_ptr<KdTree>
 // 'q_new' - new node added to tree
 // 'q_parent' - parent of 'q_new'
 void base::Tree::upgradeTree(std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q_new, std::shared_ptr<base::State> q_parent,
-							 double d_c, std::shared_ptr<std::vector<Eigen::MatrixXd>> planes, double cost)
+							 float d_c, std::shared_ptr<std::vector<Eigen::MatrixXf>> planes, float cost)
 {
 	size_t N = states->size();
 	states->emplace_back(q_new);

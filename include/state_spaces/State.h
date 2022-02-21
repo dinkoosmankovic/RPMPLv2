@@ -27,9 +27,9 @@ namespace base
 
 		virtual uint getTreeIdx() const = 0;
 		virtual size_t getIdx() const = 0;
-		virtual double getDistance() const = 0;
-		virtual double getCost() const = 0;
-		virtual std::shared_ptr<std::vector<Eigen::MatrixXd>> getPlanes() const = 0;
+		virtual float getDistance() const = 0;
+		virtual float getCost() const = 0;
+		virtual std::shared_ptr<std::vector<Eigen::MatrixXf>> getPlanes() const = 0;
 		virtual int getDimension() const = 0;
 		virtual const Eigen::VectorXf &getCoord() const = 0;
 		virtual const float getCoord(int idx) const = 0;
@@ -39,9 +39,9 @@ namespace base
 
 		virtual void setTreeIdx(uint treeIdx_) = 0;
 		virtual void setIdx(size_t idx_) = 0;
-		virtual void setDistance(double d_c_) = 0;
-		virtual void setCost(double cost_) = 0;
-		virtual void setPlanes(std::shared_ptr<std::vector<Eigen::MatrixXd>> planes_) = 0;
+		virtual void setDistance(float d_c_) = 0;
+		virtual void setCost(float cost_) = 0;
+		virtual void setPlanes(std::shared_ptr<std::vector<Eigen::MatrixXf>> planes_) = 0;
 		virtual void setCoord(const Eigen::VectorXf &coord) = 0;
 		inline void setParent(std::shared_ptr<State> parent_) { parent = parent_; }
 		inline void setChildren(std::shared_ptr<std::vector<std::shared_ptr<State>>> children_) { children = children_; }
@@ -61,7 +61,7 @@ namespace base
 			std::make_shared<std::vector<std::shared_ptr<base::State>>>();	// List of all nodes in the tree
 	public:
 		typedef nanoflann::KDTreeSingleIndexDynamicAdaptor
-			<nanoflann::L2_Simple_Adaptor<double, base::Tree>, base::Tree /* dim */> KdTree;
+			<nanoflann::L2_Simple_Adaptor<float, base::Tree>, base::Tree /* dim */> KdTree;
 
 		Tree(std::shared_ptr<std::vector<std::shared_ptr<base::State>>> states_) : states(states_) {}
 		Tree(std::string treeName_, uint treeNum_);
@@ -78,13 +78,13 @@ namespace base
 		inline void setStates(std::shared_ptr<std::vector<std::shared_ptr<base::State>>> states_) { states = states_; }
 		inline void setState(std::shared_ptr<base::State> state, size_t idx) { states->at(idx) = state; }
 
-		void emptyTree();
+		void clearTree();
 		std::shared_ptr<base::State> getNearestState(std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q);
 		void upgradeTree(std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q_new, std::shared_ptr<base::State> q_parent,
-						 double d_c = -1, std::shared_ptr<std::vector<Eigen::MatrixXd>> planes = nullptr, double cost = -1);
+						 float d_c = -1, std::shared_ptr<std::vector<Eigen::MatrixXf>> planes = nullptr, float cost = -1);
 
 		inline size_t kdtree_get_point_count() const { return states->size(); }
-		inline double kdtree_get_pt(const size_t idx, const size_t dim) const { return states->at(idx)->getCoord()[dim]; }
+		inline float kdtree_get_pt(const size_t idx, const size_t dim) const { return states->at(idx)->getCoord()[dim]; }
 		template <class BBOX> bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
 		friend std::ostream& operator<<(std::ostream& os, const Tree& tree);
 	};

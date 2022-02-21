@@ -17,9 +17,9 @@ namespace base
 		Eigen::VectorXf coord;
 		uint treeIdx;								// Tree index in which the state is stored
 		size_t idx; 								// Index of the state in the tree
-		double d_c = -1;							// Distance-to-obstacles
-		double cost = -1;                  			// Cost-to-come
-		std::shared_ptr<std::vector<Eigen::MatrixXd>> planes = nullptr;	// Lines/planes dividing space into two subspaces (free and occupied)
+		float d_c = -1;							// Distance-to-obstacles
+		float cost = -1;                  			// Cost-to-come
+		std::shared_ptr<std::vector<Eigen::MatrixXf>> planes = nullptr;	// Lines/planes dividing space into two subspaces (free and occupied)
 	
 	public:
 		RealVectorSpaceState(Eigen::VectorXf state_);
@@ -32,17 +32,17 @@ namespace base
 		inline const float getCoord(int idx) const override { return coord(idx); }
 		inline uint getTreeIdx() const override { return treeIdx; }
 		inline size_t getIdx() const override { return idx; }
-		inline double getDistance() const override { return d_c; }
-		inline double getCost() const override { return cost; }
-		inline std::shared_ptr<std::vector<Eigen::MatrixXd>> getPlanes() const override { return planes; }
+		inline float getDistance() const override { return d_c; }
+		inline float getCost() const override { return cost; }
+		inline std::shared_ptr<std::vector<Eigen::MatrixXf>> getPlanes() const override { return planes; }
 
 		inline void setDimensions(int dimensions_) { dimensions = dimensions_; }
 		inline void setCoord(const Eigen::VectorXf &coord_) { coord = coord_; }
 		inline void setTreeIdx(uint treeIdx_) override { treeIdx = treeIdx_; }
 		inline void setIdx(size_t idx_) override { idx = idx_; }
-		inline void setDistance(double d_c_) override { d_c = d_c_; }
-		inline void setCost(double cost_) override { cost = cost_; }
-		inline void setPlanes(std::shared_ptr<std::vector<Eigen::MatrixXd>> planes_) override { planes = planes_; }
+		inline void setDistance(float d_c_) override { d_c = d_c_; }
+		inline void setCost(float cost_) override { cost = cost_; }
+		inline void setPlanes(std::shared_ptr<std::vector<Eigen::MatrixXf>> planes_) override { planes = planes_; }
 
 		void makeCopy(std::shared_ptr<State> q) override;
 	};

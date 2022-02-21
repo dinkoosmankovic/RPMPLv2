@@ -22,8 +22,8 @@ namespace base
 		bool isValid(const std::shared_ptr<base::State> q) override;
 		bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
 		std::shared_ptr<base::State> randomState() override;
-		double getDistance(const std::shared_ptr<base::State> q) override;
-		std::tuple<double, std::shared_ptr<std::vector<Eigen::MatrixXd>>> getDistanceAndPlanes(const std::shared_ptr<base::State> q) override;
+		float getDistance(const std::shared_ptr<base::State> q) override;
+		std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> getDistanceAndPlanes(const std::shared_ptr<base::State> q) override;
 
 	};
 }

@@ -22,7 +22,7 @@ base::RealVectorSpaceState::RealVectorSpaceState(base::RealVectorSpaceState* sta
 {
 	dimensions = state->dimensions;
 	coord = state->coord;
-	planes = std::make_shared<std::vector<Eigen::MatrixXd>>();
+	planes = std::make_shared<std::vector<Eigen::MatrixXf>>();
 	setStateSpaceType(StateSpaceType::RealVectorSpace);
 	setParent(nullptr);
 	setChildren(std::make_shared<std::vector<std::shared_ptr<base::State>>>());

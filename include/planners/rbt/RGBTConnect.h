@@ -19,7 +19,7 @@ namespace planning
 			RGBTConnect(std::shared_ptr<base::StateSpace> ss_);
 			RGBTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> goal_);
 			~RGBTConnect();
-			bool solve() override;
+			virtual bool solve() override;
 			virtual void outputPlannerData(std::string filename) const override;
 
 		protected:
@@ -30,8 +30,8 @@ namespace planning
                 extendGenSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
             planning::rrt::Status connectGenSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, 
                                                   std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
-            double getDistanceUnderestimation(std::shared_ptr<base::State> q, std::shared_ptr<std::vector<Eigen::MatrixXd>> planes);
-            double getDistance(std::shared_ptr<base::State> q) override;
+            float getDistanceUnderestimation(std::shared_ptr<base::State> q, std::shared_ptr<std::vector<Eigen::MatrixXf>> planes);
+            float getDistance(std::shared_ptr<base::State> q) override;
         };
 	}
 }

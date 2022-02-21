@@ -50,8 +50,8 @@ bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q)
 bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
 	int numChecks = 10;
-	double D = (q2->getCoord() - q1->getCoord()).norm();
-	for (double t = 1./numChecks; t <= 1; t += 1./numChecks)
+	float D = (q2->getCoord() - q1->getCoord()).norm();
+	for (float t = 1./numChecks; t <= 1; t += 1./numChecks)
 	{
 		std::shared_ptr<base::State> q_t = interpolate(q1, q2, t, D);
 		/* if (q_t != nullptr) 
@@ -86,10 +86,10 @@ Eigen::VectorXf normalizedAngles(Eigen::VectorXf r)
 	
 }
 
-double base::RealVectorSpaceFCL::getDistance(const std::shared_ptr<base::State> q)
+float base::RealVectorSpaceFCL::getDistance(const std::shared_ptr<base::State> q)
 {
 	robot->setState(q);
-	double min_dist = INFINITY;
+	float min_dist = INFINITY;
 	for (size_t i = 0; i < robot->getParts().size(); ++i)
 	{	
 		//LOG(INFO) << "part " << i <<"\t:" << robot->getParts()[i]->getAABB().min_ <<"\t;\t" << robot->getParts()[i]->getAABB().max_;
@@ -100,19 +100,19 @@ double base::RealVectorSpaceFCL::getDistance(const std::shared_ptr<base::State> 
 			fcl::DistanceResult result;
 			fcl::distance(robot->getParts()[i].get(), env->getParts()[j].get(), request, result);
 			//LOG(INFO) << "part " << i <<"\t:" << robot->getParts()[i]->getAABB().min_ <<"\t;\t" << robot->getParts()[i]->getAABB().max_ << "\t" << result.min_distance;
-			min_dist = std::min(min_dist, (double) result.min_distance);
+			min_dist = std::min(min_dist, (float) result.min_distance);
 		}
 	}
 	return min_dist;
 }
 
-std::tuple<double, std::shared_ptr<std::vector<Eigen::MatrixXd>>> base::RealVectorSpaceFCL::getDistanceAndPlanes
+std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVectorSpaceFCL::getDistanceAndPlanes
 	(const std::shared_ptr<base::State> q)
 {
 	robot->setState(q);
-	double min_dist = INFINITY;
-	std::shared_ptr<std::vector<Eigen::MatrixXd>> planes = std::make_shared<std::vector<Eigen::MatrixXd>>
-		(std::vector<Eigen::MatrixXd>(env->getParts().size(), Eigen::MatrixXd(6, robot->getParts().size())));
+	float min_dist = INFINITY;
+	std::shared_ptr<std::vector<Eigen::MatrixXf>> planes = std::make_shared<std::vector<Eigen::MatrixXf>>
+		(std::vector<Eigen::MatrixXf>(env->getParts().size(), Eigen::MatrixXf(6, robot->getParts().size())));
 	
 	for (size_t i = 0; i < robot->getParts().size(); ++i)
 	{	
@@ -124,16 +124,30 @@ std::tuple<double, std::shared_ptr<std::vector<Eigen::MatrixXd>>> base::RealVect
 			fcl::DistanceResult result;
 			fcl::distance(robot->getParts()[i].get(), env->getParts()[j].get(), request, result);
 			//LOG(INFO) << "part " << i <<"\t:" << robot->getParts()[i]->getAABB().min_ <<"\t;\t" << robot->getParts()[i]->getAABB().max_ << "\t" << result.min_distance;
-			min_dist = std::min(min_dist, (double) result.min_distance);
+			min_dist = std::min(min_dist, (float) result.min_distance);
 
-			planes->at(j).col(i) << result.nearest_points[1][0],
-									result.nearest_points[1][1],
-									result.nearest_points[1][2],
-									result.nearest_points[0][0] - result.nearest_points[1][0],
-									result.nearest_points[0][1] - result.nearest_points[1][1],
-									result.nearest_points[0][2] - result.nearest_points[1][2];
-			// std::cout << "i = " << i << ", j = " << j << ". Nearest points: " << result.nearest_points[0] 
-			// 		<< "   " << result.nearest_points[1] << std::endl;
+			std::cout << "link: " << i << std::endl;
+			
+			fcl::Vec3f link_point = result.nearest_points[0];
+			link_point = robot->getParts().at(i)->getTransform().getRotation() * link_point;
+			link_point += robot->getParts().at(i)->getTransform().getTranslation();
+			std::cout << "link_point: " << link_point << std::endl;
+
+			fcl::Vec3f obs_point = result.nearest_points[1];
+			std::cout << "obs_point_orig: " << obs_point << std::endl;
+			obs_point = env->getParts().at(j)->getTransform().getRotation() * obs_point;
+			std::cout << "obs_point_rot: " << obs_point << std::endl;
+			obs_point += env->getParts().at(j)->getTransform().getTranslation();
+			std::cout << "obs_point_transl: " << obs_point << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+
+			planes->at(j).col(i) << obs_point[0], 
+									obs_point[1],
+									obs_point[2],
+									link_point[0] - obs_point[0],
+									link_point[1] - obs_point[1],
+									link_point[2] - obs_point[2];
+
 		}
 	}
 	return {min_dist, planes};

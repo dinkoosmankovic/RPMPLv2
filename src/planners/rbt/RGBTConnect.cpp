@@ -16,9 +16,9 @@ planning::rbt::RGBTConnect::RGBTConnect(std::shared_ptr<base::StateSpace> ss_, s
 
 planning::rbt::RGBTConnect::~RGBTConnect()
 {
-    TREES[0].emptyTree();
-    TREES[1].emptyTree();
-    path.empty();
+    TREES[0].clearTree();
+    TREES[1].clearTree();
+    path.clear();
 }
 
 bool planning::rbt::RGBTConnect::solve()
@@ -33,63 +33,65 @@ bool planning::rbt::RGBTConnect::solve()
     std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list;
 	size_t iter = 1;
 	planning::rrt::Status status;
+	std::cout << "q: " << start->getCoord().transpose() << std::endl;
+	ss->getDistanceAndPlanes(start);
 
-	while (true)
-	{
-		/* Generating generalized bur */
-		q_e = ss->randomState();
-		// LOG(INFO) << q_rand->getCoord().transpose();
-		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_e);
-		// LOG(INFO) << "Iteration: " << iter;
-		// LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
-		if (getDistance(q_near) > d_crit)
-		{
-			for (int i = 0; i < numSpines; i++)
-			{
-				q_e = ss->randomState();
-				q_e->setCoord(q_e->getCoord() + q_near->getCoord());
-				saturateSpine(q_near, q_e);
-				pruneSpine(q_near, q_e);
-				tie(status, q_new_list) = extendGenSpine(q_near, q_e);
-                trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new_list->front(), q_near);
-                for (int j = 1; j < q_new_list->size(); j++)
-                {
-				    trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new_list->at(j), q_new_list->at(j-1));
-                }
-			}
-            q_new = q_new_list->back();
-		}
-		else	// Distance-to-obstacles is less than d_crit
-		{
-			tie(status, q_new) = extend(q_near, q_e);
-			if (status != planning::rrt::Status::Trapped)
-			{
-				trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new, q_near);
-			}
-		}
+	// while (true)
+	// {
+	// 	/* Generating generalized bur */
+	// 	q_e = ss->randomState();
+	// 	// LOG(INFO) << q_rand->getCoord().transpose();
+	// 	q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_e);
+	// 	// LOG(INFO) << "Iteration: " << iter;
+	// 	// LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
+	// 	if (getDistance(q_near) > d_crit)
+	// 	{
+	// 		for (int i = 0; i < numSpines; i++)
+	// 		{
+	// 			q_e = ss->randomState();
+	// 			q_e->setCoord(q_e->getCoord() + q_near->getCoord());
+	// 			saturateSpine(q_near, q_e);
+	// 			pruneSpine(q_near, q_e);
+	// 			tie(status, q_new_list) = extendGenSpine(q_near, q_e);
+    //             trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new_list->front(), q_near);
+    //             for (int j = 1; j < q_new_list->size(); j++)
+    //             {
+	// 			    trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new_list->at(j), q_new_list->at(j-1));
+    //             }
+	// 		}
+    //         q_new = q_new_list->back();
+	// 	}
+	// 	else	// Distance-to-obstacles is less than d_crit
+	// 	{
+	// 		tie(status, q_new) = extend(q_near, q_e);
+	// 		if (status != planning::rrt::Status::Trapped)
+	// 		{
+	// 			trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new, q_near);
+	// 		}
+	// 	}
 
-		/* Bur-Connect */
-		if (status != planning::rrt::Status::Trapped)
-		{
-            treeIdx = 1 - treeIdx;	// Swapping trees
-			q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_new);
-			status = connectGenSpine(trees[treeIdx], kdtrees[treeIdx], q_near, q_new);
-		}
-		else 
-		{
-			treeIdx = 1 - treeIdx; 	// Swapping trees
-		}
+	// 	/* Bur-Connect */
+	// 	if (status != planning::rrt::Status::Trapped)
+	// 	{
+    //         treeIdx = 1 - treeIdx;	// Swapping trees
+	// 		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_new);
+	// 		status = connectGenSpine(trees[treeIdx], kdtrees[treeIdx], q_near, q_new);
+	// 	}
+	// 	else 
+	// 	{
+	// 		treeIdx = 1 - treeIdx; 	// Swapping trees
+	// 	}
 
-		iter++;
-		plannerInfo->addIterationTime(getElapsedTime(time_start));
-		plannerInfo->setNumNodes(trees[0]->getStates()->size() + trees[1]->getStates()->size());
-		if (checkStoppingCondition(status, time_start))
-		{
-			plannerInfo->setPlanningTime(getElapsedTime(time_start));
-			plannerInfo->setNumIterations(iter);
-			return status == planning::rrt::Status::Reached ? true : false;
-		}
-    }
+	// 	iter++;
+	// 	plannerInfo->addIterationTime(getElapsedTime(time_start));
+	// 	plannerInfo->setNumNodes(trees[0]->getStates()->size() + trees[1]->getStates()->size());
+	// 	if (checkStoppingCondition(status, time_start))
+	// 	{
+	// 		plannerInfo->setPlanningTime(getElapsedTime(time_start));
+	// 		plannerInfo->setNumIterations(iter);
+	// 		return status == planning::rrt::Status::Reached ? true : false;
+	// 	}
+    // }
 }
 
 // Generalized spine is generated from 'q' towards 'q_e'
@@ -97,7 +99,7 @@ bool planning::rbt::RGBTConnect::solve()
 std::tuple<planning::rrt::Status, std::shared_ptr<std::vector<std::shared_ptr<base::State>>>> 
     planning::rbt::RGBTConnect::extendGenSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
-    double d_c = getDistance(q);
+    float d_c = getDistance(q);
 	std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q);
 	std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list = std::make_shared<std::vector<std::shared_ptr<base::State>>>();
     std::shared_ptr<base::State> q_new;
@@ -124,7 +126,7 @@ planning::rrt::Status planning::rbt::RGBTConnect::connectGenSpine(std::shared_pt
     std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list;
 	std::shared_ptr<base::State> q_new;
 	planning::rrt::Status status = planning::rrt::Advanced;
-    double d_c = getDistance(q_temp);
+    float d_c = getDistance(q_temp);
 	int num_ext = 0;  // TODO: should be read from configuration
 	while (status == planning::rrt::Advanced && num_ext++ < 50)
 	{
@@ -154,14 +156,14 @@ planning::rrt::Status planning::rbt::RGBTConnect::connectGenSpine(std::shared_pt
 }
 
 // Returns the underestimation of distance-to-obstacles 'd_c', i.e. returns the distance-to-planes
-double planning::rbt::RGBTConnect::getDistanceUnderestimation(std::shared_ptr<base::State> q, std::shared_ptr<std::vector<Eigen::MatrixXd>> planes)
+float planning::rbt::RGBTConnect::getDistanceUnderestimation(std::shared_ptr<base::State> q, std::shared_ptr<std::vector<Eigen::MatrixXf>> planes)
 {
     int numObstacles = ss->env->getParts().size();
     int numLinks = ss->robot->getParts().size();
-    Eigen::MatrixXd D(numLinks, numObstacles);
-    Eigen::Vector3d P1, P21;    // planes = [P1; P2-P1];
-    Eigen::Vector3d A, B;       // origins of two adjacent frames
-    Eigen::Vector2d lambda;
+    Eigen::MatrixXf D(numLinks, numObstacles);
+    Eigen::Vector3f P1, P21;    // planes = [P1; P2-P1];
+    Eigen::Vector3f A, B;       // origins of two adjacent frames
+    Eigen::Vector2f lambda;
 	std::vector<KDL::Frame> frames = ss->robot->computeForwardKinematics(q);
     
     for (int j = 0; j < numObstacles; j++)
@@ -182,10 +184,10 @@ double planning::rbt::RGBTConnect::getDistanceUnderestimation(std::shared_ptr<ba
 
 // Get minimal distance from 'q' to obstacles
 // Also set corresponding 'planes' (which are approximating the obstacles) for the configuation 'q'
-double planning::rbt::RGBTConnect::getDistance(std::shared_ptr<base::State> q)
+float planning::rbt::RGBTConnect::getDistance(std::shared_ptr<base::State> q)
 {
-    double d_c;
-    std::shared_ptr<std::vector<Eigen::MatrixXd>> planes;
+    float d_c;
+    std::shared_ptr<std::vector<Eigen::MatrixXf>> planes;
 	if (q->getDistance() > 0)
 	{
 		d_c = q->getDistance();

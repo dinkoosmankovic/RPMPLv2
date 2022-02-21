@@ -10,18 +10,18 @@
 class PlannerInfo
 {
 protected:
-	std::vector<double> iterationsTimesOfExecution;
-	double planningTime;
+	std::vector<float> iterationsTimesOfExecution;
+	float planningTime;
 	size_t numCollisionQueries;
 	size_t numDistanceQueries;
 	size_t numNodes;
 	size_t numIterations;
 public:
-	void addIterationTime(double time);
-	const std::vector<double> &getIterationsTimesOfExecution() const;
-	void setIterationsTimesOfExecution(const std::vector<double> &iterationsTimesOfExecution);
-	double getPlanningTime() const;
-	void setPlanningTime(double planningTime);
+	void addIterationTime(float time);
+	const std::vector<float> &getIterationsTimesOfExecution() const;
+	void setIterationsTimesOfExecution(const std::vector<float> &iterationsTimesOfExecution);
+	float getPlanningTime() const;
+	void setPlanningTime(float planningTime);
 	size_t getNumCollisionQueries() const;
 	void setNumCollisionQueries(size_t numCollisionQueries);
 	size_t getNumDistanceQueries() const;

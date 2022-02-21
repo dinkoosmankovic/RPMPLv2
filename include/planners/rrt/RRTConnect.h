@@ -20,7 +20,7 @@ namespace planning
 			RRTConnect(std::shared_ptr<base::StateSpace> ss_);
 			RRTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> goal_);
 			~RRTConnect();
-			bool solve() override;
+			virtual bool solve() override;
 			base::Tree getTree(int TN) const;
 			std::tuple<Status, std::shared_ptr<base::State>> extend(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			Status connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
@@ -34,14 +34,14 @@ namespace planning
 			std::vector<base::Tree> TREES;
 			std::vector<std::shared_ptr<KdTree>> kdtrees;
 			//TODO: Read from configuration file
-			double epsilon = 0.1;							// Step in C-space used by RRT-based algorithms
+			float epsilon = 0.1;							// Step in C-space used by RRT-based algorithms
 			size_t maxNumNodes = 10000;                     // Max. number of considered nodes
-			double maxPlanningTime = 60000;					// Maximal algorithm runtime in [ms]
+			float maxPlanningTime = 60000;					// Maximal algorithm runtime in [ms]
 			std::vector<std::shared_ptr<base::State>> path;
 			
 			void initPlanner();
 			void computePath();
-			double getElapsedTime(std::chrono::steady_clock::time_point &time_start);
+			float getElapsedTime(std::chrono::steady_clock::time_point &time_start);
 			bool checkStoppingCondition(Status status, std::chrono::steady_clock::time_point &time_start);
 		};
 	}
