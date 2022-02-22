@@ -47,7 +47,6 @@ namespace base
 		inline void setChildren(std::shared_ptr<std::vector<std::shared_ptr<State>>> children_) { children = children_; }
 		inline void setStateSpaceType(StateSpaceType stateSpaceType_) { stateSpaceType = stateSpaceType_; }
 
-		virtual void makeCopy(std::shared_ptr<State> q) = 0;
 		void addChild(std::shared_ptr<State> child);
 		friend std::ostream& operator<<(std::ostream& os, const State* state);
 	};

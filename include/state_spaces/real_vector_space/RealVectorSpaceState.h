@@ -15,16 +15,16 @@ namespace base
 	private:
 		int dimensions;
 		Eigen::VectorXf coord;
-		uint treeIdx;								// Tree index in which the state is stored
-		size_t idx; 								// Index of the state in the tree
-		float d_c = -1;							// Distance-to-obstacles
+		uint treeIdx = -1;							// Tree index in which the state is stored
+		size_t idx = -1; 							// Index of the state in the tree
+		float d_c = -1;								// Distance-to-obstacles
 		float cost = -1;                  			// Cost-to-come
 		std::shared_ptr<std::vector<Eigen::MatrixXf>> planes = nullptr;	// Lines/planes dividing space into two subspaces (free and occupied)
 	
 	public:
 		RealVectorSpaceState(Eigen::VectorXf state_);
 		RealVectorSpaceState(int dimensions_);
-		RealVectorSpaceState(base::RealVectorSpaceState* state);
+		RealVectorSpaceState(std::shared_ptr<base::State> state);
 		~RealVectorSpaceState() {}
 
 		inline int getDimension() const override { return dimensions; }
@@ -43,8 +43,6 @@ namespace base
 		inline void setDistance(float d_c_) override { d_c = d_c_; }
 		inline void setCost(float cost_) override { cost = cost_; }
 		inline void setPlanes(std::shared_ptr<std::vector<Eigen::MatrixXf>> planes_) override { planes = planes_; }
-
-		void makeCopy(std::shared_ptr<State> q) override;
 	};
 }
 

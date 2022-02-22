@@ -30,6 +30,8 @@ namespace base
 		std::shared_ptr<base::State> interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, float step, float D) override;
 		bool equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
 		virtual std::shared_ptr<base::State> randomState() override;
+		virtual std::shared_ptr<base::State> newState(std::shared_ptr<base::State> q) override;
+
 	protected:
 		int dimensions;
 	};

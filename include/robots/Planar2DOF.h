@@ -23,7 +23,7 @@ namespace robots
 		const std::vector<std::unique_ptr<fcl::CollisionObject>>& getParts() const override;
 		void setState(std::shared_ptr<base::State> q_) override;
 		void test();
-		std::vector<robots::LinkLimits> getLimits() const override;
+		std::vector<std::vector<float>> getLimits() const override;
 
 	private:
 		fcl::Transform3f KDL2fcl(const KDL::Frame &in);
@@ -34,7 +34,7 @@ namespace robots
 		std::vector<KDL::Frame> init_poses;
 		KDL::Tree robot_tree;
 		KDL::Chain robot_chain;
-		std::vector<robots::LinkLimits> limits_;
+		std::vector<std::vector<float>> limits_;
 	};
 
 }

@@ -33,87 +33,87 @@ bool planning::rbt::RGBTConnect::solve()
     std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list;
 	planning::rrt::Status status;
 	plannerInfo->setNumIterations(0);
-	std::cout << "q: " << start->getCoord().transpose() << std::endl;
-	ss->getDistanceAndPlanes(start);
+	// std::cout << "q: " << start->getCoord().transpose() << std::endl;
+	// ss->getDistanceAndPlanes(start);
 
-	// while (true)
-	// {
-	// 	/* Generating generalized bur */
-	// 	q_e = ss->randomState();
-	// 	// LOG(INFO) << q_rand->getCoord().transpose();
-	// 	q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_e);
-	// 	// LOG(INFO) << "Iteration: " << iter;
-	// 	// LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
-	// 	if (getDistance(q_near) > d_crit)
-	// 	{
-	// 		for (int i = 0; i < numSpines; i++)
-	// 		{
-	// 			q_e = ss->randomState();
-	// 			q_e->setCoord(q_e->getCoord() + q_near->getCoord());
-	// 			saturateSpine(q_near, q_e);
-	// 			pruneSpine(q_near, q_e);
-	// 			tie(status, q_new_list) = extendGenSpine(q_near, q_e);
-    //             trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new_list->front(), q_near);
-    //             for (int j = 1; j < q_new_list->size(); j++)
-    //             {
-	// 			    trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new_list->at(j), q_new_list->at(j-1));
-    //             }
-	// 		}
-    //         q_new = q_new_list->back();
-	// 	}
-	// 	else	// Distance-to-obstacles is less than d_crit
-	// 	{
-	// 		tie(status, q_new) = extend(q_near, q_e);
-	// 		if (status != planning::rrt::Status::Trapped)
-	// 		{
-	// 			trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new, q_near);
-	// 		}
-	// 	}
+	while (true)
+	{
+		/* Generating generalized bur */
+		q_e = ss->randomState();
+		// LOG(INFO) << q_rand->getCoord().transpose();
+		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_e);
+		// LOG(INFO) << "Iteration: " << iter;
+		// LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
+		if (getDistance(q_near) > d_crit)
+		{
+			for (int i = 0; i < numSpines; i++)
+			{
+				q_e = ss->randomState();
+				q_e->setCoord(q_e->getCoord() + q_near->getCoord());
+				saturateSpine(q_near, q_e);
+				pruneSpine(q_near, q_e);
+				tie(status, q_new_list) = extendGenSpine(q_near, q_e);
+                trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new_list->front(), q_near);
+                for (int j = 1; j < q_new_list->size(); j++)
+                {
+				    trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new_list->at(j), q_new_list->at(j-1));
+                }
+			}
+            q_new = q_new_list->back();
+		}
+		else	// Distance-to-obstacles is less than d_crit
+		{
+			tie(status, q_new) = extend(q_near, q_e);
+			if (status != planning::rrt::Status::Trapped)
+			{
+				trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new, q_near);
+			}
+		}
 
-	// 	/* Bur-Connect */
-	// 	if (status != planning::rrt::Status::Trapped)
-	// 	{
-    //         treeIdx = 1 - treeIdx;	// Swapping trees
-	// 		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_new);
-	// 		status = connectGenSpine(trees[treeIdx], kdtrees[treeIdx], q_near, q_new);
-	// 	}
-	// 	else 
-	// 	{
-	// 		treeIdx = 1 - treeIdx; 	// Swapping trees
-	// 	}
+		/* Bur-Connect */
+		if (status != planning::rrt::Status::Trapped)
+		{
+            treeIdx = 1 - treeIdx;	// Swapping trees
+			q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_new);
+			status = connectGenSpine(trees[treeIdx], kdtrees[treeIdx], q_near, q_new);
+		}
+		else 
+		{
+			treeIdx = 1 - treeIdx; 	// Swapping trees
+		}
 
-	//  plannerInfo->setNumIterations(plannerInfo->getNumIterations() + 1);
-	// 	plannerInfo->addIterationTime(getElapsedTime(time_start));
-	// 	plannerInfo->setNumNodes(trees[0]->getStates()->size() + trees[1]->getStates()->size());
-	// 	if (checkStoppingCondition(status, time_start))
-	// 	{
-	// 		plannerInfo->setPlanningTime(getElapsedTime(time_start));
-	// 		return status == planning::rrt::Status::Reached ? true : false;
-	// 	}
-    // }
+	 plannerInfo->setNumIterations(plannerInfo->getNumIterations() + 1);
+		plannerInfo->addIterationTime(getElapsedTime(time_start));
+		plannerInfo->setNumStates(trees[0]->getStates()->size() + trees[1]->getStates()->size());
+		if (checkStoppingCondition(status, time_start))
+		{
+			plannerInfo->setPlanningTime(getElapsedTime(time_start));
+			return status == planning::rrt::Status::Reached ? true : false;
+		}
+    }
 }
 
 // Generalized spine is generated from 'q' towards 'q_e'
-// 'q_new_list' contains all nodes from the generalized spine
+// 'q_new_list' contains all states from the generalized spine
 std::tuple<planning::rrt::Status, std::shared_ptr<std::vector<std::shared_ptr<base::State>>>> 
     planning::rbt::RGBTConnect::extendGenSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
     float d_c = getDistance(q);
-	std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q);
+	std::shared_ptr<base::State> q_new = q;
 	std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list = std::make_shared<std::vector<std::shared_ptr<base::State>>>();
-    std::shared_ptr<base::State> q_new;
     planning::rrt::Status status;
     for (int i = 0; i < numLayers; i++)
     {
-        tie(status, q_new) = extendSpine(q_temp, q_e, d_c);
-		        LOG(INFO) << "spine " << i << " d_c: " << d_c;
+        std::shared_ptr<base::State> q_temp = ss->newState(q_new);
+        // tie(status, q_new) = extendSpine(q_temp, q_e, d_c);
+        tie(status, q_new) = extendSpine(q_temp, q_e);
         q_new_list->emplace_back(q_new);
-        d_c = getDistanceUnderestimation(q_new, q->getPlanes());
+        // d_c = getDistanceUnderestimation(q_new, q->getPlanes());
+		d_c = getDistance(q_new);
         if (d_c < d_crit || status == planning::rrt::Reached)
         {
             break;
         }
-        std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q_new);
     }
     return {status, q_new_list};
 }
@@ -121,24 +121,24 @@ std::tuple<planning::rrt::Status, std::shared_ptr<std::vector<std::shared_ptr<ba
 planning::rrt::Status planning::rbt::RGBTConnect::connectGenSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, 
 														 	      std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
-	std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q);
+    float d_c = getDistance(q);
+	std::shared_ptr<base::State> q_new = q;
     std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list;
-	std::shared_ptr<base::State> q_new;
 	planning::rrt::Status status = planning::rrt::Advanced;
-    float d_c = getDistance(q_temp);
 	int num_ext = 0;  // TODO: should be read from configuration
 	while (status == planning::rrt::Advanced && num_ext++ < 50)
 	{
+		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
 		if (d_c > d_crit)
 		{
 			tie(status, q_new_list) = extendGenSpine(q_temp, q_e);
-            tree->upgradeTree(kdtree, q_new_list->front(), q);
+            tree->upgradeTree(kdtree, q_new_list->front(), q_temp);
             for (int i = 1; i < q_new_list->size(); i++)
             {
                 tree->upgradeTree(kdtree, q_new_list->at(i), q_new_list->at(i-1));
             }
-            d_c = getDistance(q_new_list->back());
-            std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q_new_list->back());	
+			q_new = q_new_list->back();
+            d_c = getDistance(q_new);
 		}
 		else
 		{
@@ -146,11 +146,9 @@ planning::rrt::Status planning::rbt::RGBTConnect::connectGenSpine(std::shared_pt
             if (status != planning::rrt::Trapped)
             {
                 tree->upgradeTree(kdtree, q_new, q_temp);
-                std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q_new);	
             }
 		}	
 	}
-	// LOG(INFO) << "extended.";
 	return status;
 }
 

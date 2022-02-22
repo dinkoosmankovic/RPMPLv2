@@ -35,3 +35,7 @@ target_link_libraries(test_rbtconnect_fcl PUBLIC rpmpl_library ${PROJECT_LIBRARI
 add_executable(test_rgbtconnect_fcl test_rgbtconnect_fcl.cpp)
 target_compile_features(test_rgbtconnect_fcl PRIVATE cxx_std_17)
 target_link_libraries(test_rgbtconnect_fcl PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
+
+add_executable(test_rgbmtstar_fcl test_rgbmtstar_fcl.cpp)
+target_compile_features(test_rgbmtstar_fcl PRIVATE cxx_std_17)
+target_link_libraries(test_rgbmtstar_fcl PUBLIC rpmpl_library ${PROJECT_LIBRARIES})

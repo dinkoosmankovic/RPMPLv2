@@ -129,17 +129,16 @@ planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::T
 														 std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
 	// LOG(INFO) << "Inside connect.";
-	std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q);
-	std::shared_ptr<base::State> q_new;
+	std::shared_ptr<base::State> q_new = q;
 	planning::rrt::Status status = planning::rrt::Advanced;
 	int num_ext = 0;  // TODO: should be read from configuration
 	while (status == planning::rrt::Advanced && num_ext++ < 50)
 	{
+		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
 		tie(status, q_new) = extend(q_temp, q_e);
 		if (status != planning::rrt::Trapped)
 		{
 			tree->upgradeTree(kdtree, q_new, q_temp);
-			std::shared_ptr<base::State> q_temp = ss->randomState(); q_temp->makeCopy(q_new);
 		}
 	}
 	// LOG(INFO) << "extended.";
@@ -153,6 +152,7 @@ void planning::rrt::RRTConnect::computePath(std::shared_ptr<base::State> q_con0,
 	{
 		q_con0 = TREES[0].getStates()->back();
 	}
+	q_con0 = q_con0->getParent();
 	while (q_con0->getParent() != nullptr)
 	{
 		path.emplace_back(q_con0);
@@ -190,7 +190,7 @@ bool planning::rrt::RRTConnect::checkStoppingCondition(Status status, std::chron
 		computePath();
 		return true;
 	}
-	else if (plannerInfo->getNumStates() >= maxNumNodes || getElapsedTime(time_start) > maxPlanningTime)
+	else if (plannerInfo->getNumStates() >= maxNumStates || getElapsedTime(time_start) > maxPlanningTime)
 	{
 		return true;
 	}

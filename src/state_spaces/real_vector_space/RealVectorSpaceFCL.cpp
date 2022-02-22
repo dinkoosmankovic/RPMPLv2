@@ -81,6 +81,12 @@ std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
 	return state;
 }
 
+std::shared_ptr<base::State> base::RealVectorSpaceFCL::newState(std::shared_ptr<base::State> state)
+{
+	std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(state);
+	return q;
+}
+
 Eigen::VectorXf normalizedAngles(Eigen::VectorXf r)
 {
 	
@@ -126,20 +132,20 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 			//LOG(INFO) << "part " << i <<"\t:" << robot->getParts()[i]->getAABB().min_ <<"\t;\t" << robot->getParts()[i]->getAABB().max_ << "\t" << result.min_distance;
 			min_dist = std::min(min_dist, (float) result.min_distance);
 
-			std::cout << "link: " << i << std::endl;
+			// std::cout << "link: " << i << std::endl;
 			
 			fcl::Vec3f link_point = result.nearest_points[0];
 			link_point = robot->getParts().at(i)->getTransform().getRotation() * link_point;
 			link_point += robot->getParts().at(i)->getTransform().getTranslation();
-			std::cout << "link_point: " << link_point << std::endl;
+			// std::cout << "link_point: " << link_point << std::endl;
 
 			fcl::Vec3f obs_point = result.nearest_points[1];
-			std::cout << "obs_point_orig: " << obs_point << std::endl;
+			// std::cout << "obs_point_orig: " << obs_point << std::endl;
 			obs_point = env->getParts().at(j)->getTransform().getRotation() * obs_point;
-			std::cout << "obs_point_rot: " << obs_point << std::endl;
+			// std::cout << "obs_point_rot: " << obs_point << std::endl;
 			obs_point += env->getParts().at(j)->getTransform().getTranslation();
-			std::cout << "obs_point_transl: " << obs_point << std::endl;
-			std::cout << "----------------------------------" << std::endl;
+			// std::cout << "obs_point_transl: " << obs_point << std::endl;
+			// std::cout << "----------------------------------" << std::endl;
 
 			planes->at(j).col(i) << obs_point[0], 
 									obs_point[1],

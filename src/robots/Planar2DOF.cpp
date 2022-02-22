@@ -162,7 +162,7 @@ KDL::Frame robots::Planar2DOF::fcl2KDL(const fcl::Transform3f &in)
     return f;
 }
 
-std::vector<robots::LinkLimits> robots::Planar2DOF::getLimits() const
+std::vector<std::vector<float>> robots::Planar2DOF::getLimits() const
 {
 	return limits_;
 }

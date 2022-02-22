@@ -50,6 +50,12 @@ std::shared_ptr<base::State> base::RealVectorSpace::randomState()
 	return state;
 }
 
+std::shared_ptr<base::State> base::RealVectorSpace::newState(std::shared_ptr<base::State> state)
+{
+	std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(state);
+	return q;
+}
+
 // D (optional parameter) is the distance between q1 and q2
 std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::shared_ptr<base::State> q1, 
 																const std::shared_ptr<base::State> q2, float step, float D)

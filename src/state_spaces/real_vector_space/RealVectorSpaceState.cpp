@@ -18,26 +18,17 @@ base::RealVectorSpaceState::RealVectorSpaceState(int dimensions_)
 	setStateSpaceType(StateSpaceType::RealVectorSpace);
 }
 
-base::RealVectorSpaceState::RealVectorSpaceState(base::RealVectorSpaceState* state)
+// Make copy of 'state'
+base::RealVectorSpaceState::RealVectorSpaceState(std::shared_ptr<base::State> state)
 {
-	dimensions = state->dimensions;
-	coord = state->coord;
-	planes = std::make_shared<std::vector<Eigen::MatrixXf>>();
+	dimensions = state->getDimension();
+	coord = state->getCoord();
+	treeIdx = state->getTreeIdx();
+	idx = state->getIdx();
+	d_c = state->getDistance();
+	cost = state->getCost();
+	planes = state->getPlanes();
 	setStateSpaceType(StateSpaceType::RealVectorSpace);
-	setParent(nullptr);
-	setChildren(std::make_shared<std::vector<std::shared_ptr<base::State>>>());
-}
-
-void base::RealVectorSpaceState::makeCopy(std::shared_ptr<base::State> q)
-{
-	dimensions = q->getDimension();
-	coord = q->getCoord();
-	treeIdx = q->getTreeIdx();
-	idx = q->getIdx();
-	d_c = q->getDistance();
-	cost = q->getCost();
-	planes = q->getPlanes();
-	setStateSpaceType(q->getStateSpaceType());
-	setParent(q->getParent());
-	setChildren(q->getChildren());
+	setParent(state->getParent());
+	setChildren(state->getChildren());
 }

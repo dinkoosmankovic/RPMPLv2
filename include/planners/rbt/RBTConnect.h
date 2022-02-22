@@ -35,6 +35,8 @@ namespace planning
 				(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float d_c_underest = -1);
 			planning::rrt::Status connectSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, 
 											   std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
+											   
+		private:
 			float computeStep(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float fi, std::vector<KDL::Frame> &frames);
 		};
 	}
