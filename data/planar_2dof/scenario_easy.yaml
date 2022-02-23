@@ -1,11 +1,12 @@
 obstacles:
   - box:
-      dim: [0.2, 1.2, 0.1]
-      trans: [1.15, 0, 0]
+      dim: [0.5, 0.5, 0.1]
+      trans: [1.25, 0.75, 0]
+      
 robot:
   type: "planar_2DOF"
   urdf: "data/planar_2dof/planar_2dof.urdf"
   space: "RealVectorSpaceFCL"
   dimensions: 2
-  start: [-1.570796, 0]
-  goal: [1.570796, 0]
+  start: [-2, -2.5]
+  goal: [2, 2.5]

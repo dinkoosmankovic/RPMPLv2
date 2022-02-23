@@ -28,6 +28,8 @@ int main(int argc, char **argv)
 	LOG(INFO) << "Environment parts: " << scenario.getEnvironment()->getParts().size();
 	LOG(INFO) << "Dimensions: " << ss->getDimensions();
 	LOG(INFO) << "State space type: " << ss->getStateSpaceType();
+	LOG(INFO) << "Start: " << scenario.getStart();
+	LOG(INFO) << "Goal: " << scenario.getGoal();
 	try
 	{
 		std::unique_ptr<planning::rrt::RRTConnect> planner = std::make_unique<planning::rrt::RRTConnect>(ss, scenario.getStart(), scenario.getGoal());

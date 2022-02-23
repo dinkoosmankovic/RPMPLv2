@@ -28,11 +28,11 @@ int main(int argc, char **argv)
 	LOG(INFO) << "Environment parts: " << scenario.getEnvironment()->getParts().size();
 	LOG(INFO) << "Dimensions: " << ss->getDimensions();
 	LOG(INFO) << "State space type: " << ss->getStateSpaceType();
-	std::shared_ptr<base::State> start = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({-M_PI/2 ,0}));
-	std::shared_ptr<base::State> goal = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({M_PI/2 ,0}));
+	LOG(INFO) << "Start: " << scenario.getStart();
+	LOG(INFO) << "Goal: " << scenario.getGoal();
 	try
 	{
-		std::unique_ptr<planning::rbt::RGBMTStar> planner = std::make_unique<planning::rbt::RGBMTStar>(ss, start, goal);
+		std::unique_ptr<planning::rbt::RGBMTStar> planner = std::make_unique<planning::rbt::RGBMTStar>(ss, scenario.getStart(), scenario.getGoal());
 		bool res = planner->solve();
 		LOG(INFO) << "RGBMT* planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
 		LOG(INFO) << "Number of nodes: " << planner->getPlannerInfo()->getNumStates();

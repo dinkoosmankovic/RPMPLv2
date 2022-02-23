@@ -4,7 +4,7 @@
 
 #include "RealVectorSpaceState.h"
 
-base::RealVectorSpaceState::RealVectorSpaceState(const Eigen::VectorXf &state_)
+base::RealVectorSpaceState::RealVectorSpaceState(Eigen::VectorXf state_)
 {
 	dimensions = state_.size();
 	coord = state_;

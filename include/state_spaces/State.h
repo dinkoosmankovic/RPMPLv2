@@ -31,8 +31,8 @@ namespace base
 		virtual float getCost() const = 0;
 		virtual std::shared_ptr<std::vector<Eigen::MatrixXf>> getPlanes() const = 0;
 		virtual int getDimensions() const = 0;
-		virtual const Eigen::VectorXf &getCoord() const = 0;
-		virtual const float getCoord(int idx) const = 0;
+		virtual Eigen::VectorXf getCoord() const = 0;
+		virtual float getCoord(int idx) const = 0;
 		inline std::shared_ptr<State> getParent() const { return parent; }
 		inline std::shared_ptr<std::vector<std::shared_ptr<State>>> getChildren() const { return children; };
 		inline StateSpaceType getStateSpaceType() const { return stateSpaceType; }
@@ -42,7 +42,7 @@ namespace base
 		virtual void setDistance(float d_c_) = 0;
 		virtual void setCost(float cost_) = 0;
 		virtual void setPlanes(std::shared_ptr<std::vector<Eigen::MatrixXf>> planes_) = 0;
-		virtual void setCoord(const Eigen::VectorXf &coord) = 0;
+		virtual void setCoord(Eigen::VectorXf coord) = 0;
 		virtual void setCoord(const float coord_, int idx) = 0;
 		inline void setParent(std::shared_ptr<State> parent_) { parent = parent_; }
 		inline void setChildren(std::shared_ptr<std::vector<std::shared_ptr<State>>> children_) { children = children_; }

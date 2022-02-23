@@ -55,7 +55,7 @@ bool planning::rbt::RGBMTStar::solve()
     float cost;
     plannerInfo->setNumIterations(0);
 
-maxNumStates = 10;
+maxNumStates = 1000;
     while (true)
     {
 		LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
@@ -344,6 +344,10 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize(std::shared_ptr<
             break;
         }
     }
+                std::cout << "********* OPTIMIZE *********" << std::endl; 
+                std::cout << "q " << q->getCoord().transpose() << std::endl; 
+                std::cout << "q_reached " << q_reached->getCoord().transpose() << std::endl; 
+                std::cout << "q_reachedNew " << q_reachedNew->getCoord().transpose() << std::endl; 
 
     std::shared_ptr<base::State> q_opt; 
     if (q_reachedNew->getParent() != nullptr)
@@ -356,7 +360,7 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize(std::shared_ptr<
         for (int i = 0; i < floor(log2(10 * D)); i++)
         {
             q_middle->setCoord((q_opt_ + q_parent) / 2);
-            if (std::get<0>(connectGenSpine(q, q_middle)))
+            if (std::get<0>(connectGenSpine(q, q_middle)) == planning::rrt::Reached)
             {
                 q_opt_ = q_middle->getCoord();
                 update = true;
@@ -365,6 +369,7 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize(std::shared_ptr<
             {
                 q_parent = q_middle->getCoord();
             }
+                std::cout << "q_opt_ " << q_opt_.transpose() << std::endl; 
         }
         if (update)
         {
@@ -399,6 +404,8 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize(std::shared_ptr<
     float cost = q_opt->getCost() + getCostToCome(q_opt, q_new);
     // tree->upgradeTree(kdtree, q_new, q_opt, q_new->getDistance(), q_new->getPlanes(), cost);
     tree->upgradeTree(q_new, q_opt, q_new->getDistance(), q_new->getPlanes(), cost);
+                std::cout << "q_opt " << q_opt->getCoord().transpose() << std::endl; 
+                std::cout << "q_new " << q_new->getCoord().transpose() << std::endl; 
     return q_new;
 }
 
