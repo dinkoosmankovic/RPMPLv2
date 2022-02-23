@@ -69,12 +69,10 @@ std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
 {
 	std::shared_ptr<base::State> state = std::make_shared<base::RealVectorSpaceState>(dimensions);
 	Eigen::VectorXf rand = Eigen::VectorXf::Random(dimensions).normalized();
+	std::vector<std::vector<float>> limits = robot->getLimits();
 	for (size_t i = 0; i < dimensions; ++i)
 	{
-		float llimit = robot->getLimits()[i][0];
-		float ulimit = robot->getLimits()[i][1];
-
-		rand[i] = ((ulimit - llimit) * rand[i] + llimit + ulimit) / 2;
+		rand[i] = ((limits[i][1] - limits[i][0]) * rand[i] + limits[i][0] + limits[i][1]) / 2;
 	}
 	//LOG(INFO) << "random coord: " << rand.transpose();
 	state->setCoord(rand);
@@ -82,6 +80,12 @@ std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
 }
 
 std::shared_ptr<base::State> base::RealVectorSpaceFCL::newState(std::shared_ptr<base::State> state)
+{
+	std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(state);
+	return q;
+}
+
+std::shared_ptr<base::State> base::RealVectorSpaceFCL::newState(const Eigen::VectorXf &state)
 {
 	std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(state);
 	return q;
@@ -126,25 +130,24 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 		robot->getParts()[i]->computeAABB();
 		for (size_t j = 0; j < env->getParts().size(); ++j)
 		{
-			fcl::DistanceRequest request(true);
+			// fcl::DistanceRequest request(true);
+			fcl::DistanceRequest request(true, 0.01, 0.01, fcl::GST_INDEP);
 			fcl::DistanceResult result;
 			fcl::distance(robot->getParts()[i].get(), env->getParts()[j].get(), request, result);
 			//LOG(INFO) << "part " << i <<"\t:" << robot->getParts()[i]->getAABB().min_ <<"\t;\t" << robot->getParts()[i]->getAABB().max_ << "\t" << result.min_distance;
 			min_dist = std::min(min_dist, (float) result.min_distance);
 
-			// std::cout << "link: " << i << std::endl;
-			
 			fcl::Vec3f link_point = result.nearest_points[0];
 			link_point = robot->getParts().at(i)->getTransform().getRotation() * link_point;
 			link_point += robot->getParts().at(i)->getTransform().getTranslation();
-			// std::cout << "link_point: " << link_point << std::endl;
 
 			fcl::Vec3f obs_point = result.nearest_points[1];
-			// std::cout << "obs_point_orig: " << obs_point << std::endl;
 			obs_point = env->getParts().at(j)->getTransform().getRotation() * obs_point;
-			// std::cout << "obs_point_rot: " << obs_point << std::endl;
 			obs_point += env->getParts().at(j)->getTransform().getTranslation();
-			// std::cout << "obs_point_transl: " << obs_point << std::endl;
+
+			// std::cout << "link: " << i << std::endl;
+			// std::cout << "link_point: " << link_point << std::endl;
+			// std::cout << "obs_point: " << obs_point << std::endl;
 			// std::cout << "----------------------------------" << std::endl;
 
 			planes->at(j).col(i) << obs_point[0], 

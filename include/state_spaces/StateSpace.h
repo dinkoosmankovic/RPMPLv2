@@ -23,6 +23,7 @@ namespace base
 		virtual std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> getDistanceAndPlanes(const std::shared_ptr<base::State> q) = 0;
 		virtual std::shared_ptr<base::State> randomState() = 0;
 		virtual std::shared_ptr<base::State> newState(std::shared_ptr<base::State> q) = 0;
+		virtual std::shared_ptr<base::State> newState(const Eigen::VectorXf &state) = 0;
 		virtual StateSpaceType getStateSpaceType() const;
 		virtual void setStateSpaceType(StateSpaceType stateSpaceType);
 		virtual std::shared_ptr<base::State> interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, 

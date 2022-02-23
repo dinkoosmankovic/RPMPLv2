@@ -4,7 +4,7 @@
 
 #include "RealVectorSpaceState.h"
 
-base::RealVectorSpaceState::RealVectorSpaceState(Eigen::VectorXf state_)
+base::RealVectorSpaceState::RealVectorSpaceState(const Eigen::VectorXf &state_)
 {
 	dimensions = state_.size();
 	coord = state_;
@@ -21,7 +21,7 @@ base::RealVectorSpaceState::RealVectorSpaceState(int dimensions_)
 // Make copy of 'state'
 base::RealVectorSpaceState::RealVectorSpaceState(std::shared_ptr<base::State> state)
 {
-	dimensions = state->getDimension();
+	dimensions = state->getDimensions();
 	coord = state->getCoord();
 	treeIdx = state->getTreeIdx();
 	idx = state->getIdx();

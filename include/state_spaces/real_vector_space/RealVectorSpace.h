@@ -31,6 +31,7 @@ namespace base
 		bool equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
 		virtual std::shared_ptr<base::State> randomState() override;
 		virtual std::shared_ptr<base::State> newState(std::shared_ptr<base::State> q) override;
+		virtual std::shared_ptr<base::State> newState(const Eigen::VectorXf &state) override;
 
 	protected:
 		int dimensions;

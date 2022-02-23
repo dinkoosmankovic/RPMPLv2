@@ -25,7 +25,7 @@ namespace planning
 		protected:
 			//TODO: Read from configuration file
 			float d_crit = 0.01;      		// Critical distance in W-space when RBT becomes RRT
-			float delta = M_PI;    		// Radius of hypersphere from q to q_e
+			float delta = M_PI;    			// Radius of hypersphere from q to q_e
 			uint numSpines = 7;       		// Number of bur spines
 
 			virtual float getDistance(std::shared_ptr<base::State> q);

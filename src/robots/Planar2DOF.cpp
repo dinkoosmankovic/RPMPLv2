@@ -61,7 +61,8 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 	}
 	//std::cout << "constructor----------------------\n";
 	robot_tree.getChain("base_link", "tool", robot_chain);
-	setState(std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({0.0, 0.0})));
+	Eigen::Vector2f state; state << 0.0, 0.0;
+	setState(std::make_shared<base::RealVectorSpaceState>(state));
 }
 
 const KDL::Tree& robots::Planar2DOF::getRobotTree() const 
@@ -80,9 +81,9 @@ std::vector<KDL::Frame> robots::Planar2DOF::computeForwardKinematics(std::shared
 	KDL::TreeFkSolverPos_recursive treefksolver = KDL::TreeFkSolverPos_recursive(robot_tree);
 	std::vector<KDL::Frame> framesFK;
 	robot_tree.getChain("base_link", "tool", robot_chain);
-	KDL::JntArray jointpositions = KDL::JntArray(q->getDimension() );
+	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions() );
 
-	for (size_t i = 0; i < q->getDimension(); ++i)
+	for (size_t i = 0; i < q->getDimensions(); ++i)
 	{
 		jointpositions(i) = q->getCoord()(i);
 	}
@@ -101,7 +102,7 @@ std::vector<KDL::Frame> robots::Planar2DOF::computeForwardKinematics(std::shared
 void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
 {
 	q = q_;
-	KDL::JntArray jointpositions = KDL::JntArray(q->getDimension());
+	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions());
 
 	std::vector<KDL::Frame> framesFK = computeForwardKinematics(q);
 	
@@ -162,7 +163,7 @@ KDL::Frame robots::Planar2DOF::fcl2KDL(const fcl::Transform3f &in)
     return f;
 }
 
-std::vector<std::vector<float>> robots::Planar2DOF::getLimits() const
+const std::vector<std::vector<float>> &robots::Planar2DOF::getLimits() const
 {
 	return limits_;
 }

@@ -164,7 +164,7 @@ std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rbt::R
 	float rho = 0;             	// The path length in W-space
 	int k = 1;
 	int K_max = 5;              // The number of iterations for computing q*
-	std::shared_ptr<base::State> q_new = ss->newState(q);
+	std::shared_ptr<base::State> q_new = ss->newState(q->getCoord());
 	std::vector<KDL::Frame> frames = ss->robot->computeForwardKinematics(q);
 	std::vector<KDL::Frame> frames_temp = frames;
 	

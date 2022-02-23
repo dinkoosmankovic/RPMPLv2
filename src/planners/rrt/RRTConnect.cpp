@@ -33,10 +33,11 @@ planning::rrt::RRTConnect::~RRTConnect()
 
 void planning::rrt::RRTConnect::initPlanner()
 {
+	// TODO:
 	LOG(INFO) << "Initializing planner...";
 	plannerInfo = std::make_shared<PlannerInfo>();
 	TREES = {base::Tree("start", 0), 
-			 base::Tree("goal", 1)};
+			 base::Tree("goal",  1)};
 	kdtrees = {std::make_shared<KdTree>(ss->getDimensions(), TREES[0], nanoflann::KDTreeSingleIndexAdaptorParams(10)),
 			   std::make_shared<KdTree>(ss->getDimensions(), TREES[1], nanoflann::KDTreeSingleIndexAdaptorParams(10))};
 	TREES[0].upgradeTree(kdtrees[0], start, nullptr);
@@ -122,7 +123,7 @@ std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rrt::R
 			return {planning::rrt::Advanced, q_new};
 		}
 	}
-	return {planning::rrt::Trapped, q_new};
+	return {planning::rrt::Trapped, q};
 }
 
 planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, 

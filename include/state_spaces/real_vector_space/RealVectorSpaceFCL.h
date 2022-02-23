@@ -25,6 +25,7 @@ namespace base
 		std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> getDistanceAndPlanes(const std::shared_ptr<base::State> q) override;
 		std::shared_ptr<base::State> randomState() override;
 		std::shared_ptr<base::State> newState(std::shared_ptr<base::State> q) override;
+		std::shared_ptr<base::State> newState(const Eigen::VectorXf &state) override;
 	};
 }
 #endif //RPMPL_REALVECTORSPACE_H

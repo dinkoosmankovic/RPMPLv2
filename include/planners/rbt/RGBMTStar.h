@@ -38,7 +38,8 @@ namespace planning
             void deleteTrees(std::vector<std::shared_ptr<base::Tree>> &trees, std::vector<int> &treesConnected);
             bool checkStoppingCondition(std::shared_ptr<base::State> q_con0, std::shared_ptr<base::State> q_con1, 
                                         std::chrono::steady_clock::time_point &time_start);
-
+            std::shared_ptr<base::State> getRandomState();
+    
         private:
             void considerChildren(std::shared_ptr<base::State> q, std::shared_ptr<base::Tree> tree0, std::shared_ptr<KdTree> kdtree0,
                                   std::shared_ptr<base::State> q0_con, std::shared_ptr<base::State> q_considered);

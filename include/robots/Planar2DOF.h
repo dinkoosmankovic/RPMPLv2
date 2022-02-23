@@ -23,7 +23,7 @@ namespace robots
 		const std::vector<std::unique_ptr<fcl::CollisionObject>>& getParts() const override;
 		void setState(std::shared_ptr<base::State> q_) override;
 		void test();
-		std::vector<std::vector<float>> getLimits() const override;
+		const std::vector<std::vector<float>> &getLimits() const override;
 
 	private:
 		fcl::Transform3f KDL2fcl(const KDL::Frame &in);
