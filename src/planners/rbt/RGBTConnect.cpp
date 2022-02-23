@@ -33,64 +33,64 @@ bool planning::rbt::RGBTConnect::solve()
     std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list;
 	planning::rrt::Status status;
 	plannerInfo->setNumIterations(0);
-	std::cout << "q: " << start->getCoord().transpose() << std::endl;
-	ss->getDistanceAndPlanes(start);
+	// std::cout << "q: " << start->getCoord().transpose() << std::endl;
+	// ss->getDistanceAndPlanes(start);
 
-	// while (true)
-	// {
-	// 	/* Generating generalized bur */
-	// 	q_e = ss->randomState();
-	// 	// LOG(INFO) << q_rand->getCoord().transpose();
-	// 	q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_e);
-	// 	// LOG(INFO) << "Iteration: " << iter;
-	// 	// LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
-	// 	if (getDistance(q_near) > d_crit)
-	// 	{
-	// 		for (int i = 0; i < numSpines; i++)
-	// 		{
-	// 			q_e = ss->randomState();
-	// 			q_e->setCoord(q_e->getCoord() + q_near->getCoord());
-	// 			saturateSpine(q_near, q_e);
-	// 			pruneSpine(q_near, q_e);
-	// 			tie(status, q_new_list) = extendGenSpine(q_near, q_e);
-    //             trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new_list->front(), q_near);
-    //             for (int j = 1; j < q_new_list->size(); j++)
-    //             {
-	// 			    trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new_list->at(j), q_new_list->at(j-1));
-    //             }
-	// 		}
-    //         q_new = q_new_list->back();
-	// 	}
-	// 	else	// Distance-to-obstacles is less than d_crit
-	// 	{
-	// 		tie(status, q_new) = extend(q_near, q_e);
-	// 		if (status != planning::rrt::Status::Trapped)
-	// 		{
-	// 			trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new, q_near);
-	// 		}
-	// 	}
+	while (true)
+	{
+		/* Generating generalized bur */
+		q_e = ss->randomState();
+		// LOG(INFO) << q_rand->getCoord().transpose();
+		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_e);
+		// LOG(INFO) << "Iteration: " << iter;
+		// LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
+		if (getDistance(q_near) > d_crit)
+		{
+			for (int i = 0; i < numSpines; i++)
+			{
+				q_e = ss->randomState();
+				q_e->setCoord(q_e->getCoord() + q_near->getCoord());
+				saturateSpine(q_near, q_e);
+				pruneSpine(q_near, q_e);
+				tie(status, q_new_list) = extendGenSpine(q_near, q_e);
+                trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new_list->front(), q_near);
+                for (int j = 1; j < q_new_list->size(); j++)
+                {
+				    trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new_list->at(j), q_new_list->at(j-1));
+                }
+			}
+            q_new = q_new_list->back();
+		}
+		else	// Distance-to-obstacles is less than d_crit
+		{
+			tie(status, q_new) = extend(q_near, q_e);
+			if (status != planning::rrt::Status::Trapped)
+			{
+				trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new, q_near);
+			}
+		}
 
-	// 	/* Bur-Connect */
-	// 	if (status != planning::rrt::Status::Trapped)
-	// 	{
-    //         treeIdx = 1 - treeIdx;	// Swapping trees
-	// 		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_new);
-	// 		status = connectGenSpine(trees[treeIdx], kdtrees[treeIdx], q_near, q_new);
-	// 	}
-	// 	else 
-	// 	{
-	// 		treeIdx = 1 - treeIdx; 	// Swapping trees
-	// 	}
+		/* Bur-Connect */
+		if (status != planning::rrt::Status::Trapped)
+		{
+            treeIdx = 1 - treeIdx;	// Swapping trees
+			q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_new);
+			status = connectGenSpine(trees[treeIdx], kdtrees[treeIdx], q_near, q_new);
+		}
+		else 
+		{
+			treeIdx = 1 - treeIdx; 	// Swapping trees
+		}
 
-	//  plannerInfo->setNumIterations(plannerInfo->getNumIterations() + 1);
-	// 	plannerInfo->addIterationTime(getElapsedTime(time_start));
-	// 	plannerInfo->setNumStates(trees[0]->getStates()->size() + trees[1]->getStates()->size());
-	// 	if (checkStoppingCondition(status, time_start))
-	// 	{
-	// 		plannerInfo->setPlanningTime(getElapsedTime(time_start));
-	// 		return status == planning::rrt::Status::Reached ? true : false;
-	// 	}
-    // }
+	 plannerInfo->setNumIterations(plannerInfo->getNumIterations() + 1);
+		plannerInfo->addIterationTime(getElapsedTime(time_start));
+		plannerInfo->setNumStates(trees[0]->getStates()->size() + trees[1]->getStates()->size());
+		if (checkStoppingCondition(status, time_start))
+		{
+			plannerInfo->setPlanningTime(getElapsedTime(time_start));
+			return status == planning::rrt::Status::Reached ? true : false;
+		}
+    }
 }
 
 // Generalized spine is generated from 'q' towards 'q_e'
