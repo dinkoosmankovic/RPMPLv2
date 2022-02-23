@@ -19,7 +19,7 @@ env::Environment::Environment(const std::string& filename)
 {
     YAML::Node node = YAML::LoadFile(filename);
     std::vector<std::shared_ptr<fcl::CollisionObject> > parts_;
-	for (size_t i = 0; i < node["obstacles"].size(); ++i)
+    for (size_t i = 0; i < node["obstacles"].size(); ++i)
 	{
         YAML::Node obstacle = node["obstacles"][i];
         if(obstacle["box"].IsDefined())
@@ -52,14 +52,12 @@ env::Environment::Environment(const fcl::Box& box, const fcl::Transform3f& tf)
     parts_.emplace_back(ob);
 }
 
-env::Environment::Environment(const std::vector<env::Obstacle>& obs)
+env::Environment::Environment(std::vector<env::Obstacle> obs)
 {
     for (size_t i = 0; i < obs.size(); ++i)
     {
-
         CollisionGeometryPtr fclBox(new fcl::Box(obs[i].first.side[0], obs[i].first.side[1], obs[i].first.side[2]));
         std::shared_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, obs[i].second));
-
         ob->computeAABB();
         LOG(INFO) << ob->getAABB().min_ << "\t" << ob->getAABB().max_;
 

@@ -15,7 +15,9 @@ protected:
 	int numCollisionQueries;
 	int numDistanceQueries;
 	int numNodes;
+	int numIterations;
 public:
+	void clearPlannerInfo();
 	void addIterationTime(double time);
 	const std::vector<double> &getIterationsTimesOfExecution() const;
 	void setIterationsTimesOfExecution(const std::vector<double> &iterationsTimesOfExecution);
@@ -27,6 +29,8 @@ public:
 	void setNumDistanceQueries(int numDistanceQueries);
 	int getNumNodes() const;
 	void setNumNodes(int numNodes);
+	int getNumIterations() const;
+	void setNumIterations(int numIterations);
 
 };
 

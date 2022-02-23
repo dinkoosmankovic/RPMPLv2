@@ -35,3 +35,7 @@ target_link_libraries(test_xarm6 PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
 add_executable(test_rrtconnect_fcl_xarm6 test_rrtconnect_fcl_xarm6.cpp)
 target_compile_features(test_rrtconnect_fcl_xarm6 PRIVATE cxx_std_17)
 target_link_libraries(test_rrtconnect_fcl_xarm6 PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
+
+add_executable(test_rrtconnect_fcl_benchmark test_rrtconnect_fcl_benchmark.cpp)
+target_compile_features(test_rrtconnect_fcl_benchmark PRIVATE cxx_std_17)
+target_link_libraries(test_rrtconnect_fcl_benchmark PUBLIC rpmpl_library ${PROJECT_LIBRARIES})

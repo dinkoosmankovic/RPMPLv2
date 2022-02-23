@@ -26,9 +26,10 @@ namespace planning
 			Status connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q_rand);
 			std::shared_ptr<base::State> get_q_near(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q);
 			void addNode(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q);
-			const std::vector<std::shared_ptr<base::State>> &getPath() const;
-			void outputPlannerData(std::string filename) const override;
+			const std::vector<std::shared_ptr<base::State>> &getPath() const override;
+			void outputPlannerData(std::string filename, bool outputStatesAndPaths=true, bool appendOutput=false) const override;
 			bool isTerminationConditionSatisfied() const override;
+			void clearPlanner();
 		private:
 			std::shared_ptr<base::StateSpace> ss;
 			std::shared_ptr<base::State> start;
@@ -38,8 +39,6 @@ namespace planning
 			void initPlanner();
 			void prepareKdTrees();
 			void computePath();
-			std::shared_ptr<base::KdTree> startKdTree;
-			std::shared_ptr<base::KdTree> goalKdTree;
 			//TODO: Read from configuration file
 			double step = 0.2;
 			std::vector<std::shared_ptr<base::State>> path;

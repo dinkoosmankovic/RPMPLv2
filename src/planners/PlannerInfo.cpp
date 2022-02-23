@@ -5,6 +5,17 @@
 #include <PlannerInfo.h>
 #include "PlannerInfo.h"
 
+void PlannerInfo::clearPlannerInfo()
+{
+	iterationsTimesOfExecution.clear();
+	planningTime = 0;
+	numCollisionQueries = 0;
+	numDistanceQueries = 0;
+	numNodes = 0;
+	numIterations = 0;
+}
+
+
 const std::vector<double> &PlannerInfo::getIterationsTimesOfExecution() const
 {
 	return iterationsTimesOfExecution;
@@ -58,4 +69,14 @@ void PlannerInfo::setNumNodes(int numNodes)
 void PlannerInfo::addIterationTime(double time)
 {
 	iterationsTimesOfExecution.emplace_back(time);
+}
+
+int PlannerInfo::getNumIterations() const
+{
+	return numIterations;
+}
+
+void PlannerInfo::setNumIterations(int numIterations)
+{
+	numIterations = numIterations;
 }

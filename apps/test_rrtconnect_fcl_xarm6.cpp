@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 			// TODO: read from configuration yaml
 			
 		}
-		planner->outputPlannerData("/tmp/plannerData.log");
+		planner->outputPlannerData("/tmp/plannerData.log", true);
 
 	}
 	catch (std::domain_error& e)

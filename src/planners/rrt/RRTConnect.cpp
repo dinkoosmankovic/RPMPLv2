@@ -63,8 +63,6 @@ bool planning::rrt::RRTConnect::solve()
 	// T_start and T_goal are initialized
 	std::shared_ptr<base::Tree> Ta = std::make_shared<base::Tree>(startTree);
 	std::shared_ptr<base::Tree> Tb = std::make_shared<base::Tree>(goalTree);
-	std::shared_ptr<base::KdTree> Kd_Ta = Ta->getKdTree();
-	std::shared_ptr<base::KdTree> Kd_Tb = Tb->getKdTree();
 	int MAX_ITER = RRTConnectConfig::MAX_ITER;
 	for (size_t i = 0; i < MAX_ITER; ++i)
 	{
@@ -79,9 +77,10 @@ bool planning::rrt::RRTConnect::solve()
 			if (connect(Tb, q_new) == Reached)
 			{
 				LOG(INFO) << "Connected after " << i + 1 << " iterations!";
+				plannerInfo->setNumIterations(i + 1);
 				computePath();
 				auto end = std::chrono::steady_clock::now();
-				double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+				double elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 				plannerInfo->setPlanningTime(elapsed);
 				return true;
 			}
@@ -215,6 +214,14 @@ void planning::rrt::RRTConnect::computePath()
 	}
 }
 
+void planning::rrt::RRTConnect::clearPlanner()
+{
+	startTree.emptyTree();
+	goalTree.emptyTree();
+	path.empty();
+	initPlanner();
+}
+
 const std::vector<std::shared_ptr<base::State>> &planning::rrt::RRTConnect::getPath() const
 {
 	return path;
@@ -225,28 +232,38 @@ bool planning::rrt::RRTConnect::isTerminationConditionSatisfied() const
 	false;
 }
 
-void planning::rrt::RRTConnect::outputPlannerData(std::string filename) const
+void planning::rrt::RRTConnect::outputPlannerData(std::string filename, bool outputStatesAndPaths, bool appendOutput) const
 {
 	std::ofstream outputFile;
-	outputFile.open(filename);
+	std::ios_base::openmode mode = std::ofstream::out;
+
+	if (appendOutput)
+		mode = std::ofstream::app;
+
+	outputFile.open(filename, mode);
 	if (outputFile.is_open())
 	{
 		outputFile << "Space Type: " << ss->getStateSpaceType() << std::endl;
 		outputFile << "Space dimension: " << ss->getDimensions() << std::endl;
 		outputFile << "Planner type:\t" << "RRTConnect" << std::endl;
 		outputFile << "Planner info: \n";
+		outputFile << "\t\t Number of iterations:\t" << plannerInfo->getNumIterations() << std::endl;
 		outputFile << "\t\t Number of nodes:\t" << plannerInfo->getNumNodes() << std::endl;
-		outputFile << "\t\t Planning time(ms):\t" << plannerInfo->getPlanningTime() << std::endl;
-		outputFile << startTree;
-		outputFile << goalTree;
-		if (path.size() > 0)
+		outputFile << "\t\t Planning time(us):\t" << plannerInfo->getPlanningTime() << std::endl;
+		if (outputStatesAndPaths)
 		{
-			outputFile << "Path:" << std::endl;
-			for (int i = 0; i < path.size(); i++)
+			outputFile << startTree;
+			outputFile << goalTree;
+			if (path.size() > 0)
 			{
-				outputFile << path.at(i) << std::endl;
+				outputFile << "Path:" << std::endl;
+				for (int i = 0; i < path.size(); i++)
+				{
+					outputFile << path.at(i) << std::endl;
+				}
 			}
 		}
+		outputFile << std::string(25, '-') << std::endl;
 		outputFile.close();
 	}
 	else

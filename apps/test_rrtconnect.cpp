@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 				std::cout << path.at(i) << std::endl;
 			}*/
 			// TODO: read from configuration yaml
-			planner->outputPlannerData("/tmp/plannerData.log");
+			planner->outputPlannerData("/tmp/plannerData.log", true);
 		}
 
 	}

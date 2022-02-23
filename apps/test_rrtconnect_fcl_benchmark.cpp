@@ -4,6 +4,7 @@
 #include <Scenario.h>
 #include <ConfigurationReader.h>
 #include <CommandLine.h>
+#include "Benchmark.h"
 
 #include <glog/logging.h>
 
@@ -45,27 +46,14 @@ int main(int argc, char **argv)
 	scenario::Scenario scenario(scenarioFilePath);
 
 	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
-
-	LOG(INFO) << "Using scenario: " << scenarioFilePath;
-	LOG(INFO) << "Dimensions: " << ss->getDimensions();
-	LOG(INFO) << "StateSpace Type: " << ss->getStateSpaceType();
+	benchmark::Benchmark benchmark;
+	benchmark.addBenchmarkContext(std::make_pair(
+		scenario,
+		"RRTConnect"
+	));
 	try
 	{
-		std::unique_ptr<planning::AbstractPlanner> planner = std::make_unique<planning::rrt::RRTConnect>(ss, scenario.getStart(), scenario.getGoal());
-		bool res = planner->solve();
-		LOG(INFO) << "RRTConnect planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
-		LOG(INFO) << "number of nodes: " << planner->getPlannerInfo()->getNumNodes();
-
-		if (res)
-		{
-			std::vector<std::shared_ptr<base::State>> path = planner->getPath();
-			/*for (int i = 0; i < path.size(); i++)
-			{
-				std::cout << path.at(i) << std::endl;
-			}*/
-			// TODO: read from configuration yaml
-		}
-		planner->outputPlannerData("/tmp/plannerData.log", true);
+		benchmark.runBenchmark();		
 	}
 	catch (std::domain_error &e)
 	{

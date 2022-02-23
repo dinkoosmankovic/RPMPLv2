@@ -21,7 +21,8 @@
 scenario::Scenario::Scenario(std::string configuration_file)
 {
     YAML::Node node = YAML::LoadFile(configuration_file);
-    std::vector<env::Obstacle> obstacles;
+    std::vector<env::Obstacle> obstacles(node["obstacles"].size());
+
     for (size_t i = 0; i < node["obstacles"].size(); ++i)
 	{
         YAML::Node obstacle = node["obstacles"][i];
@@ -39,9 +40,11 @@ scenario::Scenario::Scenario(std::string configuration_file)
             float ty = trans[1].as<float>();
             float tz = trans[2].as<float>();
             fcl::Transform3f tf(fcl::Vec3f(tx, ty, tz));
-            obstacles.emplace_back(std::make_pair(obs, tf));
+            env::Obstacle obs_(std::make_pair(obs, tf));
+            obstacles[i] = obs_;
         }
     }
+
     env = std::make_shared<env::Environment>(obstacles);
 
     YAML::Node robot_node = node["robot"];
