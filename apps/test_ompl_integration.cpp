@@ -2,9 +2,17 @@
 #include <ompl/base/spaces/SE3StateSpace.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/SimpleSetup.h>
+#include <ompl/tools/benchmark/Benchmark.h>
 
 #include <ompl/config.h>
 #include <iostream>
+#include <string>
+#include <memory>
+#include <functional>
+
+#include <Scenario.h>
+#include <RealVectorSpaceState.h>
+#include <Eigen/Dense>
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -12,62 +20,61 @@ namespace og = ompl::geometric;
 bool isStateValid(const ob::State *state)
 {
     // cast the abstract state type to the type we expect
-    const auto *se3state = state->as<ob::SE3StateSpace::StateType>();
+    const auto *realVectorSpaceState = state->as<ob::RealVectorStateSpace::StateType>();
 
-    // extract the first component of the state and cast it to what we expect
-    const auto *pos = se3state->as<ob::RealVectorStateSpace::StateType>(0);
+    std::cout << realVectorSpaceState->values[0] << "\t" << realVectorSpaceState->values[1] << std::endl;
 
-    // extract the second component of the state and cast it to what we expect
-    const auto *rot = se3state->as<ob::SO3StateSpace::StateType>(1);
-
-    // check validity of state defined by pos & rot
-
-
-    // return a value that is always true but uses the two variables we define, so we avoid compiler warnings
-    return (const void*)rot != (const void*)pos;
+    return true;
 }
 
-void plan()
+void plan(std::shared_ptr<scenario::Scenario> scenario)
 {
     // construct the state space we are planning in
-    auto space(std::make_shared<ob::SE3StateSpace>());
+    auto space(std::make_shared<ob::RealVectorStateSpace>(2));
 
-    // set the bounds for the R^3 part of SE(3)
-    ob::RealVectorBounds bounds(3);
-    bounds.setLow(-1);
-    bounds.setHigh(1);
+    ob::RealVectorBounds bounds(2);
+    bounds.setLow(-M_PI);
+    bounds.setHigh(M_PI);
 
     space->setBounds(bounds);
 
-    // construct an instance of  space information from this state space
-    auto si(std::make_shared<ob::SpaceInformation>(space));
+    ompl::geometric::SimpleSetup ss(space);
 
-    // set state validity checking for this space
-    si->setStateValidityChecker(isStateValid);
+    ss.setStateValidityChecker([scenario, space](const ob::State *state)
+                                { 
+                                    std::shared_ptr<base::StateSpace> ss = scenario->getStateSpace();
+                                    const auto *realVectorSpaceState = state->as<ob::RealVectorStateSpace::StateType>();
+                                    int dim = space->getDimension();
+                                    Eigen::VectorXf stateEigen(dim);
+                                    
+                                    for (size_t i = 0; i < space->getDimension(); ++i)
+                                        stateEigen(i) = (float)realVectorSpaceState->values[i];
+
+
+                                    std::shared_ptr<base::State> rpmplState = std::make_shared<base::RealVectorSpaceState>(stateEigen);
+                                    return ss->isValid(rpmplState);
+    });
 
     // create a random start state
     ob::ScopedState<> start(space);
-    start.random();
+    start->as<ob::RealVectorStateSpace::StateType>()->values[0] = -M_PI/2;
+    start->as<ob::RealVectorStateSpace::StateType>()->values[1] = 0;
 
     // create a random goal state
     ob::ScopedState<> goal(space);
-    goal.random();
+    goal->as<ob::RealVectorStateSpace::StateType>()->values[0] = -M_PI/2;
+    goal->as<ob::RealVectorStateSpace::StateType>()->values[1] = 0;
 
-    // create a problem instance
-    auto pdef(std::make_shared<ob::ProblemDefinition>(si));
+    ss.setStartAndGoalStates(start, goal);
+    ss.getSpaceInformation()->setStateValidityCheckingResolution(0.001);
 
-    // set the start and goal states
-    pdef->setStartAndGoalStates(start, goal);
-
-    // create a planner for the defined space
-    auto planner(std::make_shared<og::RRTConnect>(si));
+    /*auto planner(std::make_shared<og::RRTConnect>(si));
 
     // set the problem we are trying to solve for the planner
     planner->setProblemDefinition(pdef);
 
     // perform setup steps for the planner
     planner->setup();
-
 
     // print the settings for this space
     si->printSettings(std::cout);
@@ -76,7 +83,7 @@ void plan()
     pdef->print(std::cout);
 
     // attempt to solve the problem within one second of planning time
-    ob::PlannerStatus solved = planner->ob::Planner::solve(1.0);
+    ob::PlannerStatus solved = planner->ob::Planner::solve(10.0);
 
     if (solved)
     {
@@ -89,65 +96,25 @@ void plan()
         path->print(std::cout);
     }
     else
-        std::cout << "No solution found" << std::endl;
-}
+        std::cout << "No solution found" << std::endl;*/
 
-void planWithSimpleSetup()
-{
-    // construct the state space we are planning in
-    auto space(std::make_shared<ob::SE3StateSpace>());
-
-    // set the bounds for the R^3 part of SE(3)
-    ob::RealVectorBounds bounds(3);
-    bounds.setLow(-1);
-    bounds.setHigh(1);
-
-    space->setBounds(bounds);
-
-    // define a simple setup class
-    og::SimpleSetup ss(space);
-
-    // set state validity checking for this space
-    ss.setStateValidityChecker([](const ob::State *state) { return isStateValid(state); });
-
-    // create a random start state
-    ob::ScopedState<> start(space);
-    start.random();
-
-    // create a random goal state
-    ob::ScopedState<> goal(space);
-    goal.random();
-
-    // set the start and goal states
-    ss.setStartAndGoalStates(start, goal);
-
-    // this call is optional, but we put it in to get more output information
-    ss.setup();
-    ss.print();
-
-    // attempt to solve the problem within one second of planning time
-    ob::PlannerStatus solved = ss.solve(1.0);
-
-    if (solved)
-    {
-        std::cout << "Found solution:" << std::endl;
-        // print the path to screen
-        ss.simplifySolution();
-        ss.getSolutionPath().print(std::cout);
-    }
-    else
-        std::cout << "No solution found" << std::endl;
+    double runtime_limit = 60, memory_limit = 1024;
+    int run_count = 20;
+    ompl::tools::Benchmark::Request request(runtime_limit, memory_limit, run_count, 0.5);
+    ompl::tools::Benchmark b(ss, "scenario_easy_2dof" );
+    b.addPlanner(std::make_shared<ompl::geometric::RRTConnect>(ss.getSpaceInformation()));
+    b.benchmark(request);
+    b.saveResultsToFile("/tmp/omplBenchmark.log");
 }
 
 int main(int /*argc*/, char ** /*argv*/)
 {
+    std::shared_ptr<scenario::Scenario> scenario = std::make_shared<scenario::Scenario>("data/planar_2dof/scenario_easy.yaml");
     std::cout << "OMPL version: " << OMPL_VERSION << std::endl;
 
-    plan();
+    plan(scenario);
 
-    std::cout << std::endl << std::endl;
-
-    planWithSimpleSetup();
+    std::cout << std::endl;
 
     return 0;
 }

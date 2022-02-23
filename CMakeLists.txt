@@ -49,14 +49,14 @@ include_directories(${OROCOS_KDL_INCLUDE_DIR})
 
 find_package(yaml-cpp REQUIRED)
 
-#find_package(local-ompl REQUIRED)
-#include_directories(${OMPL_INCLUDE_DIRS})
+find_package(ompl REQUIRED)
+include_directories(${OMPL_INCLUDE_DIRS})
 
 add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
 add_subdirectory(external/googletest)
 
-set(PROJECT_LIBRARIES gtest glog::glog nanoflann kdl_parser orocos-kdl fcl yaml-cpp)
+set(PROJECT_LIBRARIES gtest glog::glog nanoflann kdl_parser orocos-kdl fcl yaml-cpp ${OMPL_LIBRARIES})
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data/
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
