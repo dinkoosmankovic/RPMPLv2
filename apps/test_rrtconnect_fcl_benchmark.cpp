@@ -46,18 +46,21 @@ int main(int argc, char **argv)
 	scenario::Scenario scenario(scenarioFilePath);
 
 	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
-	benchmark::Benchmark benchmark;
-	benchmark.addBenchmarkContext(std::make_pair(
-		scenario,
-		"RRTConnect"
-	));
-	try
+	for (size_t i = 0; i < 10; ++i)
 	{
-		benchmark.runBenchmark();		
-	}
-	catch (std::domain_error &e)
-	{
-		LOG(ERROR) << e.what();
+		benchmark::Benchmark benchmark;
+		benchmark.addBenchmarkContext(std::make_pair(
+			scenario,
+			"RRTConnect"
+		));
+		try
+		{
+			benchmark.runBenchmark();		
+		}
+		catch (std::domain_error &e)
+		{
+			LOG(ERROR) << e.what();
+		}
 	}
 	google::ShutDownCommandLineFlags();
 	return 0;

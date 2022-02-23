@@ -16,6 +16,7 @@ protected:
 	int numDistanceQueries;
 	int numNodes;
 	int numIterations;
+	bool successState = false;
 public:
 	void clearPlannerInfo();
 	void addIterationTime(double time);
@@ -31,6 +32,9 @@ public:
 	void setNumNodes(int numNodes);
 	int getNumIterations() const;
 	void setNumIterations(int numIterations);
+
+	bool getSuccessState() const;
+	void setSuccessState(bool successState);
 
 };
 

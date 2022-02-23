@@ -19,17 +19,16 @@ void benchmark::Benchmark::runContext(BenchmarkContext context)
 {
     scenario::Scenario scenario = context.first;
     std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
-    std::shared_ptr<planning::AbstractPlanner> planner = nullptr;
     if (context.second == "RRTConnect")
-        planner = std::make_shared<planning::rrt::RRTConnect>(ss, scenario.getStart(), scenario.getGoal());
-    for (size_t i = 0; i < numberOfRuns; ++i)
     {
-        bool res = planner->solve();
-        planner->outputPlannerData(benchmarkFile, false, true);
+        planning::rrt::RRTConnect planner(ss, scenario.getStart(), scenario.getGoal());
+        for (size_t i = 0; i < numberOfRuns; ++i)
+        {
+            bool res = planner.solve();
+            planner.outputPlannerData(benchmarkFile, false, true);
+        }
+        planner.clearPlanner();
     }
-    planner->clearPlanner();
-    planner.reset();
-    planner = nullptr;
 }
 void benchmark::Benchmark::runBenchmark()
 {

@@ -78,5 +78,15 @@ int PlannerInfo::getNumIterations() const
 
 void PlannerInfo::setNumIterations(int numIterations)
 {
-	numIterations = numIterations;
+	PlannerInfo::numIterations = numIterations;
+}
+
+bool PlannerInfo::getSuccessState() const
+{
+	return successState;
+}
+
+void PlannerInfo::setSuccessState(bool successState)
+{
+	PlannerInfo::successState = successState;
 }

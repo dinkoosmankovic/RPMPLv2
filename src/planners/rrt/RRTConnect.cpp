@@ -78,6 +78,7 @@ bool planning::rrt::RRTConnect::solve()
 			{
 				LOG(INFO) << "Connected after " << i + 1 << " iterations!";
 				plannerInfo->setNumIterations(i + 1);
+				plannerInfo->setSuccessState(true);
 				computePath();
 				auto end = std::chrono::steady_clock::now();
 				double elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
@@ -106,6 +107,7 @@ bool planning::rrt::RRTConnect::solve()
 		plannerInfo->addIterationTime(elapsed);
 		plannerInfo->setNumNodes(Ta->getStates()->size() + Tb->getStates()->size());
 	}
+	plannerInfo->setSuccessState(false);
 	return false;
 }
 
@@ -247,6 +249,7 @@ void planning::rrt::RRTConnect::outputPlannerData(std::string filename, bool out
 		outputFile << "Space dimension: " << ss->getDimensions() << std::endl;
 		outputFile << "Planner type:\t" << "RRTConnect" << std::endl;
 		outputFile << "Planner info: \n";
+		outputFile << "\t\t Succesfull:\t" << plannerInfo->getSuccessState() << std::endl;
 		outputFile << "\t\t Number of iterations:\t" << plannerInfo->getNumIterations() << std::endl;
 		outputFile << "\t\t Number of nodes:\t" << plannerInfo->getNumNodes() << std::endl;
 		outputFile << "\t\t Planning time(us):\t" << plannerInfo->getPlanningTime() << std::endl;

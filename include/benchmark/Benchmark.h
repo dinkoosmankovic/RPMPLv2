@@ -10,7 +10,7 @@ namespace benchmark
     class Benchmark
     {
     private:
-        size_t numberOfRuns = 10;
+        size_t numberOfRuns = 1;
         std::string benchmarkFile = "/tmp/benchmark.log";
         std::vector<benchmark::BenchmarkContext> contexts;
 
