@@ -30,7 +30,7 @@ add_library(rpmpl_library SHARED ${SRC_LIST} ${HEADER_LIST})
 target_include_directories(rpmpl_library PUBLIC ${INCLUDE_DIRS} )
 
 # All users of this library will need at least C++11
-target_compile_features(rpmpl_library PUBLIC cxx_std_11)
+target_compile_features(rpmpl_library PUBLIC cxx_std_17)
 
 # IDEs should put the headers in a nice place
 source_group(
