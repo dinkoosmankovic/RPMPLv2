@@ -9,9 +9,17 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <memory>
+#include <nanoflann.hpp>
 
 namespace base
 {
+	class Tree;
+
+	typedef nanoflann::KDTreeSingleIndexDynamicAdaptor<
+	nanoflann::L2_Simple_Adaptor<double, base::Tree> ,
+	base::Tree /* dim */
+	> KdTree;
+
 	class State
 	{
 	private:
@@ -35,6 +43,7 @@ namespace base
 	{
 		std::shared_ptr<std::vector<std::shared_ptr<base::State>>> states;
 		std::string treeName;
+		std::shared_ptr<base::KdTree> kdTree;
 	public:
 		const std::string &getTreeName() const
 		{
@@ -46,7 +55,6 @@ namespace base
 			Tree::treeName = treeName;
 		}
 
-	public:
 		Tree(std::shared_ptr<std::vector<std::shared_ptr<base::State> > > states_) : states(states_) {}
 		~Tree(){}
 		Tree()
@@ -83,6 +91,13 @@ namespace base
 		}
 		template <class BBOX>
 		bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+
+		std::shared_ptr<base::KdTree> getKdTree() const { return kdTree; }
+
+		void setKdTree(std::shared_ptr<base::KdTree> kdtree_)
+		{
+			Tree::kdTree = kdtree_;
+		}
 
 		friend std::ostream& operator<<(std::ostream& os, const Tree& tree)
 		{

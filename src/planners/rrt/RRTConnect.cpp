@@ -63,20 +63,20 @@ bool planning::rrt::RRTConnect::solve()
 	// T_start and T_goal are initialized
 	std::shared_ptr<base::Tree> Ta = std::make_shared<base::Tree>(startTree);
 	std::shared_ptr<base::Tree> Tb = std::make_shared<base::Tree>(goalTree);
-	std::shared_ptr<KdTree> Kd_Ta = startKdTree;
-	std::shared_ptr<KdTree> Kd_Tb = goalKdTree;
+	std::shared_ptr<base::KdTree> Kd_Ta = Ta->getKdTree();
+	std::shared_ptr<base::KdTree> Kd_Tb = Tb->getKdTree();
 	int MAX_ITER = RRTConnectConfig::MAX_ITER;
 	for (size_t i = 0; i < MAX_ITER; ++i)
 	{
 		std::shared_ptr<base::State> q_rand = getSs()->randomState();
 		//LOG(INFO) << "Iteration: " << i;
 		//LOG(INFO) << "Tree: " << Ta->getTreeName();
-		if (extend(Ta, Kd_Ta, q_rand) != Trapped)
+		if (extend(Ta, q_rand) != Trapped)
 		{
 			//LOG(INFO) << "Not Trapped";
 			std::shared_ptr<base::State> q_new = Ta->getStates()->back();
 			//LOG(INFO) << "Trying to connect to: " << q_new->getCoord().transpose() << " from " << Tb->getTreeName();
-			if (connect(Tb, Kd_Tb, q_new) == Reached)
+			if (connect(Tb, q_new) == Reached)
 			{
 				LOG(INFO) << "Connected after " << i + 1 << " iterations!";
 				computePath();
@@ -101,7 +101,6 @@ bool planning::rrt::RRTConnect::solve()
 			Kd_Tb = startKdTree;
 		}*/
 		std::swap(Ta, Tb);
-		std::swap(Kd_Ta, Kd_Tb);
 		//LOG(INFO) << "Trees swapped!";
 		auto end = std::chrono::steady_clock::now();
 		double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -121,22 +120,22 @@ base::Tree planning::rrt::RRTConnect::getGoalTree() const
 	return goalTree;
 }
 
-void planning::rrt::RRTConnect::addNode(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q)
+void planning::rrt::RRTConnect::addNode(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q)
 {
 	int K = tree->getStates()->size();
 	tree->getStates()->emplace_back(q);
-	kdtree->addPoints(K - 1, K - 1);
+	tree->getKdTree()->addPoints(K, K);
 }
 
-planning::rrt::Status planning::rrt::RRTConnect::extend(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q_rand)
+planning::rrt::Status planning::rrt::RRTConnect::extend(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q_rand)
 {
-	std::shared_ptr<base::State> q_near = get_q_near(tree, kdtree, q_rand);
+	std::shared_ptr<base::State> q_near = get_q_near(tree, q_rand);
 	std::shared_ptr<base::State> q_new = ss->interpolate(q_near, q_rand, step);
 	//LOG(INFO) << q_near->getCoord().transpose();
 	if (q_new != nullptr && ss->isValid(q_near, q_new))
 	{
 		q_new->setParent(q_near);
-		addNode(tree, kdtree, q_new);
+		addNode(tree, q_new);
 		if (ss->equal(q_new, q_rand))
 		{
 			//LOG(INFO) << "Reached";
@@ -151,7 +150,7 @@ planning::rrt::Status planning::rrt::RRTConnect::extend(std::shared_ptr<base::Tr
 	return planning::rrt::Trapped;
 }
 
-planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q)
+planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q)
 {
 	//LOG(INFO) << "Inside connect.";
 	Status s = planning::rrt::Advanced;
@@ -159,13 +158,13 @@ planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::T
 	int MAX_EXTENSION_STEPS = RRTConnectConfig::MAX_EXTENSION_STEPS;
 	while (s == planning::rrt::Advanced && num_ext++ < MAX_EXTENSION_STEPS)
 	{
-		s = extend(tree, kdtree, q);
+		s = extend(tree, q);
 	}
 	//LOG(INFO) << "extended.";
 	return s;
 }
 
-std::shared_ptr<base::State> planning::rrt::RRTConnect::get_q_near(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q)
+std::shared_ptr<base::State> planning::rrt::RRTConnect::get_q_near(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q)
 {
 	const size_t num_results = 1;
 	size_t ret_index;
@@ -176,7 +175,7 @@ std::shared_ptr<base::State> planning::rrt::RRTConnect::get_q_near(std::shared_p
 							q->getCoord().data() + q->getCoord().rows() *
 												   q->getCoord().cols());
 	double *vec_c = &vec[0];
-	kdtree->findNeighbors(resultSet, vec_c, nanoflann::SearchParams(10));
+	tree->getKdTree()->findNeighbors(resultSet, vec_c, nanoflann::SearchParams(10));
 	vec_c = nullptr;
 	return tree->getStates()->at(ret_index);
 }
@@ -184,10 +183,17 @@ std::shared_ptr<base::State> planning::rrt::RRTConnect::get_q_near(std::shared_p
 void planning::rrt::RRTConnect::prepareKdTrees()
 {
 	int dim = ss->getDimensions();
-	startKdTree = std::make_shared<KdTree>( dim, startTree, nanoflann::KDTreeSingleIndexAdaptorParams(10) );
-	goalKdTree = std::make_shared<KdTree>( dim, goalTree, nanoflann::KDTreeSingleIndexAdaptorParams(10) );
-	startKdTree->addPoints(0, 0);
-	goalKdTree->addPoints(0, 0);
+	//startKdTree = std::make_shared<base::KdTree>( dim, startTree, nanoflann::KDTreeSingleIndexAdaptorParams(10) );
+	//goalKdTree = std::make_shared<base::KdTree>( dim, goalTree, nanoflann::KDTreeSingleIndexAdaptorParams(10) );
+	//startKdTree->addPoints(0, 0);
+	//goalKdTree->addPoints(0, 0);
+
+	startTree.setKdTree(std::make_shared<base::KdTree>( dim, startTree, nanoflann::KDTreeSingleIndexAdaptorParams(10) ));
+	goalTree.setKdTree(std::make_shared<base::KdTree>( dim, goalTree, nanoflann::KDTreeSingleIndexAdaptorParams(10) ));
+
+	startTree.getKdTree()->addPoints(0,0);
+	goalTree.getKdTree()->addPoints(0,0);
+	
 }
 
 void planning::rrt::RRTConnect::computePath()
@@ -212,6 +218,11 @@ void planning::rrt::RRTConnect::computePath()
 const std::vector<std::shared_ptr<base::State>> &planning::rrt::RRTConnect::getPath() const
 {
 	return path;
+}
+
+bool planning::rrt::RRTConnect::isTerminationConditionSatisfied() const
+{
+	false;
 }
 
 void planning::rrt::RRTConnect::outputPlannerData(std::string filename) const

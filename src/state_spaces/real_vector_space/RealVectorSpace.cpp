@@ -46,12 +46,20 @@ std::shared_ptr<base::State> base::RealVectorSpace::randomState()
 	return state;
 }
 
-std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, double t)
+std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, float step)
 {
 	std::shared_ptr<base::State> q_t = randomState();
-	Eigen::VectorXf eig = ( q2->getCoord() - q1->getCoord() ) / (q2->getCoord() - q1->getCoord()).norm();
-	q_t->setCoord( q1->getCoord() + t * eig );
-
+	float distanceStates = (q2->getCoord() - q1->getCoord()).norm();
+	Eigen::VectorXf eig; 
+	if (step < distanceStates)
+	{
+		eig = (q2->getCoord() - q1->getCoord()) / distanceStates;
+		q_t->setCoord(q1->getCoord() + step * eig);
+	}
+	else
+	{
+		q_t->setCoord(q2->getCoord());
+	}
 	// here we check the validity of the motion q1->q_t
 	if (isValid(q_t))
 		return q_t;
@@ -71,6 +79,7 @@ bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const s
 bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
 	int numChecks = RealVectorSpaceConfig::NUM_INTERPOLATION_VALIDITY_CHECKS;
+	float statesDistance = (q2->getCoord() - q1->getCoord()).norm();
 	for (double t = 1./numChecks; t <= 1; t += 1./numChecks)
 	{
 		std::shared_ptr<base::State> q_t = interpolate(q1, q2, t);

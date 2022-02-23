@@ -8,5 +8,6 @@ class RRTConnectConfig
         static int MAX_ITER;
         static int MAX_EXTENSION_STEPS;
         static float EPS_STEP;
+        static float MAX_EXECUTION_TIME;
 
 };
