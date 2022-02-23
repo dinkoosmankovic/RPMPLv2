@@ -12,6 +12,7 @@ PyOpenGL==3.1.5
 pyrender==0.1.43
 python-dateutil==2.8.2
 python-fcl==0.6.1
+PyYAML==6.0
 scipy==1.8.0
 six==1.16.0
 trimesh==3.10.0

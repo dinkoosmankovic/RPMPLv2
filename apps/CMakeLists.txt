@@ -28,6 +28,14 @@ add_executable(test_obstacle_parsing test_obstacle_parsing.cpp)
 target_compile_features(test_obstacle_parsing PRIVATE cxx_std_17)
 target_link_libraries(test_obstacle_parsing PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
 
+add_executable(test_xarm6 test_xarm6.cpp)
+target_compile_features(test_xarm6 PRIVATE cxx_std_17)
+target_link_libraries(test_xarm6 PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
+
+add_executable(test_rrtconnect_fcl_xarm6 test_rrtconnect_fcl_xarm6.cpp)
+target_compile_features(test_rrtconnect_fcl_xarm6 PRIVATE cxx_std_17)
+target_link_libraries(test_rrtconnect_fcl_xarm6 PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
+
 add_executable(test_rbtconnect_fcl test_rbtconnect_fcl.cpp)
 target_compile_features(test_rbtconnect_fcl PRIVATE cxx_std_17)
 target_link_libraries(test_rbtconnect_fcl PUBLIC rpmpl_library ${PROJECT_LIBRARIES})

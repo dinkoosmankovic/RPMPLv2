@@ -5,6 +5,7 @@
 #include "RealVectorSpaceState.h"
 #include <ostream>
 #include <Eigen/Dense>
+#include "ConfigurationReader.h"
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 
@@ -92,7 +93,7 @@ std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::share
 bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
 	float d = (q1->getCoord() - q2->getCoord()).norm();
-	float stateEqualityThreshold = 1e-6; // TODO: needs to be obtained from configuration file
+	float stateEqualityThreshold = RealVectorSpaceConfig::EQUALITY_THRESHOLD;
 	if (d < stateEqualityThreshold)
 		return true;
 	return false;
@@ -100,7 +101,7 @@ bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const s
 
 bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
-	int numChecks = 10;
+	int numChecks = RealVectorSpaceConfig::NUM_INTERPOLATION_VALIDITY_CHECKS;
 	float D = (q2->getCoord() - q1->getCoord()).norm();
 	for (float t = 1./numChecks; t <= 1; t += 1./numChecks)
 	{

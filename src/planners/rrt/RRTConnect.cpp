@@ -6,6 +6,7 @@
 #include <nanoflann.hpp>
 #include <fstream>
 #include "RealVectorSpaceState.h"
+#include "ConfigurationReader.h"
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 
@@ -36,6 +37,7 @@ void planning::rrt::RRTConnect::initPlanner()
 	// TODO:
 	LOG(INFO) << "Initializing planner...";
 	plannerInfo = std::make_shared<PlannerInfo>();
+	epsilon = RRTConnectConfig::EPS_STEP;
 	TREES = {base::Tree("start", 0), 
 			 base::Tree("goal",  1)};
 	kdtrees = {std::make_shared<KdTree>(ss->getDimensions(), TREES[0], nanoflann::KDTreeSingleIndexAdaptorParams(10)),
@@ -132,8 +134,9 @@ planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::T
 	// LOG(INFO) << "Inside connect.";
 	std::shared_ptr<base::State> q_new = q;
 	planning::rrt::Status status = planning::rrt::Advanced;
-	int num_ext = 0;  // TODO: should be read from configuration
-	while (status == planning::rrt::Advanced && num_ext++ < 50)
+	int numExt = 0;  // TODO: should be read from configuration
+	int MAX_EXTENSION_STEPS = RRTConnectConfig::MAX_EXTENSION_STEPS;
+	while (status == planning::rrt::Advanced && numExt++ < MAX_EXTENSION_STEPS)
 	{
 		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
 		tie(status, q_new) = extend(q_temp, q_e);
@@ -208,6 +211,9 @@ void planning::rrt::RRTConnect::outputPlannerData(std::string filename) const
 		outputFile << "Space Type: " << ss->getStateSpaceType() << std::endl;
 		outputFile << "Space dimension: " << ss->getDimensions() << std::endl;
 		outputFile << "Planner type:\t" << "RRTConnect" << std::endl;
+		outputFile << "Planner info: \n";
+		outputFile << "\t\t Number of nodes:\t" << plannerInfo->getNumStates() << std::endl;
+		outputFile << "\t\t Planning time(ms):\t" << plannerInfo->getPlanningTime() << std::endl;
 		outputFile << TREES[0];
 		outputFile << TREES[1];
 		if (path.size() > 0)

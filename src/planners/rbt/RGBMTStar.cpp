@@ -55,7 +55,7 @@ bool planning::rbt::RGBMTStar::solve()
     float cost;
     plannerInfo->setNumIterations(0);
 
-maxNumStates = 20;
+maxNumStates = 10;
     while (true)
     {
 		LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
@@ -238,7 +238,7 @@ maxNumStates = 20;
 		if (checkStoppingCondition(q_con0, q_con1, time_start))
 		{
 			plannerInfo->setPlanningTime(getElapsedTime(time_start));
-			return true;
+			return (costOpt < INFINITY) ? true : false;
 		}
     }
 }
