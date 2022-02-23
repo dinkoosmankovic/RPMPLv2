@@ -19,6 +19,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 
   # Testing only available if this is the main app
@@ -48,8 +49,8 @@ include_directories(${OROCOS_KDL_INCLUDE_DIR})
 
 find_package(yaml-cpp REQUIRED)
 
-find_package(local-ompl REQUIRED)
-include_directories(${OMPL_INCLUDE_DIRS})
+#find_package(local-ompl REQUIRED)
+#include_directories(${OMPL_INCLUDE_DIRS})
 
 add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
