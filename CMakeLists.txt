@@ -48,6 +48,9 @@ include_directories(${OROCOS_KDL_INCLUDE_DIR})
 
 find_package(yaml-cpp REQUIRED)
 
+find_package(local-ompl REQUIRED)
+include_directories(${OMPL_INCLUDE_DIRS})
+
 add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
 add_subdirectory(external/googletest)
