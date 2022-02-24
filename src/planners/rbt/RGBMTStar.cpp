@@ -55,17 +55,26 @@ bool planning::rbt::RGBMTStar::solve()
     float cost;
     plannerInfo->setNumIterations(0);
 
-maxNumStates = 1000;
     while (true)
     {
 		LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
         // Adding a new tree rooted in 'q_rand'
-		q_rand = getRandomState();
+		std::shared_ptr<base::State> q_rand = getRandomState();
         TREES.emplace_back(base::Tree("local", treeNewIdx));
         // kdtrees.emplace_back(std::make_shared<KdTree>(ss->getDimensions(), TREES[treeNewIdx], nanoflann::KDTreeSingleIndexAdaptorParams(10)));
         // TREES[treeNewIdx].upgradeTree(kdtrees[treeNewIdx], q_rand, nullptr, -1, nullptr, 0);
         TREES[treeNewIdx].upgradeTree(q_rand, nullptr, -1, nullptr, 0);
         trees.emplace_back(std::make_shared<base::Tree>(TREES[treeNewIdx]));
+        
+        std::cout << "---------TREE NEW " << treeNewIdx << "--------------------" << std::endl; 
+                for (int kk = 0; kk < trees[treeNewIdx]->getStates()->size(); kk++)
+                {
+                    std::cout << "q" <<kk<<"  "<< trees[treeNewIdx]->getState(kk)->getCoord().transpose(); 
+                    if (trees[treeNewIdx]->getState(kk)->getParent() != nullptr) 
+                        std::cout << "  parent: "<< trees[treeNewIdx]->getState(kk)->getParent()->getCoord().transpose() << std::endl;
+                    else
+                        std::cout << " nullptr " << std::endl; 
+                }
 
         treesExist.clear();
         treesReached.clear();
@@ -79,9 +88,9 @@ maxNumStates = 1000;
             // If the connection with 'q_near' is not possible, attempt to connect with 'parent(q_near)', etc.
             // q_near = trees[idx]->getNearestState(kdtrees[idx], q_rand);
             q_near = trees[idx]->getNearestStateV2(q_rand);
-                std::cout << "---------- tree " << idx << " ---------" << std::endl; 
+                std::cout << "---------- Try to connect to tree " << idx << " ---------" << std::endl; 
             std::shared_ptr<base::State> q_nearNew = ss->newState(q_near);
-                std::cout << "q_nearNew " << q_nearNew->getCoord().transpose() << std::endl; 
+                std::cout << "q_near " << q_nearNew->getCoord().transpose() << std::endl; 
             while (true)
             {
                 tie(status, q_new) = connectGenSpine(q_rand, q_nearNew);
@@ -95,6 +104,7 @@ maxNumStates = 1000;
                 }
             }
 
+                std::cout << "q_nearNew " << q_nearNew->getCoord().transpose() << std::endl; 
                 std::cout << "q_new " << q_new->getCoord().transpose() << std::endl; 
             // Whether currently considering tree ('treeNewIdx'-th tree) is reached
             cost = getCostToCome(q_rand, q_new);
@@ -115,12 +125,12 @@ maxNumStates = 1000;
             }
         }
 
-                std::cout << "---------Tree new " << treeNewIdx << "--------------------" << std::endl; 
+                std::cout << "---------TREE NEW " << treeNewIdx << "--------------------" << std::endl; 
                 for (int kk = 0; kk < trees[treeNewIdx]->getStates()->size(); kk++)
                 {
                     std::cout << "q" <<kk<<"  "<< trees[treeNewIdx]->getState(kk)->getCoord().transpose(); 
                     if (trees[treeNewIdx]->getState(kk)->getParent() != nullptr) 
-                        std::cout << "   parent: "<< trees[treeNewIdx]->getState(kk)->getParent()->getCoord().transpose() << std::endl;
+                        std::cout << "  parent: "<< trees[treeNewIdx]->getState(kk)->getParent()->getCoord().transpose() << std::endl;
                     else
                         std::cout << " nullptr " << std::endl; 
                 }
@@ -142,15 +152,16 @@ maxNumStates = 1000;
 
             // Considering all edges from the new tree
             // q_rand = optimize(q_rand, trees[treeIdx], kdtrees[treeIdx], statesReached[treeIdx]);
+                std::cout << "Optimized q_k: " << q_rand->getCoord().transpose() << " with tree " << treeIdx << std::endl; 
             q_rand = optimize(q_rand, trees[treeIdx], kdtrees[0], statesReached[treeIdx]);
-                std::cout << "Optimized with q_rand " << q_rand->getCoord().transpose() << std::endl; 
+                std::cout << "Result: q_rand " << q_rand->getCoord().transpose() << std::endl; 
                 
-            std::cout << "---------Tree main "<< treeIdx <<" ------------" << std::endl; 
+            std::cout << "---------TREE MAIN "<< treeIdx <<" ------------" << std::endl; 
             for (int kk = 0; kk < trees[treeIdx]->getStates()->size(); kk++)
             {
                 std::cout << "q" <<kk<<"  "<< trees[treeIdx]->getState(kk)->getCoord().transpose(); 
                 if (trees[treeIdx]->getState(kk)->getParent() != nullptr) 
-                    std::cout << "   parent: "<< trees[treeIdx]->getState(kk)->getParent()->getCoord().transpose() << std::endl;
+                    std::cout << "  parent: "<< trees[treeIdx]->getState(kk)->getParent()->getCoord().transpose() << std::endl;
                 else
                     std::cout << " nullptr " << std::endl; 
             }       
@@ -168,39 +179,42 @@ maxNumStates = 1000;
                 std::cout << "tree " << idx << std::endl; 
                 // Unification of tree 'idx' with 'treeIdx'. Main trees are never unified mutually
                 // q_new = optimize(trees[treeNewIdx]->getState(k), trees[treeIdx], kdtrees[treeIdx], q_rand); // From 'k'-th reached state to tree 'treeIdx'
+                std::cout << "Optimized q_k: " << trees[treeNewIdx]->getState(k)->getCoord().transpose() << " with tree " << treeIdx << std::endl; 
                 q_new = optimize(trees[treeNewIdx]->getState(k), trees[treeIdx], kdtrees[0], q_rand);
-                std::cout << "Optimized with q_new " << q_new->getCoord().transpose() << std::endl; 
+                std::cout << "Result: q_new " << q_new->getCoord().transpose() << std::endl; 
                 std::cout << "---------Tree main "<< treeIdx << " --------------- " << std::endl; 
                 for (int kk = 0; kk < trees[treeIdx]->getStates()->size(); kk++)
                 {
                     std::cout << "q" <<kk<<"  "<<trees[treeIdx]->getState(kk)->getCoord().transpose();
                     if (trees[treeIdx]->getState(kk)->getParent() != nullptr) 
-                        std::cout << "   parent: "<< trees[treeIdx]->getState(kk)->getParent()->getCoord().transpose() << std::endl;
+                        std::cout << "  parent: "<< trees[treeIdx]->getState(kk)->getParent()->getCoord().transpose() << std::endl;
                     else
                         std::cout << "nullptr " << std::endl; 
                 }
 
                 if (idx > 1 && std::find(treesReached.begin(), treesReached.end(), idx) != treesReached.end())
                 {
+                std::cout << "Inside unify " << std::endl; 
+                    
                     // unifyTrees(trees[idx], trees[treeIdx], kdtrees[treeIdx], statesReached[idx], q_new);
                     unifyTrees(trees[idx], trees[treeIdx], kdtrees[0], statesReached[idx], q_new);
                     treesConnected.emplace_back(idx);
-                std::cout << "unified " << idx << std::endl; 
+                std::cout << "Unified tree " << idx << " with tree " << treeIdx << std::endl; 
                 }
 
                 // The connection of 'q_rand' with both main trees exists
                 else if (idx < 2 && mainTreesReached(treesReached))
                 {
                     std::cout << "###########################" << std::endl;
-                    std::cout << "q_new " << q_new->getCoord().transpose() << std::endl;;  
+                    std::cout << "q_new from tree " << treeIdx << ": " << q_new->getCoord().transpose() << std::endl;;  
                     std::cout << "cost: " << q_new->getCost() << std::endl;
-                    std::cout << "q_new2 " << statesReached[idx]->getCoord().transpose() << std::endl;; 
+                    std::cout << "q_new2 from tree " << idx << ": " << statesReached[idx]->getCoord().transpose() << std::endl;; 
                     std::cout << "cost2: " << statesReached[idx]->getCost() << std::endl;
-                    std::cout << "###########################" << std::endl;
                     cost = q_new->getCost() + statesReached[idx]->getCost();
                     if (cost < costOpt)    // The optimal connection between main trees is stored
                     {
-                        costOpt = cost;    std::cout << "costOpt: " << costOpt << std::endl;
+                    std::cout << "#################################################################################" << std::endl;
+                        costOpt = cost;     std::cout <<"numNodes: " << plannerInfo->getNumStates() << "   costOpt: " << costOpt << std::endl;
                         if (treeIdx == 0)
                         {
                             q_con0 = q_new;
@@ -252,11 +266,13 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::getRandomState(){
         std::shared_ptr<base::State> q_rand = ss->randomState();    // Uniform distribution
         if (TREES.size() > 2)
         {
+                std::cout << "Maybe Gaussian distribution. Trees size: " << TREES.size() << std::endl; 
             int idx = (numStates[0] < numStates[1]) ? 0 : 1;
             numLocal = plannerInfo->getNumStates() - numStates[0] - numStates[1];
             std::default_random_engine generator;
             if (numLocal > numStates[idx])
             {
+                std::cout << "Inside Gaussian distribution " << std::endl; 
 	            std::vector<std::vector<float>> limits = ss->robot->getLimits();
                 for (int i = 0; i < ss->getDimensions(); i++)   // Gaussian distribution
                 {   
@@ -300,15 +316,17 @@ std::tuple<planning::rrt::Status, std::shared_ptr<base::State>>
 			tie(status, q_new_list) = extendGenSpine(q_temp, q_e);
 			q_new = q_new_list->back();
             d_c = getDistance(q_new);
+            std::cout << "extended by spine to: " << q_new->getCoord().transpose() << std::endl;
 		}
 		else
 		{
 			tie(status, q_new) = extend(q_temp, q_e);
-            if (++num_ext > 10)
-            {
-                d_c = getDistance(q_new);   
-                num_ext = 0;
-            }
+                std::cout << "extended by RRT to: " << q_new->getCoord().transpose() << " from " << q_temp->getCoord().transpose() << std::endl ; 
+            // if (++num_ext > 10)
+            // {
+            //     d_c = getDistance(q_new);   
+            //     num_ext = 0;
+            // }
 		}
 	}
 	return {status, q_new};
@@ -344,10 +362,10 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize(std::shared_ptr<
             break;
         }
     }
-                std::cout << "********* OPTIMIZE *********" << std::endl; 
-                std::cout << "q " << q->getCoord().transpose() << std::endl; 
-                std::cout << "q_reached " << q_reached->getCoord().transpose() << std::endl; 
-                std::cout << "q_reachedNew " << q_reachedNew->getCoord().transpose() << std::endl; 
+                // std::cout << "********* OPTIMIZE *********" << std::endl; 
+                // std::cout << "q " << q->getCoord().transpose() << std::endl; 
+                // std::cout << "q_reached " << q_reached->getCoord().transpose() << std::endl; 
+                // std::cout << "q_reachedNew " << q_reachedNew->getCoord().transpose() << std::endl; 
 
     std::shared_ptr<base::State> q_opt; 
     if (q_reachedNew->getParent() != nullptr)
@@ -404,8 +422,8 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize(std::shared_ptr<
     float cost = q_opt->getCost() + getCostToCome(q_opt, q_new);
     // tree->upgradeTree(kdtree, q_new, q_opt, q_new->getDistance(), q_new->getPlanes(), cost);
     tree->upgradeTree(q_new, q_opt, q_new->getDistance(), q_new->getPlanes(), cost);
-                std::cout << "q_opt " << q_opt->getCoord().transpose() << std::endl; 
-                std::cout << "q_new " << q_new->getCoord().transpose() << std::endl; 
+                // std::cout << "q_opt " << q_opt->getCoord().transpose() << std::endl; 
+                // std::cout << "q_new " << q_new->getCoord().transpose() << std::endl; 
     return q_new;
 }
 
@@ -420,15 +438,21 @@ void planning::rbt::RGBMTStar::unifyTrees(std::shared_ptr<base::Tree> tree, std:
     std::shared_ptr<base::State> q0_conNew = ss->newState(q0_con);
     while (true)
     {
+        // std::cout << "q_conNew " << q_conNew->getCoord().transpose() << " from tree "<< q_conNew->getTreeIdx() << std::endl; 
+        // std::cout << "q0_conNew " << q0_conNew->getCoord().transpose() << " from tree "<< q0_conNew->getTreeIdx() << std::endl; 
+        
         considerChildren(q_conNew, tree0, kdtree0, q0_conNew, q_considered);
         if (q_conNew->getParent() == nullptr)
         {
             break;
         }
+        // std::cout << "Optimize from " << q_conNew->getParent()->getCoord().transpose() << " to tree0. q0_conNew: " << q0_conNew->getParent()->getCoord().transpose() << std::endl; 
         q0_conNew = optimize(q_conNew->getParent(), tree0, kdtree0, q0_conNew);
         q_considered = q_conNew;
-        q_conNew = q_conNew->getParent();
+        q_conNew = ss->newState(q_conNew->getParent());
     }
+        // std::cout << "q_conNew " << q_conNew->getCoord().transpose() << " from tree "<< q_conNew->getTreeIdx()<< std::endl; 
+        // std::cout << "q0_conNew " << q0_conNew->getCoord().transpose() << " from tree "<< q0_conNew->getTreeIdx()<< std::endl; 
 }
 
 // Consider all children (except 'q_considered', that has already being considered) of 'q', and connect them optimally to 'tree0' 
@@ -441,7 +465,7 @@ void planning::rbt::RGBMTStar::considerChildren(std::shared_ptr<base::State> q, 
     {
         for (int i = 0; i < children->size(); i++)
         {
-            if (children->at(i) == q_considered)
+            if (ss->equal(children->at(i), q_considered))
             {
                 children->erase(children->begin() + i);
                 break;
@@ -452,8 +476,7 @@ void planning::rbt::RGBMTStar::considerChildren(std::shared_ptr<base::State> q, 
     for (int i = 0; i < children->size(); i++)
     {
         std::shared_ptr<base::State> q0_conNew = optimize(children->at(i), tree0, kdtree0, q0_con);
-        std::shared_ptr<std::vector<std::shared_ptr<base::State>>> children_new = children->at(i)->getChildren();
-        if (children_new->size() > 0)   // child has its own children
+        if (children->at(i)->getChildren()->size() > 0)   // child has its own children
         {
             considerChildren(children->at(i), tree0, kdtree0, q0_conNew, nullptr);  // 'nullptr' means that no children will be removed
         }
@@ -465,7 +488,7 @@ void planning::rbt::RGBMTStar::deleteTrees(std::vector<std::shared_ptr<base::Tre
 {
     for (int i = treesConnected.size()-1; i >= 0; i--)
     {
-        trees.erase(trees.begin() + treesConnected[i]); // not needed because of smart pointers
+        // trees.erase(trees.begin() + treesConnected[i]); // not needed because of smart pointers
         TREES.erase(TREES.begin() + treesConnected[i]);
     }
 }

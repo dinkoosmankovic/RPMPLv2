@@ -51,8 +51,10 @@ std::shared_ptr<base::State> base::Tree::getNearestState(std::shared_ptr<KdTree>
 	float out_dist_sqr;
 	nanoflann::KNNResultSet<float> resultSet(num_results);
 	resultSet.init(&q_near_idx, &out_dist_sqr);
-	std::vector<float> vec(q->getCoord().data(), 
-						    q->getCoord().data() + q->getCoord().rows() * q->getCoord().cols());
+
+	Eigen::VectorXf v = q->getCoord();
+	std::vector<float> vec(&v[0], v.data()+v.cols()*v.rows());
+
 	float *vec_c = &vec[0];
 	kdtree->findNeighbors(resultSet, vec_c, nanoflann::SearchParams(10));
 	vec_c = nullptr;

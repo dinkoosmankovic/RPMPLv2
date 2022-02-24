@@ -13,7 +13,7 @@
 
 namespace env
 {
-	typedef std::pair<const fcl::Box&, const fcl::Transform3f&> Obstacle;
+	typedef std::pair<fcl::Box, const fcl::Transform3f> Obstacle;
 	class Environment
 	{
 	public:
