@@ -35,7 +35,7 @@ namespace planning
 			std::vector<std::shared_ptr<KdTree>> kdtrees;
 			//TODO: Read from configuration file
 			float epsilon = 0.1;							// Step in C-space used by RRT-based algorithms
-			size_t maxNumStates = 30;                     // Max. number of considered states
+			size_t maxNumStates = 10;                     // Max. number of considered states
 			float maxPlanningTime = 600000;					// Maximal algorithm runtime in [ms]
 			std::vector<std::shared_ptr<base::State>> path;
 			

@@ -24,11 +24,11 @@ namespace planning
 
 		protected:
 			//TODO: Read from configuration file
-			float d_crit = 0.01;      		// Critical distance in W-space when RBT becomes RRT
+			float d_crit = 0.1;      		// Critical distance in W-space when RBT becomes RRT
 			float delta = M_PI;    			// Radius of hypersphere from q to q_e
 			uint numSpines = 7;       		// Number of bur spines
 
-			virtual float getDistance(std::shared_ptr<base::State> q);
+			float getDistance(std::shared_ptr<base::State> q);
 			void saturateSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			void pruneSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> extendSpine

@@ -181,23 +181,23 @@ float planning::rbt::RGBTConnect::getDistanceUnderestimation(std::shared_ptr<bas
 
 // Get minimal distance from 'q' to obstacles
 // Also set corresponding 'planes' (which are approximating the obstacles) for the configuation 'q'
-float planning::rbt::RGBTConnect::getDistance(std::shared_ptr<base::State> q)
-{
-    float d_c;
-    std::shared_ptr<std::vector<Eigen::MatrixXf>> planes;
-	if (q->getDistance() > 0)
-	{
-		d_c = q->getDistance();
-        planes = q->getPlanes();
-	}
-	else
-	{
-		tie(d_c, planes) = ss->getDistanceAndPlanes(q);
-		q->setDistance(d_c);
-        q->setPlanes(planes);
-	}
-	return d_c;
-}
+// float planning::rbt::RGBTConnect::getDistance(std::shared_ptr<base::State> q)
+// {
+//     float d_c;
+//     std::shared_ptr<std::vector<Eigen::MatrixXf>> planes;
+// 	if (q->getDistance() > 0)
+// 	{
+// 		d_c = q->getDistance();
+//         planes = q->getPlanes();
+// 	}
+// 	else
+// 	{
+// 		tie(d_c, planes) = ss->getDistanceAndPlanes(q);
+// 		q->setDistance(d_c);
+//         q->setPlanes(planes);
+// 	}
+// 	return d_c;
+// }
 
 void planning::rbt::RGBTConnect::outputPlannerData(std::string filename) const
 {

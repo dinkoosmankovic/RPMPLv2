@@ -22,7 +22,9 @@ int main(int argc, char **argv)
 	// std::shared_ptr<base::State> goal = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({M_PI/2 ,0}));
 
 	ConfigurationReader::initConfiguration();
-	scenario::Scenario scenario("data/planar_2dof/scenario_easy.yaml");
+	// scenario::Scenario scenario("data/planar_2dof/scenario_easy.yaml");
+	// scenario::Scenario scenario("data/planar_2dof/scenario1.yaml");
+	scenario::Scenario scenario("data/planar_2dof/scenario2.yaml");
 	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
 
 	LOG(INFO) << "Environment parts: " << scenario.getEnvironment()->getParts().size();
