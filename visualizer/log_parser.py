@@ -8,6 +8,7 @@ class LogParser:
             raise RuntimeError("No filename provided!")
 
         self.path = None
+        self.trees = None
 
         with open(file_name) as file:
             self.path = self.parse_file(file)
@@ -15,20 +16,64 @@ class LogParser:
     def get_path(self):
         return self.path
 
+    def get_trees(self):
+        return self.trees
+
     def parse_file(self, file=None):
         if file is None:
             return
         
         log_file_text = file.read()
         path_string = self._extract_path(log_file_text)
+        tree_names, tree_strings = self._extract_trees(log_file_text)
         path = []
+        trees = []
         for p in path_string:
             if p[0] == '-':
                 break
             con = self._parse_configuration(p)
             path.append(con[0])
+
+        for t in tree_strings:
+            tree = []
+            for p in t:
+                if (len(p) == 0):
+                    continue
+                con = self._parse_configuration(p)
+                tree.append( (con[0], con[1]))
+            trees.append(tree)
+        self.trees = (tree_names, trees)
         file.close()
         return path
+
+    def _process_tree_string(self, tree_string):
+        pivot = tree_string.index("\n")
+        tree_name = tree_string[:pivot]
+        tree_string = tree_string[pivot+1:-1]
+        tree_string = tree_string.split("\n")
+        for i, p in enumerate(tree_string):
+            p = p.replace("parent q: ", "")
+            p = p.replace("q: ", "")
+            tree_string[i] = p
+            if len(p) == 0:
+                tree_string.remove(p)
+        return tree_name, tree_string
+
+
+    def _extract_trees(self, log_file_text):
+        log_file_text = log_file_text.replace("NONE", "None")
+        tree_string = re.findall(r"Tree: (.*)\n(.*\n)+", log_file_text, flags=re.DOTALL)[0]
+        
+        tree_string_list = []
+        tree_string = tree_string[0].split("Path:")[0]
+        tree_strings = tree_string.split("Tree: ")
+        tree_names = ["" for i in range(len(tree_strings))]
+
+        for i, ts in enumerate(tree_strings):
+            tree_names[i], tree_strings[i] = self._process_tree_string(ts)
+
+        return tree_names, tree_strings
+
 
     def _extract_path(self, log_file_text):
         log_file_text = log_file_text.replace("NONE", "None")

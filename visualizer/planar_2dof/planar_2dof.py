@@ -5,6 +5,9 @@ from trimesh.creation import box, cylinder
 from trimesh.collision import CollisionManager
 import numpy as np
 import threading
+from scipy.spatial import Delaunay
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 
 
 class Planar2DOF(RealVectorSpace):
@@ -94,6 +97,8 @@ class Planar2DOF(RealVectorSpace):
         return self.robot_cm.min_distance_other(self.env_cm)
 
     def is_valid(self, q, qe=None, num_checks=None):
+        if q[0] < -np.pi or q[0] > np.pi or q[1] < -np.pi or q[1] > np.pi:
+            return False
         if qe is None or num_checks is None:
             res = self.is_in_collision(q)
             return not(res)
@@ -232,3 +237,71 @@ class Planar2DOF(RealVectorSpace):
                     node_map[mesh].matrix = np.matmul(pose, init_pose_map[mesh])
             v.render_lock.release()
             time.sleep(1.0 / fps)
+
+
+    def get_obstacles(self) -> tuple:
+        import math
+        obs = []
+        # print("range: ", self.space_state.range)
+        for i in np.arange(-np.pi, np.pi, 0.1):
+            for j in np.arange(-np.pi, np.pi, 0.1):
+                res = self.is_valid(q=[i, j])
+                # print([i,j], res)
+                if not(res):
+                    obs.append([i, j])
+
+        return np.array(obs)
+    
+    def show_configuration_space(self, trees):
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.axis('equal')
+        xs = []
+        ys = []
+
+        obs = self.get_obstacles()
+        tri = Delaunay(obs)
+        triangles = np.empty((0, 3), dtype=int)
+        for i in range(0, tri.simplices.shape[0]):
+            simplex = tri.simplices[i]
+            x = tri.points[simplex[0]]
+            y = tri.points[simplex[1]]
+            z = tri.points[simplex[2]]
+            d0 = np.sqrt(np.dot(x-y, x-y))
+            d1 = np.sqrt(np.dot(x-z, x-z))
+            d2 = np.sqrt(np.dot(z-y, z-y))
+            max_edge = max([d0, d1, d2])
+            if max_edge <= 0.5:
+                triangles = np.vstack((triangles, simplex))
+        zFaces = np.ones(triangles.shape[0])
+        cmap = colors.LinearSegmentedColormap.from_list(
+            "", [(0.8, 0.8, 0.8), "grey", "grey"])
+        ax.tripcolor(obs[:, 0], obs[:, 1], triangles, cmap=cmap,
+                     facecolors=zFaces, edgecolors='none')
+
+        # print(len(obs_xs))
+        # ax.scatter(obs_xs, obs_ys, marker=".", color="black")
+        
+        colors_list = ['cyan', 'magenta']
+        names, ts = trees
+        start = ts[0][0][0]
+        goal = ts[1][0][0]
+        for i, t in enumerate(ts):
+            for p in t:
+                p1, p2 = p
+                if (p2 is None):
+                    continue
+                xs = [p1[0], p2[0]]
+                ys = [p1[1], p2[1]]
+                line = ax.plot(xs, ys, marker='o', color=colors_list[i])[0]
+        
+        ax.scatter(start[0], start[1],
+                   marker="o", color="blue", s=100, zorder=3)
+        ax.scatter(goal[0], goal[1], marker="o",
+                   color="red", s=100, zorder=3)
+        #ax.scatter(self.goal[0], self.goal[1], marker="o",
+        #           color="red", s=3000, zorder=3, alpha=0.1)
+
+        ax.grid(False)
+        ax.set_xlim([-np.pi-0.2, np.pi+0.2])
+        ax.set_ylim([-np.pi-0.2, np.pi+0.2])
+        plt.show()
