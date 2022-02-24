@@ -6,7 +6,7 @@ from planar_2dof.planar_2dof import Planar2DOF
 from math import pi
 import time
 
-def visualize(q=None, obstacles=None, image_file=None, is_trajectory=False, fps=10.0):
+def visualize(q=None, obstacles=None, image_file=None, is_trajectory=False, fps=10.0, trees=None):
     #obstacles = [box([0.2, 1.2, 0.1])]
     #obstacles[0].apply_translation([1.3+0.25, 0, 0])
     obstacles = obstacles['obstacles']
@@ -19,6 +19,7 @@ def visualize(q=None, obstacles=None, image_file=None, is_trajectory=False, fps=
 
     planar_2dof = Planar2DOF(obstacles)
     robot = planar_2dof.robot
+    
     for link in robot.actuated_joints:
         print(link.name)
     print("Number of joints: ", len(robot.actuated_joints))
@@ -27,3 +28,6 @@ def visualize(q=None, obstacles=None, image_file=None, is_trajectory=False, fps=
         planar_2dof.show( q, obstacles, image_file)
     else:
         planar_2dof.animate(q, obstacles=obstacles, fps=fps, image_file=image_file)
+
+    if trees is not None:
+        planar_2dof.show_configuration_space(trees)
