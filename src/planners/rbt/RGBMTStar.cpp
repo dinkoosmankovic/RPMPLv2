@@ -57,6 +57,7 @@ bool planning::rbt::RGBMTStar::solve()
 
     while (true)
     {
+        std::cout << std::endl;
 		LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
         // Adding a new tree rooted in 'q_rand'
 		std::shared_ptr<base::State> q_rand = getRandomState();
@@ -66,7 +67,7 @@ bool planning::rbt::RGBMTStar::solve()
         TREES[treeNewIdx].upgradeTree(q_rand, nullptr, -1, nullptr, 0);
         trees.emplace_back(std::make_shared<base::Tree>(TREES[treeNewIdx]));
         
-        std::cout << "---------TREE NEW " << treeNewIdx << "--------------------" << std::endl; 
+        std::cout << "---------TREE NEW " << treeNewIdx << " size " << trees[treeNewIdx]->getStates()->size() << std::endl; 
                 for (int kk = 0; kk < trees[treeNewIdx]->getStates()->size(); kk++)
                 {
                     std::cout << "q" <<kk<<"  "<< trees[treeNewIdx]->getState(kk)->getCoord().transpose(); 
@@ -79,6 +80,7 @@ bool planning::rbt::RGBMTStar::solve()
         treesExist.clear();
         treesReached.clear();
         treesConnected.clear();
+        statesReached.clear();
         statesReached = std::vector<std::shared_ptr<base::State>>(treeNewIdx, nullptr);
 
                 std::cout << "q_rand " << q_rand->getCoord().transpose() << std::endl; 
@@ -488,7 +490,7 @@ void planning::rbt::RGBMTStar::deleteTrees(std::vector<std::shared_ptr<base::Tre
 {
     for (int i = treesConnected.size()-1; i >= 0; i--)
     {
-        // trees.erase(trees.begin() + treesConnected[i]); // not needed because of smart pointers
+        trees.erase(trees.begin() + treesConnected[i]);
         TREES.erase(TREES.begin() + treesConnected[i]);
     }
 }
