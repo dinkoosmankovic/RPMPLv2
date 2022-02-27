@@ -10,7 +10,7 @@ if __name__ == "__main__":
     #    print(p)
     #print(path)
     #visualize(path[0], "test.png")
-    with open('../data/planar_2dof/scenario2.yaml', 'r') as file:
+    with open('../data/planar_2dof/scenario1.yaml', 'r') as file:
         obstacles = yaml.safe_load(file)     
     
     visualize(path, obstacles=obstacles, image_file="easy_planar_2dof.gif", is_trajectory=True, fps=10.0)
