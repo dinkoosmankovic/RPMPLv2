@@ -68,7 +68,7 @@ bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q1, co
 std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
 {
 	std::shared_ptr<base::State> state = std::make_shared<base::RealVectorSpaceState>(dimensions);
-	Eigen::VectorXf rand = Eigen::VectorXf::Random(dimensions).normalized();
+	Eigen::VectorXf rand = Eigen::VectorXf::Random(dimensions);
 	for (size_t i = 0; i < dimensions; ++i)
 	{
 		float llimit = robot->getLimits()[i][0];

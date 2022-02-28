@@ -243,8 +243,8 @@ class Planar2DOF(RealVectorSpace):
         import math
         obs = []
         # print("range: ", self.space_state.range)
-        for i in np.arange(-np.pi, np.pi, 0.1):
-            for j in np.arange(-np.pi, np.pi, 0.1):
+        for i in np.arange(-np.pi, np.pi, 0.15):
+            for j in np.arange(-np.pi, np.pi, 0.15):
                 res = self.is_valid(q=[i, j])
                 # print([i,j], res)
                 if not(res):
@@ -282,7 +282,7 @@ class Planar2DOF(RealVectorSpace):
         # ax.scatter(obs_xs, obs_ys, marker=".", color="black")
         
         colors_list = ['cyan', 'magenta']
-        names, ts = trees
+        names, ts, path = trees
         start = ts[0][0][0]
         goal = ts[1][0][0]
         for i, t in enumerate(ts):
@@ -300,6 +300,15 @@ class Planar2DOF(RealVectorSpace):
                    color="red", s=100, zorder=3)
         #ax.scatter(self.goal[0], self.goal[1], marker="o",
         #           color="red", s=3000, zorder=3, alpha=0.1)
+        
+        pxs = []
+        pys = []
+        for p in path:
+            pxs.append(p[0])
+            pys.append(p[1])
+
+        ax.plot(pxs, pys, marker='o', color="black", linewidth=3)
+        ax.grid(True)
 
         ax.grid(False)
         ax.set_xlim([-np.pi-0.2, np.pi+0.2])
