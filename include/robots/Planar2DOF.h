@@ -18,9 +18,9 @@ namespace robots
 	public:
 		Planar2DOF(std::string robot_desc);
 		~Planar2DOF();
-		std::vector<KDL::Frame> computeForwardKinematics(std::shared_ptr<base::State> q) override;
+		const std::vector<KDL::Frame> &computeForwardKinematics(std::shared_ptr<base::State> q) override;
 		const KDL::Tree& getRobotTree() const;
-		const std::vector<std::unique_ptr<fcl::CollisionObject>>& getParts() const override;
+		const std::vector<std::unique_ptr<fcl::CollisionObject>> &getParts() const override;
 		void setState(std::shared_ptr<base::State> q_) override;
 		void test();
 		const std::vector<std::vector<float>> &getLimits() const override;

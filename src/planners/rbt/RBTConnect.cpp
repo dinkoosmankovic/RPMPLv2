@@ -197,13 +197,13 @@ std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rbt::R
 }
 
 float planning::rbt::RBTConnect::computeStep(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2, float fi, 
-											  std::vector<KDL::Frame> &frames)
+											 std::vector<KDL::Frame> &frames)
 {
 	float d = 0;
-	float r;
 	// TODO: Add all robot types
 	if (ss->getDimensions() == 2)	// Assumes that number of links = number of DOFs
 	{
+		float r;
 		for (int i = 0; i < ss->robot->getParts().size(); i++)
 		{
 			r = 0;
@@ -216,9 +216,54 @@ float planning::rbt::RBTConnect::computeStep(std::shared_ptr<base::State> q1, st
 	}
 	else if (ss->getDimensions() == 6) 	// TODO. This is only for xArm6
 	{
-
+		Eigen::VectorXf r(6);
+		r(0) = getEnclosingRadius(frames, 2, -2);
+		r(1) = getEnclosingRadius(frames, 2, -1);
+		r(2) = getEnclosingRadius(frames, 3, -1);
+		r(3) = getEnclosingRadius(frames, 4, 3);
+		r(4) = getEnclosingRadius(frames, 5, 3);
+		r(5) = 0;
+		d = r.dot((q1->getCoord() - q2->getCoord()).cwiseAbs());
+		std::cout << "r = " << r.transpose() << std::endl;
+		std::cout << "d = " << d << std::endl;
 	}
 	return fi / d;
+}
+
+float planning::rbt::RBTConnect::getEnclosingRadius(std::vector<KDL::Frame> &frames, int j_start, int j_proj)
+{
+	float r = 0;
+	if (j_proj == -2)	// Special case when all frame origins starting from j_start are projected on {x,y} plane
+	{
+		Eigen::Vector2f P;
+		for (int j = j_start; j < frames.size(); j++)
+		{
+			P << frames[j].p(0), frames[j].p(1);
+			r = std::max(r, P.norm());
+		}
+	}
+	else if (j_proj == -1) 	// No projection
+	{
+		for (int j = j_start; j < frames.size(); j++)
+		{
+			r = std::max(r, (float) (frames[j].p - frames[j_start-1].p).Norm());
+		}
+	}
+	else	// Projection of all frame origins starting from j_start to the link (j_proj, j_proj+1) is needed
+	{
+		float t;
+		Eigen::Vector3f A; A << frames[j_proj].p(0), frames[j_proj].p(1), frames[j_proj].p(2);
+		Eigen::Vector3f B; B << frames[j_proj+1].p(0), frames[j_proj+1].p(1), frames[j_proj+1].p(3);
+		Eigen::Vector3f P, P_proj;
+		for (int j = j_start; j < frames.size(); j++)
+		{
+			P << frames[j].p(0), frames[j].p(1), frames[j].p(2);
+			t = (P - A).dot(B - A) / (B - A).squaredNorm();
+			P_proj = A + t * (B - A);
+			r = std::max(r, (P - P_proj).norm());
+		}
+	}
+	return r;
 }
 
 planning::rrt::Status planning::rbt::RBTConnect::connectSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, 

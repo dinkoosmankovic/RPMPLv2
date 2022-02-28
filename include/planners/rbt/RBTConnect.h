@@ -33,6 +33,7 @@ namespace planning
 											   
 		private:
 			float computeStep(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2, float fi, std::vector<KDL::Frame> &frames);
+            float getEnclosingRadius(std::vector<KDL::Frame> &frames, int j_start, int j_proj);
 		};
 	}
 }

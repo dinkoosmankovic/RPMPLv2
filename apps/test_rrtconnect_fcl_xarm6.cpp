@@ -30,10 +30,10 @@ int main(int argc, char **argv)
 		if (res)
 		{
 			std::vector<std::shared_ptr<base::State>> path = planner->getPath();
-			/*for (int i = 0; i < path.size(); i++)
+			for (int i = 0; i < path.size(); i++)
 			{
 				std::cout << path.at(i) << std::endl;
-			}*/
+			}
 			// TODO: read from configuration yaml
 			
 		}

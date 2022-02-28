@@ -21,7 +21,7 @@ namespace robots
 	public:
 		AbstractRobot() { q == nullptr; };
 		virtual ~AbstractRobot() = 0;
-		virtual std::vector<KDL::Frame> computeForwardKinematics(std::shared_ptr<base::State> q) = 0;
+		virtual const std::vector<KDL::Frame> &computeForwardKinematics(std::shared_ptr<base::State> q) = 0;
 		virtual void setState(std::shared_ptr<base::State> q_) = 0;
 		virtual const std::vector<std::unique_ptr<fcl::CollisionObject>>& getParts() const = 0;
 		virtual const std::vector<std::vector<float>> &getLimits() const = 0;

@@ -22,7 +22,7 @@ namespace robots
 	public:
 		xARM6(std::string robot_desc);
 		~xARM6();
-		std::vector<KDL::Frame> computeForwardKinematics(std::shared_ptr<base::State> q);
+		const std::vector<KDL::Frame> &computeForwardKinematics(std::shared_ptr<base::State> q);
 		const KDL::Tree& getRobotTree() const;
 		const std::vector<std::unique_ptr<fcl::CollisionObject> >& getParts() const override;
 		void setState(std::shared_ptr<base::State> q_) override;

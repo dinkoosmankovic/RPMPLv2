@@ -104,7 +104,7 @@ const std::vector<std::unique_ptr<fcl::CollisionObject> >& robots::xARM6::getPar
 	return parts_;
 }
 
-std::vector<KDL::Frame> robots::xARM6::computeForwardKinematics(std::shared_ptr<base::State> q)
+const std::vector<KDL::Frame> &robots::xARM6::computeForwardKinematics(std::shared_ptr<base::State> q)
 {
 	//KDL::Chain robot_chain;
 	KDL::TreeFkSolverPos_recursive treefksolver = KDL::TreeFkSolverPos_recursive(robot_tree);
