@@ -23,11 +23,6 @@ namespace planning
 			virtual void outputPlannerData(std::string filename) const override;
 
 		protected:
-			//TODO: Read from configuration file
-			float d_crit = 0.1;      		// Critical distance in W-space when RBT becomes RRT
-			float delta = M_PI;    			// Radius of hypersphere from q to q_e
-			uint numSpines = 7;       		// Number of bur spines
-
 			float getDistance(std::shared_ptr<base::State> q);
 			void saturateSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			void pruneSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
@@ -37,7 +32,7 @@ namespace planning
 											   std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 											   
 		private:
-			float computeStep(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float fi, std::vector<KDL::Frame> &frames);
+			float computeStep(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2, float fi, std::vector<KDL::Frame> &frames);
 		};
 	}
 }

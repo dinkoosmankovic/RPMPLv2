@@ -23,9 +23,6 @@ namespace planning
 			virtual void outputPlannerData(std::string filename) const override;
 
 		protected:
-			//TODO: Read from configuration file
-            uint numLayers = 5;       // Number of layers (extensions) for building a generalized bur
-
             std::tuple<planning::rrt::Status, std::shared_ptr<std::vector<std::shared_ptr<base::State>>>> 
                 extendGenSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
             planning::rrt::Status connectGenSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, 

@@ -6,6 +6,7 @@
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 #include <nanoflann.hpp>
+#include "ConfigurationReader.h"
 #include <chrono>
 #include <fstream>
 
@@ -41,9 +42,9 @@ bool planning::rbt::RBTConnect::solve()
 		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_e);
 		// LOG(INFO) << "Iteration: " << iter;
 		//LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
-		if (getDistance(q_near) > d_crit)
+		if (getDistance(q_near) > RBTConnectConfig::D_CRIT)
 		{
-			for (int i = 0; i < numSpines; i++)
+			for (int i = 0; i < RBTConnectConfig::NUM_SPINES; i++)
 			{
 				q_e = ss->randomState();
 				q_e->setCoord(q_e->getCoord() + q_near->getCoord());
@@ -106,7 +107,7 @@ void planning::rbt::RBTConnect::saturateSpine(std::shared_ptr<base::State> q, st
 	float d = (q_e->getCoord() - q->getCoord()).norm();
 	if (d > 0)
 	{
-		q_e->setCoord(q->getCoord() + (q_e->getCoord() - q->getCoord()) * delta / d);
+		q_e->setCoord(q->getCoord() + (q_e->getCoord() - q->getCoord()) * RBTConnectConfig::DELTA / d);
 	}
 }
 
@@ -166,11 +167,11 @@ std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rbt::R
 	int K_max = 5;              // The number of iterations for computing q*
 	std::shared_ptr<base::State> q_new = ss->newState(q->getCoord());
 	std::vector<KDL::Frame> frames = ss->robot->computeForwardKinematics(q);
-	std::vector<KDL::Frame> frames_temp = frames;
+	std::vector<KDL::Frame> frames_new = frames;
 	
 	while (true)
 	{
-		step = computeStep(q_new, q_e, d_c - rho, frames_temp);     // 'd_c - rho' is the remaining path length in W-space
+		step = computeStep(q_new, q_e, d_c - rho, frames_new);     // 'd_c - rho' is the remaining path length in W-space
 		if (step > 1)
 		{
 			q_new->setCoord(q_e->getCoord());
@@ -185,13 +186,39 @@ std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rbt::R
 			return {planning::rrt::Advanced, q_new};
 		}
 
-		frames_temp = ss->robot->computeForwardKinematics(q_new);
+		rho = 0;
+		frames_new = ss->robot->computeForwardKinematics(q_new);
 		for (int i = 1; i < ss->robot->getParts().size()+1; i++)
 		{
-			rho = std::max(rho, (float)(frames[i].p - frames_temp[i].p).Norm());
+			rho = std::max(rho, (float)(frames[i].p - frames_new[i].p).Norm());
 		}
 		k += 1;
 	}
+}
+
+float planning::rbt::RBTConnect::computeStep(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2, float fi, 
+											  std::vector<KDL::Frame> &frames)
+{
+	float d = 0;
+	float r;
+	// TODO: Add all robot types
+	if (ss->getDimensions() == 2)	// Assumes that number of links = number of DOFs
+	{
+		for (int i = 0; i < ss->robot->getParts().size(); i++)
+		{
+			r = 0;
+			for (int k = i+1; k <= ss->robot->getParts().size(); k++)
+			{
+				r = std::max(r, (float)(frames[k].p - frames[i].p).Norm());
+			}
+			d += r * std::abs(q2->getCoord(i) - q1->getCoord(i));
+		}
+	}
+	else if (ss->getDimensions() == 6) 	// TODO. This is only for xArm6
+	{
+
+	}
+	return fi / d;
 }
 
 planning::rrt::Status planning::rbt::RBTConnect::connectSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, 
@@ -200,11 +227,11 @@ planning::rrt::Status planning::rbt::RBTConnect::connectSpine(std::shared_ptr<ba
 	float d_c = getDistance(q);
 	std::shared_ptr<base::State> q_new = q;
 	planning::rrt::Status status = planning::rrt::Advanced;
-	int num_ext = 0;  // TODO: should be read from configuration
-	while (status == planning::rrt::Advanced && num_ext++ < 50)
+	int num_ext = 0;
+	while (status == planning::rrt::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
 	{
 		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
-		if (d_c > d_crit)
+		if (d_c > RBTConnectConfig::D_CRIT)
 		{
 			tie(status, q_new) = extendSpine(q_temp, q_e);
 			d_c = getDistance(q_new);
@@ -220,30 +247,6 @@ planning::rrt::Status planning::rbt::RBTConnect::connectSpine(std::shared_ptr<ba
 		}
 	}
 	return status;
-}
-
-float planning::rbt::RBTConnect::computeStep(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float fi, 
-											  std::vector<KDL::Frame> &frames){
-	float d = 0;
-	float r;
-	// TODO: Add all robot types
-	if (ss->getDimensions() == 2)	// Assumes that number of links = number of DOFs
-	{
-		for (int i = 0; i < ss->robot->getParts().size(); i++)
-		{
-			r = (frames[i+1].p - frames[i].p).Norm(); 	// i-th segment length. TODO: Any better way to get this?? 
-			for (int k = i+1; k < ss->robot->getParts().size(); k++)
-			{
-				r = std::max(r, (float)(frames[k+1].p - frames[i].p).Norm());
-			}
-			d += r * std::abs(q_e->getCoord(i) - q->getCoord(i));
-		}
-	}
-	else if (ss->getDimensions() == 6) 	// TODO
-	{
-
-	}
-	return fi / d;
 }
 
 void planning::rbt::RBTConnect::outputPlannerData(std::string filename) const

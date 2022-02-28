@@ -6,6 +6,7 @@
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 #include <nanoflann.hpp>
+#include "ConfigurationReader.h"
 #include <chrono>
 #include <fstream>
 
@@ -33,8 +34,6 @@ bool planning::rbt::RGBTConnect::solve()
     std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list;
 	planning::rrt::Status status;
 	plannerInfo->setNumIterations(0);
-	// std::cout << "q: " << start->getCoord().transpose() << std::endl;
-	// ss->getDistanceAndPlanes(start);
 
 	while (true)
 	{
@@ -44,9 +43,9 @@ bool planning::rbt::RGBTConnect::solve()
 		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_e);
 		// LOG(INFO) << "Iteration: " << iter;
 		// LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
-		if (getDistance(q_near) > d_crit)
+		if (getDistance(q_near) > RBTConnectConfig::D_CRIT)
 		{
-			for (int i = 0; i < numSpines; i++)
+			for (int i = 0; i < RBTConnectConfig::NUM_SPINES; i++)
 			{
 				q_e = ss->randomState();
 				q_e->setCoord(q_e->getCoord() + q_near->getCoord());
@@ -102,15 +101,15 @@ std::tuple<planning::rrt::Status, std::shared_ptr<std::vector<std::shared_ptr<ba
 	std::shared_ptr<base::State> q_new = q;
 	std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list = std::make_shared<std::vector<std::shared_ptr<base::State>>>();
     planning::rrt::Status status;
-    for (int i = 0; i < numLayers; i++)
+    for (int i = 0; i < RGBTConnectConfig::NUM_LAYERS; i++)
     {
         std::shared_ptr<base::State> q_temp = ss->newState(q_new);
         // tie(status, q_new) = extendSpine(q_temp, q_e, d_c);
         tie(status, q_new) = extendSpine(q_temp, q_e);
-        q_new_list->emplace_back(q_new);
+		q_new_list->emplace_back(q_new);
         // d_c = getDistanceUnderestimation(q_new, q->getPlanes());
 		d_c = getDistance(q_new);
-        if (d_c < d_crit || status == planning::rrt::Reached)
+        if (d_c < RBTConnectConfig::D_CRIT || status == planning::rrt::Reached)
         {
             break;
         }
@@ -125,11 +124,11 @@ planning::rrt::Status planning::rbt::RGBTConnect::connectGenSpine(std::shared_pt
 	std::shared_ptr<base::State> q_new = q;
     std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list;
 	planning::rrt::Status status = planning::rrt::Advanced;
-	int num_ext = 0;  // TODO: should be read from configuration
-	while (status == planning::rrt::Advanced && num_ext++ < 50)
+	int num_ext = 0;
+	while (status == planning::rrt::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
 	{
 		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
-		if (d_c > d_crit)
+		if (d_c > RBTConnectConfig::D_CRIT)
 		{
 			tie(status, q_new_list) = extendGenSpine(q_temp, q_e);
             tree->upgradeTree(kdtree, q_new_list->front(), q_temp);

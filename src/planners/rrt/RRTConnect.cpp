@@ -34,22 +34,14 @@ planning::rrt::RRTConnect::~RRTConnect()
 
 void planning::rrt::RRTConnect::initPlanner()
 {
-	// TODO:
 	LOG(INFO) << "Initializing planner...";
 	plannerInfo = std::make_shared<PlannerInfo>();
-	epsilon = RRTConnectConfig::EPS_STEP;
 	TREES = {base::Tree("start", 0), 
 			 base::Tree("goal",  1)};
 	kdtrees = {std::make_shared<KdTree>(ss->getDimensions(), TREES[0], nanoflann::KDTreeSingleIndexAdaptorParams(10)),
 			   std::make_shared<KdTree>(ss->getDimensions(), TREES[1], nanoflann::KDTreeSingleIndexAdaptorParams(10))};
 	TREES[0].upgradeTree(kdtrees[0], start, nullptr);
 	TREES[1].upgradeTree(kdtrees[1], goal, nullptr);
-
-	//std::shared_ptr<base::State> test = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({M_PI/2,0}));
-
-	//LOG(INFO) << "Min distance start: " << ss->getDistance(start);
-	//LOG(INFO) << "Min distance goal: " << ss->getDistance(goal);
-	//LOG(INFO) << "Min distance test: " << ss->getDistance(test);
 	LOG(INFO) << "Planner initialized!";
 }
 
@@ -110,7 +102,7 @@ base::Tree planning::rrt::RRTConnect::getTree(int treeIdx) const
 std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rrt::RRTConnect::extend(std::shared_ptr<base::State> q, 
 																								  std::shared_ptr<base::State> q_e)
 {
-	std::shared_ptr<base::State> q_new = ss->interpolate(q, q_e, epsilon);
+	std::shared_ptr<base::State> q_new = ss->interpolate(q, q_e, RRTConnectConfig::EPS_STEP);
 	// LOG(INFO) << q_new->getCoord().transpose();
 	if (q_new != nullptr && ss->isValid(q, q_new))
 	{
@@ -135,8 +127,7 @@ planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::T
 	std::shared_ptr<base::State> q_new = q;
 	planning::rrt::Status status = planning::rrt::Advanced;
 	int numExt = 0;  // TODO: should be read from configuration
-	int MAX_EXTENSION_STEPS = RRTConnectConfig::MAX_EXTENSION_STEPS;
-	while (status == planning::rrt::Advanced && numExt++ < MAX_EXTENSION_STEPS)
+	while (status == planning::rrt::Advanced && numExt++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
 	{
 		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
 		tie(status, q_new) = extend(q_temp, q_e);
@@ -156,13 +147,11 @@ void planning::rrt::RRTConnect::computePath(std::shared_ptr<base::State> q_con0,
 	{
 		q_con0 = TREES[0].getStates()->back();
 	}
-	q_con0 = q_con0->getParent();
 	while (q_con0->getParent() != nullptr)
 	{
-		path.emplace_back(q_con0);
+		path.emplace_back(q_con0->getParent());
 		q_con0 = q_con0->getParent();
 	}
-	path.emplace_back(q_con0);
 	std::reverse(path.begin(), path.end());
 
 	if (q_con1 == nullptr)
@@ -194,7 +183,9 @@ bool planning::rrt::RRTConnect::checkStoppingCondition(Status status, std::chron
 		computePath();
 		return true;
 	}
-	else if (plannerInfo->getNumStates() >= maxNumStates || getElapsedTime(time_start) > maxPlanningTime)
+	else if (plannerInfo->getNumStates() >= RRTConnectConfig::MAX_NUM_STATES || 
+			 getElapsedTime(time_start) >= RRTConnectConfig::MAX_PLANNING_TIME ||
+			 plannerInfo->getNumIterations() >= RRTConnectConfig::MAX_ITER)
 	{
 		return true;
 	}

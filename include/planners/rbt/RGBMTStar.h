@@ -21,10 +21,8 @@ namespace planning
 			void outputPlannerData(std::string filename) const override;
 
 		protected:
-			//TODO: Read from configuration file
             std::vector<size_t> numStates;              // Total number of states for each tree
-            float costOpt = INFINITY;                   // The cost of the final path
-            bool returnWPF = false;                     // Whether to return When Path is Found (default: false)
+            float costOpt;                              // The cost of the final path
             
 			void initPlanner();
             std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> 

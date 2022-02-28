@@ -31,8 +31,8 @@ public:
 	void setNumStates(size_t numStates);
 	size_t getNumIterations() const;
 	void setNumIterations(size_t numIterations);
-	const std::vector<float> &getStatesCosts() const;
-	void addStatesCosts(const std::vector<float> &statesCosts);
+	const std::vector<float> &getCostConvergence() const;
+	void addCostConvergence(const std::vector<float> &statesCosts);
 };
 
 #endif //RPMPL_PLANNERINFO_H

@@ -70,12 +70,12 @@ void PlannerInfo::addIterationTime(float time)
 	iterationsTimesOfExecution.emplace_back(time);
 }
 
-const std::vector<float> &PlannerInfo::getStatesCosts() const
+const std::vector<float> &PlannerInfo::getCostConvergence() const
 {
 	return statesCosts;
 }
 
-void PlannerInfo::addStatesCosts(const std::vector<float> &statesCosts)
+void PlannerInfo::addCostConvergence(const std::vector<float> &statesCosts)
 {
 	for (int i = 0; i < statesCosts.size(); i++)
 	{

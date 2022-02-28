@@ -9,11 +9,10 @@
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 #include <time.h>
-
 #include <fcl/distance.h>
 #include <fcl/collision.h>
+#include "RealVectorSpaceConfig.h"
 
-#include <glog/logging.h>
 
 base::RealVectorSpaceFCL::~RealVectorSpaceFCL()
 {
@@ -49,7 +48,7 @@ bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q)
 
 bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
-	int numChecks = 10;
+	int numChecks = RealVectorSpaceConfig::NUM_INTERPOLATION_VALIDITY_CHECKS;
 	float D = (q2->getCoord() - q1->getCoord()).norm();
 	for (float t = 1./numChecks; t <= 1; t += 1./numChecks)
 	{
@@ -68,7 +67,7 @@ bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q1, co
 std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
 {
 	std::shared_ptr<base::State> state = std::make_shared<base::RealVectorSpaceState>(dimensions);
-	Eigen::VectorXf rand = Eigen::VectorXf::Random(dimensions).normalized();
+	Eigen::VectorXf rand = Eigen::VectorXf::Random(dimensions);
 	std::vector<std::vector<float>> limits = robot->getLimits();
 	for (size_t i = 0; i < dimensions; ++i)
 	{
