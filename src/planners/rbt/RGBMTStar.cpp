@@ -59,7 +59,7 @@ bool planning::rbt::RGBMTStar::solve()
 
     while (true)
     {
-		// LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
+		LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
         // Adding a new tree rooted in 'q_rand'
 		std::shared_ptr<base::State> q_rand = getRandomState();
         TREES.emplace_back(base::Tree("local", treeNewIdx));
@@ -146,7 +146,7 @@ bool planning::rbt::RGBMTStar::solve()
                 q_new = optimize(trees[treeNewIdx]->getState(k), trees[treeIdx], kdtrees[0], q_rand);
                 
                 if (idx > 1 && std::find(treesReached.begin(), treesReached.end(), idx) != treesReached.end())
-                {                    
+                {                 
                     // unifyTrees(trees[idx], trees[treeIdx], kdtrees[treeIdx], statesReached[idx], q_new);
                     unifyTrees(trees[idx], trees[treeIdx], kdtrees[0], statesReached[idx], q_new);
                     treesConnected.emplace_back(idx);
@@ -409,6 +409,7 @@ void planning::rbt::RGBMTStar::considerChildren(std::shared_ptr<base::State> q, 
         {
             considerChildren(children->at(i), tree0, kdtree0, q0_conNew, nullptr);  // 'nullptr' means that no children will be removed
         }
+        return;
     }
 }
 
@@ -456,7 +457,12 @@ void planning::rbt::RGBMTStar::outputPlannerData(std::string filename) const
         {
             outputFile << TREES[i];
         }
-		if (path.size() > 0)
+		outputFile << "Cost convergence: " << std::endl;
+        for (int i = 0; i < plannerInfo->getNumStates(); i++)
+        {
+            outputFile << i << "\t" << plannerInfo->getCostConvergence()[i] << std::endl;
+        }
+        if (path.size() > 0)
 		{
 			outputFile << "Path:" << std::endl;
 			for (int i = 0; i < path.size(); i++)
@@ -464,11 +470,6 @@ void planning::rbt::RGBMTStar::outputPlannerData(std::string filename) const
 				outputFile << path.at(i) << std::endl;
 			}
 		}
-        outputFile << "Cost convergence: " << std::endl;
-        for (int i = 0; i < plannerInfo->getNumStates(); i++)
-        {
-            outputFile << i << "\t" << plannerInfo->getCostConvergence()[i] << std::endl;
-        }
 		outputFile.close();
 	}
 	else
