@@ -75,11 +75,11 @@ const std::vector<std::unique_ptr<fcl::CollisionObject>>& robots::Planar2DOF::ge
 	return parts_;
 }
 
-const std::vector<KDL::Frame> &robots::Planar2DOF::computeForwardKinematics(std::shared_ptr<base::State> q)
+std::shared_ptr<std::vector<KDL::Frame>> robots::Planar2DOF::computeForwardKinematics(std::shared_ptr<base::State> q)
 {
 	KDL::Chain robot_chain;
 	KDL::TreeFkSolverPos_recursive treefksolver = KDL::TreeFkSolverPos_recursive(robot_tree);
-	std::vector<KDL::Frame> framesFK;
+	std::shared_ptr<std::vector<KDL::Frame>> framesFK = std::make_shared<std::vector<KDL::Frame>>();
 	robot_tree.getChain("base_link", "tool", robot_chain);
 	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions() );
 
@@ -93,10 +93,39 @@ const std::vector<KDL::Frame> &robots::Planar2DOF::computeForwardKinematics(std:
 		KDL::Frame cartpos;
 		bool kinematics_status = treefksolver.JntToCart(jointpositions, cartpos, robot_chain.getSegment(i).getName());
 		if (kinematics_status >= 0)
-			framesFK.emplace_back(cartpos);
+			framesFK->emplace_back(cartpos);
 	}
 	return framesFK;
     
+}
+
+std::shared_ptr<Eigen::MatrixXf> robots::Planar2DOF::computeXYZ(std::shared_ptr<base::State> q)
+{
+	std::shared_ptr<std::vector<KDL::Frame>> frames = computeForwardKinematics(q);
+	std::shared_ptr<Eigen::MatrixXf> XYZ = std::make_shared<Eigen::MatrixXf>(3, getParts().size() + 1);
+	for (int k = 0; k <= getParts().size(); k++)
+	{
+		XYZ->col(k) << frames->at(k).p(0), frames->at(k).p(1), frames->at(k).p(2);
+	}
+	return XYZ;
+}
+
+float robots::Planar2DOF::computeStep(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2, float fi, 
+									  std::shared_ptr<Eigen::MatrixXf> XYZ)
+{
+	// Assumes that number of links = number of DOFs
+	float d = 0;
+	float r;
+	for (int i = 0; i < getParts().size(); i++)
+	{
+		r = 0;
+		for (int k = i+1; k <= getParts().size(); k++)
+		{
+			r = std::max(r, (XYZ->col(k) - XYZ->col(i)).norm());
+		}
+		d += r * std::abs(q2->getCoord(i) - q1->getCoord(i));
+	}
+	return fi / d;
 }
 
 void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
@@ -104,14 +133,14 @@ void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
 	q = q_;
 	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions());
 
-	std::vector<KDL::Frame> framesFK = computeForwardKinematics(q);
+	std::shared_ptr<std::vector<KDL::Frame>> framesFK = computeForwardKinematics(q);
 	
 	//transform Collision geometries
 	//std::cout << parts_.size() << std::endl;
 	KDL::Frame tf;
 	for (size_t i = 0; i < parts_.size(); ++i)
 	{
-		tf = framesFK[i] * init_poses[i];
+		tf = framesFK->at(i) * init_poses[i];
 		//std::cout << tf.p << "\n" << tf.M << "\n++++++++++++++++++++++++\n";
 						
 		//std::cout << "fcl\n";

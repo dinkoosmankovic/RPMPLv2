@@ -22,7 +22,7 @@ namespace planning
 			virtual bool solve() override;
 			virtual void outputPlannerData(std::string filename) const override;
 
-		protected:
+		private:
 			float getDistance(std::shared_ptr<base::State> q);
 			void saturateSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			void pruneSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
@@ -30,10 +30,6 @@ namespace planning
 				(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float d_c_underest = -1);
 			planning::rrt::Status connectSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, 
 											   std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
-											   
-		private:
-			float computeStep(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2, float fi, std::vector<KDL::Frame> &frames);
-            float getEnclosingRadius(std::vector<KDL::Frame> &frames, int j_start, int j_proj);
 		};
 	}
 }

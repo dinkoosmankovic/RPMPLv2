@@ -160,7 +160,7 @@ float planning::rbt::RGBTConnect::getDistanceUnderestimation(std::shared_ptr<bas
     Eigen::Vector3f P1, P21;    // planes = [P1; P2-P1];
     Eigen::Vector3f A, B;       // origins of two adjacent frames
     Eigen::Vector2f lambda;
-	std::vector<KDL::Frame> frames = ss->robot->computeForwardKinematics(q);
+	std::shared_ptr<std::vector<KDL::Frame>> frames = ss->robot->computeForwardKinematics(q);
     
     for (int j = 0; j < numObstacles; j++)
     {
@@ -168,8 +168,8 @@ float planning::rbt::RGBTConnect::getDistanceUnderestimation(std::shared_ptr<bas
         {
             P1 << planes->at(j).col(k).head(3);
             P21 << planes->at(j).col(k).tail(3);
-            A << frames[k].p(0), frames[k].p(1), frames[k].p(2);
-            B << frames[k+1].p(0), frames[k+1].p(1), frames[k+1].p(2);
+            A << frames->at(k).p(0), frames->at(k).p(1), frames->at(k).p(2);
+            B << frames->at(k+1).p(0), frames->at(k+1).p(1), frames->at(k+1).p(2);
             lambda << (P21.dot(A) - P21.dot(P1)) / P21.norm(),
                       (P21.dot(B) - P21.dot(P1)) / P21.norm();
             D(k,j) = lambda.minCoeff();

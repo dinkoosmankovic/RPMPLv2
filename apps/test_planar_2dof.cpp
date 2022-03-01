@@ -27,11 +27,11 @@ int main(int argc, char **argv)
 	std::shared_ptr<base::State> state = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({M_PI/2, -M_PI/2}));
 	// robot->setState(state);
 	// robot->test();
-	std::vector<KDL::Frame> frames = robot->computeForwardKinematics(state);
-	for (int i = 0; i < frames.size(); i++)
+	std::shared_ptr<std::vector<KDL::Frame>> frames = robot->computeForwardKinematics(state);
+	for (int i = 0; i < frames->size(); i++)
 	{
-		std::cout << frames[i].p << std::endl;
-		// std::cout << frames[i].M << std::endl;
+		std::cout << frames->at(i).p << std::endl;
+		// std::cout << frames->at(i).M << std::endl;
 	}
 
 
