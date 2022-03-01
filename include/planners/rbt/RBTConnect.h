@@ -22,7 +22,7 @@ namespace planning
 			virtual bool solve() override;
 			virtual void outputPlannerData(std::string filename) const override;
 
-		private:
+		protected:
 			float getDistance(std::shared_ptr<base::State> q);
 			void saturateSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			void pruneSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
