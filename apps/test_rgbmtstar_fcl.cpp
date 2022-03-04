@@ -25,8 +25,8 @@ int main(int argc, char **argv)
 	// scenario::Scenario scenario("data/planar_2dof/scenario_easy.yaml");
 	// scenario::Scenario scenario("data/planar_2dof/scenario1.yaml");
 	// scenario::Scenario scenario("data/planar_2dof/scenario2.yaml");
-	// scenario::Scenario scenario("data/xarm6/scenario_easy.yaml");
-	scenario::Scenario scenario("data/xarm6/scenario3.yaml");
+	scenario::Scenario scenario("data/xarm6/scenario_easy.yaml");
+	// scenario::Scenario scenario("data/xarm6/scenario3.yaml");
 	// scenario::Scenario scenario("data/xarm6/scenario4.yaml");
 
 	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 	try
 	{
 		std::unique_ptr<planning::rbt::RGBMTStar> planner = std::make_unique<planning::rbt::RGBMTStar>(ss, scenario.getStart(), scenario.getGoal());
-		
+				
 		bool res = planner->solve();
 		LOG(INFO) << "RGBMT* planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
 		LOG(INFO) << "Number of nodes: " << planner->getPlannerInfo()->getNumStates();

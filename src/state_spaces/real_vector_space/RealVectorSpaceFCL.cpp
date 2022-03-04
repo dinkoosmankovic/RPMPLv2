@@ -30,12 +30,12 @@ base::RealVectorSpaceFCL::RealVectorSpaceFCL(int dimensions_, const std::shared_
 bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q)
 {
 	robot->setState(q);
-	//LOG(INFO) << "robot  parts: " << robot->getParts().size();
-	//LOG(INFO) << "env  parts: "<< env->getParts().size() << "\n";
 	for (size_t i = 0; i < robot->getParts().size(); ++i)
 	{	
 		for (size_t j = 0; j < env->getParts().size(); ++j)
 		{
+			// LOG(INFO) << "robot i: " << i;
+			// LOG(INFO) << "env j: " << j;
 			fcl::CollisionRequest request;
 			fcl::CollisionResult result;
 			fcl::collide(robot->getParts()[i].get(), env->getParts()[j].get(), request, result);

@@ -61,7 +61,7 @@ bool planning::rbt::RGBMTStar::solve()
     {
 		LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
         // Adding a new tree rooted in 'q_rand'
-		std::shared_ptr<base::State> q_rand = getRandomState();
+		q_rand = getRandomState();
         TREES.emplace_back(base::Tree("local", treeNewIdx));
         // kdtrees.emplace_back(std::make_shared<KdTree>(ss->getDimensions(), TREES[treeNewIdx], nanoflann::KDTreeSingleIndexAdaptorParams(10)));
         // TREES[treeNewIdx].upgradeTree(kdtrees[treeNewIdx], q_rand, nullptr, -1, nullptr, 0);
@@ -287,7 +287,7 @@ inline bool planning::rbt::RGBMTStar::mainTreesReached(std::vector<int> &treesRe
     return (treesReached.size() > 1 && treesReached[0] == 0 && treesReached[1] == 1) ? true : false;
 }
 
-// State 'q' is optimally connected to 'tree'
+// State 'q' from another tree is optimally connected to 'tree'
 // 'q_reached' is a state from 'tree' that is reached by 'q'
 std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize(std::shared_ptr<base::State> q, std::shared_ptr<base::Tree> tree,
                                                                 std::shared_ptr<KdTree> kdtree, std::shared_ptr<base::State> q_reached)
@@ -355,7 +355,7 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize(std::shared_ptr<
         q_opt = q_reachedNew;
     }
 
-    std::shared_ptr<base::State> q_new = ss->newState(q);
+    std::shared_ptr<base::State> q_new = ss->newState(q->getCoord());
     float cost = q_opt->getCost() + getCostToCome(q_opt, q_new);
     // tree->upgradeTree(kdtree, q_new, q_opt, q_new->getDistance(), q_new->getPlanes(), cost);
     tree->upgradeTree(q_new, q_opt, q_new->getDistance(), q_new->getPlanes(), cost);
@@ -372,7 +372,7 @@ void planning::rbt::RGBMTStar::unifyTrees(std::shared_ptr<base::Tree> tree, std:
     std::shared_ptr<base::State> q_conNew = ss->newState(q_con);
     std::shared_ptr<base::State> q0_conNew = ss->newState(q0_con);
     while (true)
-    {        
+    {
         considerChildren(q_conNew, tree0, kdtree0, q0_conNew, q_considered);
         if (q_conNew->getParent() == nullptr)
         {
@@ -380,7 +380,7 @@ void planning::rbt::RGBMTStar::unifyTrees(std::shared_ptr<base::Tree> tree, std:
         }
         q0_conNew = optimize(q_conNew->getParent(), tree0, kdtree0, q0_conNew);
         q_considered = q_conNew;
-        q_conNew = ss->newState(q_conNew->getParent());
+        q_conNew = q_conNew->getParent();
     }
 }
 
@@ -409,7 +409,6 @@ void planning::rbt::RGBMTStar::considerChildren(std::shared_ptr<base::State> q, 
         {
             considerChildren(children->at(i), tree0, kdtree0, q0_conNew, nullptr);  // 'nullptr' means that no children will be removed
         }
-        return;
     }
 }
 
