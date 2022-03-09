@@ -1,7 +1,8 @@
 obstacles:
   - box:
-      dim: [0.2, 1.2, 0.1]
+      dim: [0.3, 0.3, 0.3]
       trans: [1.15, 0, 0]
+      rot: [1, 0, 0, 0.0001]
 robot:
   type: "planar_2DOF"
   urdf: "data/planar_2dof/planar_2dof.urdf"

@@ -35,7 +35,18 @@ env::Environment::Environment(const std::string& filename)
             float tx = trans[0].as<float>();
             float ty = trans[1].as<float>();
             float tz = trans[2].as<float>();
-            fcl::Transform3f tf(fcl::Vec3f(tx, ty, tz));
+
+            YAML::Node rot = obstacle["box"]["rot"];
+            float rx = rot[1].as<float>();
+            float ry = rot[2].as<float>();
+            float rz = rot[3].as<float>();
+            float rw = rot[0].as<float>();
+            
+            fcl::Vec3f tr(tx, ty, tz);
+            fcl::Quaternion3f quat(rw, rx, ry, rz);
+
+            fcl::Transform3f tf(quat, tr);
+            LOG(INFO) << "Object tf: " << tf.getTranslation() << "\n" << tf.getRotation() << "\n------------";
             std::shared_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, tf));
             ob->computeAABB();
             parts_.emplace_back(ob);
@@ -59,8 +70,7 @@ env::Environment::Environment(std::vector<env::Obstacle> obs)
         CollisionGeometryPtr fclBox(new fcl::Box(obs[i].first.side[0], obs[i].first.side[1], obs[i].first.side[2]));
         std::shared_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, obs[i].second));
         ob->computeAABB();
-        LOG(INFO) << ob->getAABB().min_ << "\t" << ob->getAABB().max_;
-
+        LOG(INFO) << "Obstacle range: " << ob->getAABB().min_ << "\t" << ob->getAABB().max_;
         parts_.emplace_back(ob);
     }
 

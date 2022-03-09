@@ -6,6 +6,7 @@
 #define RPMPL_PLANAR2DOF_H
 
 #include "AbstractRobot.h"
+#include "Environment.h"
 #include <memory>
 #include <vector>
 #include <string>
@@ -26,13 +27,14 @@ namespace robots
 		const KDL::Tree& getRobotTree() const;
 		const std::vector<std::unique_ptr<fcl::CollisionObject> >& getParts() const override;
 		void setState(std::shared_ptr<base::State> q_) override;
-		void test();
+		void test(std::shared_ptr<env::Environment> env, std::shared_ptr<base::State> q);
 
 		std::vector<robots::LinkLimits> getLimits() const override;
 
 	private:
 		fcl::Transform3f KDL2fcl(const KDL::Frame &in);
 		KDL::Frame fcl2KDL(const fcl::Transform3f &in);
+		fcl::Vec3f transformPoint(fcl::Vec3f& v, fcl::Transform3f t);
 	
 	private:
 		std::vector<std::unique_ptr<fcl::CollisionObject> > parts_;

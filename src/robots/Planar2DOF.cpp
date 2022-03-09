@@ -10,6 +10,7 @@
 #include "RealVectorSpaceState.h"
 
 #include <fcl/distance.h>
+#include <Eigen/Dense>
 
 #include <glog/logging.h>
 
@@ -87,7 +88,7 @@ std::vector<KDL::Frame> robots::Planar2DOF::computeForwardKinematics(std::shared
 	{
 		jointpositions(i) = q->getCoord()(i);
 	}
-	
+	 
 	for (size_t i = 0; i < robot_tree.getNrOfSegments(); ++i)
 	{
 		KDL::Frame cartpos;
@@ -122,21 +123,38 @@ void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
     
 }
 
-void robots::Planar2DOF::test()
+void robots::Planar2DOF::test(std::shared_ptr<env::Environment> env, std::shared_ptr<base::State> q)
 {
-	CollisionGeometryPtr fclBox(new fcl::Box(1.2, 0.5, 0.1));
-	fcl::Transform3f tf; tf.setTranslation(fcl::Vec3f(0,1.1+0.25, 0));
-	std::unique_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, tf));
+	setState(q);
+	std::shared_ptr<fcl::CollisionObject> ob = env->getParts()[0];
 
 	for (size_t i = 0; i < parts_.size(); ++i)
 	{
-		fcl::DistanceRequest request;
+		fcl::DistanceRequest request(true, 0.01, 0.02, fcl::GST_LIBCCD);
 		fcl::DistanceResult result;
 		fcl::distance(parts_[i].get(), ob.get(), request, result);
-		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
-		std::cout << "distance from " << i << ": " << result.min_distance << std::endl;
+		//LOG(INFO) << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
+		LOG(INFO) << "distance from " << i + 1 << ": " << result.min_distance << " p1: " << transformPoint(result.nearest_points[0], parts_[i]->getTransform() ) << 
+					"\t p2: " << transformPoint(result.nearest_points[2], ob->getTransform() );
 	}
 
+}
+
+fcl::Vec3f robots::Planar2DOF::transformPoint(fcl::Vec3f& v, fcl::Transform3f t)
+{
+	fcl::Vec3f fclVec = t.getTranslation();
+	Eigen::Vector4f trans = Eigen::Vector4f(fclVec[0], fclVec[1], fclVec[2], 1);
+	fcl::Matrix3f rot = t.getRotation();
+	Eigen::MatrixXf M = Eigen::MatrixXf::Identity(4,4);
+	for (size_t i = 0; i < 3; ++i)
+		for (size_t j = 0; j < 3; ++j)	
+			M(i,j) = rot(i,j);
+
+	for (size_t i = 0; i < 3; ++i)
+		M(i,3) = fclVec[i];
+
+	Eigen::Vector4f newVec = M * trans;
+	return fcl::Vec3f(newVec(0), newVec(1), newVec(2));
 }
 
 fcl::Transform3f robots::Planar2DOF::KDL2fcl(const KDL::Frame &in)

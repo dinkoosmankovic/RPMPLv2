@@ -39,7 +39,22 @@ scenario::Scenario::Scenario(std::string configuration_file)
             float tx = trans[0].as<float>();
             float ty = trans[1].as<float>();
             float tz = trans[2].as<float>();
-            fcl::Transform3f tf(fcl::Vec3f(tx, ty, tz));
+
+            LOG(INFO) << "read trans";
+
+            YAML::Node rot = obstacle["box"]["rot"];
+            float rx = rot[1].as<float>();
+            float ry = rot[2].as<float>();
+            float rz = rot[3].as<float>();
+            float rw = rot[0].as<float>();
+            
+            fcl::Vec3f tr(tx, ty, tz);
+            fcl::Quaternion3f quat(rw, rx, ry, rz);
+
+            fcl::Transform3f tf(quat, tr);
+
+            LOG(INFO) << "Object tf: " << tf.getTranslation() << "\n" << tf.getRotation() << "\n------------";
+            
             env::Obstacle obs_(std::make_pair(obs, tf));
             obstacles[i] = obs_;
         }
