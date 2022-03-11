@@ -50,48 +50,42 @@ scenario::Scenario::Scenario(std::string configuration_file)
     std::string type = robot_node["type"].as<std::string>();
     std::string space_state = robot_node["space"].as<std::string>();
     if (type == "xARM6")
-        robot = std::make_shared<robots::xARM6>( robot_node["urdf"].as<std::string>());
+        robot = std::make_shared<robots::xARM6>(robot_node["urdf"].as<std::string>());
+    else if (type == "planar_2DOF")
+        robot = std::make_shared<robots::Planar2DOF>(robot_node["urdf"].as<std::string>());
 
-    if (type == "planar_2DOF")
-        robot = std::make_shared<robots::Planar2DOF>( robot_node["urdf"].as<std::string>());
-
-    if (space_state == "RealVectorSpaceFCL")
-    {
+    if (space_state == "RealVectorSpace")
+        ss = std::make_shared<base::RealVectorSpace>(dim, robot, env);
+    else if (space_state == "RealVectorSpaceFCL")
         ss = std::make_shared<base::RealVectorSpaceFCL>(dim, robot, env);
-        YAML::Node start_node = robot_node["start"];
-        YAML::Node goal_node = robot_node["goal"];
-        std::vector<float> start_vec;
-        std::vector<float> goal_vec;
-        if (start_node.size() != goal_node.size())
-            throw std::logic_error("Start and goal size mismatch!");
-        for (size_t i = 0; i < start_node.size(); ++i)
-        {
-            start_vec.emplace_back(start_node[i].as<float>());
-            goal_vec.emplace_back(goal_node[i].as<float>());
-        }
-        start = std::make_shared<base::RealVectorSpaceState>(vector2VectorXf(start_vec));
-        goal = std::make_shared<base::RealVectorSpaceState>(vector2VectorXf(goal_vec));
+
+    YAML::Node start_node = robot_node["start"];
+    YAML::Node goal_node = robot_node["goal"];
+    Eigen::VectorXf start_vec(dim);
+    Eigen::VectorXf goal_vec(dim);
+    if (start_node.size() != goal_node.size())
+        throw std::logic_error("Start and goal size mismatch!");
+    for (size_t i = 0; i < start_node.size(); ++i)
+    {
+        start_vec(i) = start_node[i].as<float>();
+        goal_vec(i) = goal_node[i].as<float>();
     }
+    start = std::make_shared<base::RealVectorSpaceState>(start_vec);
+    goal = std::make_shared<base::RealVectorSpaceState>(goal_vec);
 
 }
 
-const std::shared_ptr<robots::AbstractRobot>& scenario::Scenario::getRobot() const 
+const std::shared_ptr<robots::AbstractRobot> &scenario::Scenario::getRobot() const 
 {
     return robot;
 }		
 
-const std::shared_ptr<env::Environment>& scenario::Scenario::getEnvironment() const
+const std::shared_ptr<env::Environment> &scenario::Scenario::getEnvironment() const
 {
     return env;
 }
 
-const std::shared_ptr<base::StateSpace>& scenario::Scenario::getStateSpace() const
+const std::shared_ptr<base::StateSpace> &scenario::Scenario::getStateSpace() const
 {
     return ss;
-}
-
-Eigen::VectorXf scenario::Scenario::vector2VectorXf(std::vector<float>& v) 
-{
-    Eigen::VectorXf vec = Eigen::Map<Eigen::VectorXf, Eigen::Unaligned>(v.data(), v.size());
-    return vec;
 }

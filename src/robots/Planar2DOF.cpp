@@ -53,10 +53,9 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 			CollisionGeometryPtr fclBox(new fcl::Box(box->dim.x, box->dim.y, box->dim.z));
 			//std::cout << "origin: " << origin << std::endl;
 			
-			init_poses.emplace_back( KDL::Frame(origin));
-			parts_.emplace_back( new fcl::CollisionObject(
-				fclBox, fcl::Transform3f()
-			));
+			init_poses.emplace_back(KDL::Frame(origin));
+			parts_.emplace_back(new fcl::CollisionObject(fclBox, fcl::Transform3f()));
+			radii.emplace_back(box->dim.y / 2);
 		}
 	}
 	//std::cout << "constructor----------------------\n";
@@ -65,12 +64,12 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 	setState(std::make_shared<base::RealVectorSpaceState>(state));
 }
 
-const KDL::Tree& robots::Planar2DOF::getRobotTree() const 
+const KDL::Tree &robots::Planar2DOF::getRobotTree() const 
 {
     return robot_tree;
 }
 
-const std::vector<std::unique_ptr<fcl::CollisionObject>>& robots::Planar2DOF::getParts() const
+const std::vector<std::unique_ptr<fcl::CollisionObject>> &robots::Planar2DOF::getParts() const
 {
 	return parts_;
 }
@@ -81,7 +80,7 @@ std::shared_ptr<std::vector<KDL::Frame>> robots::Planar2DOF::computeForwardKinem
 	KDL::TreeFkSolverPos_recursive treefksolver = KDL::TreeFkSolverPos_recursive(robot_tree);
 	std::shared_ptr<std::vector<KDL::Frame>> framesFK = std::make_shared<std::vector<KDL::Frame>>();
 	robot_tree.getChain("base_link", "tool", robot_chain);
-	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions() );
+	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions());
 
 	for (size_t i = 0; i < q->getDimensions(); ++i)
 	{
@@ -132,7 +131,6 @@ void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
 {
 	q = q_;
 	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions());
-
 	std::shared_ptr<std::vector<KDL::Frame>> framesFK = computeForwardKinematics(q);
 	
 	//transform Collision geometries
@@ -195,4 +193,14 @@ KDL::Frame robots::Planar2DOF::fcl2KDL(const fcl::Transform3f &in)
 const std::vector<std::vector<float>> &robots::Planar2DOF::getLimits() const
 {
 	return limits_;
+}
+
+const int robots::Planar2DOF::getDimensions()
+{
+	return 2;
+}
+
+const float robots::Planar2DOF::getRadius(int dim)
+{
+	return radii[dim];
 }

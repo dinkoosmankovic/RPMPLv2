@@ -260,3 +260,13 @@ const std::vector<std::vector<float>> &robots::xARM6::getLimits() const
 {
 	return limits_;
 }
+
+const int robots::xARM6::getDimensions()
+{
+	return 3;
+}
+
+const float robots::xARM6::getRadius(int dim)
+{
+	return radii[dim];
+}

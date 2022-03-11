@@ -22,17 +22,13 @@ namespace scenario
 	{
 	public:
 		Scenario(std::string configuration_file);
-        const std::shared_ptr<robots::AbstractRobot>& getRobot() const;		
-        const std::shared_ptr<env::Environment>& getEnvironment() const;
-        const std::shared_ptr<base::StateSpace>& getStateSpace() const;
-        
-        const std::shared_ptr<base::State>& getStart() const { return start; }
-        const std::shared_ptr<base::State>& getGoal() const { return goal; }
-        const std::string& getSpaceType() const { return spaceType; }
-        const int& getDimensions() const { return dimensions; }
-
-    private:
-        Eigen::VectorXf vector2VectorXf(std::vector<float>& v);
+        const std::shared_ptr<robots::AbstractRobot> &getRobot() const;		
+        const std::shared_ptr<env::Environment> &getEnvironment() const;
+        const std::shared_ptr<base::StateSpace> &getStateSpace() const;
+        const std::shared_ptr<base::State> &getStart() const { return start; }
+        const std::shared_ptr<base::State> &getGoal() const { return goal; }
+        const std::string &getSpaceType() const { return spaceType; }
+        const int &getDimensions() const { return dimensions; }
 
 	private:
 		std::shared_ptr<robots::AbstractRobot> robot;

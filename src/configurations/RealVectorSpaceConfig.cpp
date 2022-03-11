@@ -5,4 +5,4 @@
 #include "RealVectorSpaceConfig.h"
 
 int RealVectorSpaceConfig::NUM_INTERPOLATION_VALIDITY_CHECKS = 15;
-float RealVectorSpaceConfig::EQUALITY_THRESHOLD = 0.0001;
+float RealVectorSpaceConfig::EQUALITY_THRESHOLD = 1e-6;

@@ -14,54 +14,12 @@
 #include "RealVectorSpaceConfig.h"
 
 
-base::RealVectorSpaceFCL::~RealVectorSpaceFCL()
-{
-}
+base::RealVectorSpaceFCL::~RealVectorSpaceFCL() {}
 
 base::RealVectorSpaceFCL::RealVectorSpaceFCL(int dimensions_, const std::shared_ptr<robots::AbstractRobot> robot_, 
-											 const std::shared_ptr<env::Environment> env_) : RealVectorSpace(dimensions_)
+											 const std::shared_ptr<env::Environment> env_) : RealVectorSpace(dimensions_, robot_, env_)
 {
-	srand((unsigned int) time(0));
 	setStateSpaceType(StateSpaceType::RealVectorSpaceFCL);
-	robot = robot_;
-	env = env_;
-}
-
-bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q)
-{
-	robot->setState(q);
-	for (size_t i = 0; i < robot->getParts().size(); ++i)
-	{	
-		for (size_t j = 0; j < env->getParts().size(); ++j)
-		{
-			// LOG(INFO) << "robot i: " << i;
-			// LOG(INFO) << "env j: " << j;
-			fcl::CollisionRequest request;
-			fcl::CollisionResult result;
-			fcl::collide(robot->getParts()[i].get(), env->getParts()[j].get(), request, result);
-			if (result.isCollision() )
-				return false;
-		}
-	}
-	return true;
-}
-
-bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
-{
-	int numChecks = RealVectorSpaceConfig::NUM_INTERPOLATION_VALIDITY_CHECKS;
-	float D = (q2->getCoord() - q1->getCoord()).norm();
-	for (float t = 1./numChecks; t <= 1; t += 1./numChecks)
-	{
-		std::shared_ptr<base::State> q_t = interpolate(q1, q2, t, D);
-		/* if (q_t != nullptr) 
-		{
-			LOG(INFO) << "checking " << t << " : " << q_t->getCoord().transpose();
-			LOG(INFO) << "check: " << isValid(q_t);
-		} */
-		if (q_t == nullptr)
-			return false;
-	}
-	return true;
 }
 
 std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
@@ -90,9 +48,23 @@ std::shared_ptr<base::State> base::RealVectorSpaceFCL::newState(const Eigen::Vec
 	return q;
 }
 
-Eigen::VectorXf normalizedAngles(Eigen::VectorXf r)
+bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q)
 {
-	
+	robot->setState(q);
+	for (size_t i = 0; i < robot->getParts().size(); ++i)
+	{	
+		for (size_t j = 0; j < env->getParts().size(); ++j)
+		{
+			// LOG(INFO) << "robot i: " << i;
+			// LOG(INFO) << "env j: " << j;
+			fcl::CollisionRequest request;
+			fcl::CollisionResult result;
+			fcl::collide(robot->getParts()[i].get(), env->getParts()[j].get(), request, result);
+			if (result.isCollision() )
+				return false;
+		}
+	}
+	return true;
 }
 
 float base::RealVectorSpaceFCL::getDistance(const std::shared_ptr<base::State> q)

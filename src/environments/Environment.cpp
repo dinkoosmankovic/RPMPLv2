@@ -15,7 +15,7 @@ typedef std::shared_ptr <fcl::CollisionGeometry> CollisionGeometryPtr;
 
 env::Environment::~Environment() {}
 
-env::Environment::Environment(const std::string& filename)
+env::Environment::Environment(const std::string &filename)
 {
     YAML::Node node = YAML::LoadFile(filename);
     std::vector<std::shared_ptr<fcl::CollisionObject> > parts_;
@@ -43,7 +43,7 @@ env::Environment::Environment(const std::string& filename)
     }        
 }
 
-env::Environment::Environment(const fcl::Box& box, const fcl::Transform3f& tf)
+env::Environment::Environment(const fcl::Box &box, const fcl::Transform3f &tf)
 {
     CollisionGeometryPtr fclBox(new fcl::Box(box.side[0], box.side[1], box.side[2]));
 	std::shared_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, tf));
@@ -52,7 +52,7 @@ env::Environment::Environment(const fcl::Box& box, const fcl::Transform3f& tf)
     parts_.emplace_back(ob);
 }
 
-env::Environment::Environment(const std::vector<env::Obstacle>& obs)
+env::Environment::Environment(const std::vector<env::Obstacle> &obs)
 {
     for (size_t i = 0; i < obs.size(); ++i)
     {
@@ -68,7 +68,7 @@ env::Environment::Environment(const std::vector<env::Obstacle>& obs)
 
 }
 
-const std::vector<std::shared_ptr<fcl::CollisionObject> >& env::Environment::Environment::getParts() const
+const std::vector<std::shared_ptr<fcl::CollisionObject>> &env::Environment::Environment::getParts() const
 {
 	return parts_;
 }

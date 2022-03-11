@@ -25,19 +25,22 @@ namespace robots
 		const KDL::Tree& getRobotTree() const;
 		const std::vector<std::unique_ptr<fcl::CollisionObject>> &getParts() const override;
 		void setState(std::shared_ptr<base::State> q_) override;
-		void test();
 		const std::vector<std::vector<float>> &getLimits() const override;
+		const int getDimensions() override;
+		const float getRadius(int dim) override;
+		void test();
 
 	private:
 		fcl::Transform3f KDL2fcl(const KDL::Frame &in);
 		KDL::Frame fcl2KDL(const fcl::Transform3f &in);
 	
-	protected:
+	private:
 		std::vector<std::unique_ptr<fcl::CollisionObject>> parts_;
 		std::vector<KDL::Frame> init_poses;
 		KDL::Tree robot_tree;
 		KDL::Chain robot_chain;
 		std::vector<std::vector<float>> limits_;
+		std::vector<float> radii;		// Radii of all enclosing cylinders
 	};
 
 }

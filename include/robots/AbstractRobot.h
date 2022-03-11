@@ -18,6 +18,8 @@ namespace robots
 {
 	class AbstractRobot
 	{
+	protected:
+		std::shared_ptr<base::State> q;
 	public:
 		AbstractRobot() { q == nullptr; };
 		virtual ~AbstractRobot() = 0;
@@ -26,10 +28,10 @@ namespace robots
 		virtual float computeStep(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2, float fi, 
 								  std::shared_ptr<Eigen::MatrixXf> XYZ) = 0;
 		virtual void setState(std::shared_ptr<base::State> q_) = 0;
-		virtual const std::vector<std::unique_ptr<fcl::CollisionObject>>& getParts() const = 0;
+		virtual const std::vector<std::unique_ptr<fcl::CollisionObject>> &getParts() const = 0;
 		virtual const std::vector<std::vector<float>> &getLimits() const = 0;
-	protected:
-		std::shared_ptr<base::State> q;
+		virtual const int getDimensions() = 0;
+		virtual const float getRadius(int dim) = 0;
 	};
 }
 #endif //RPMPL_ABSTRACTPLANNER_H

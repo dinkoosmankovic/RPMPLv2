@@ -29,8 +29,10 @@ namespace robots
 		const KDL::Tree &getRobotTree() const;
 		const std::vector<std::unique_ptr<fcl::CollisionObject>> &getParts() const override;
 		void setState(std::shared_ptr<base::State> q_) override;
-		void test();
 		const std::vector<std::vector<float>> &getLimits() const override;
+		const int getDimensions() override;
+		const float getRadius(int dim) override;
+		void test();
 
 	private:
 		fcl::Transform3f KDL2fcl(const KDL::Frame &in);
@@ -38,7 +40,7 @@ namespace robots
 		float getEnclosingRadius(std::shared_ptr<Eigen::MatrixXf> XYZ, int j_start, int j_proj);
 	
 	private:
-		std::vector<std::unique_ptr<fcl::CollisionObject> > parts_;
+		std::vector<std::unique_ptr<fcl::CollisionObject>> parts_;
 		std::vector<KDL::Frame> init_poses;
 		KDL::Tree robot_tree;
 		KDL::Chain robot_chain;
