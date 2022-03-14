@@ -127,7 +127,6 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 									link_point[0] - obs_point[0],
 									link_point[1] - obs_point[1],
 									link_point[2] - obs_point[2];
-
 		}
 	}
 	return {min_dist, planes};
