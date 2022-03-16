@@ -40,19 +40,19 @@ namespace base
 		static const Eigen::Vector3f get3DPoint(const Eigen::Vector2f &point, float coord_value, int coord);
 		static bool collisionCapsuleToSphere(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
 		
-		static std::tuple<float, std::shared_ptr<Eigen::VectorXf>> distanceCapsuleToCuboid
+		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceCapsuleToCuboid
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
-		static std::tuple<float, std::shared_ptr<Eigen::VectorXf>> distanceLineSegToLineSeg
+		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceLineSegToLineSeg
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C, const Eigen::Vector3f &D);
-		static std::tuple<float, std::shared_ptr<Eigen::VectorXf>> distanceLineSegToPoint
+		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceLineSegToPoint
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C);
-		static std::tuple<float, std::shared_ptr<Eigen::VectorXf>> distanceCapsuleToSphere
+		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceCapsuleToSphere
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
 		class Capsule_Cuboid
 		{
 			private:
 			float d_c = INFINITY;
-			std::shared_ptr<Eigen::VectorXf> plane = std::make_shared<Eigen::VectorXf>(6);
+    		std::shared_ptr<Eigen::MatrixXf> nearest_pts = std::make_shared<Eigen::MatrixXf>(3, 2);
 			Eigen::Vector3f A, B, P1, P2;
 			Eigen::MatrixXi projections = Eigen::MatrixXi::Zero(6, 2);			// Determines whether projections on obs exist. First column is for point 'A', and second is for point 'B'
 			Eigen::Vector2f dist_AB_obs = Eigen::Vector2f(INFINITY, INFINITY);	// Distances of 'A' and 'B' to 'obs' (if projections exist)
@@ -68,7 +68,9 @@ namespace base
 
 			public:
 			Capsule_Cuboid(const Eigen::Vector3f &A_, const Eigen::Vector3f &B_, float radius_, Eigen::VectorXf &obs_);
-			std::tuple<float, std::shared_ptr<Eigen::VectorXf>> getDistance();
+			void compute();
+			float getDistance() { return d_c; }
+			std::shared_ptr<Eigen::MatrixXf> getNearestPoints() { return nearest_pts; }
 		};
 		
 	};

@@ -297,14 +297,15 @@ bool base::RealVectorSpace::collisionLineSegToLineSeg(const Eigen::Vector3f &A, 
 
     if (t > 0 && t < 1 && s > 0 && s < 1)
 	{
-        P1 = C + s * (D - C);
-        P2 = A + t * (B - A);
-        if ((P1 - P2).norm() < RealVectorSpaceConfig::EQUALITY_THRESHOLD) 	// The collision occurs
+        P1 = A + t * (B - A);
+        P2 = C + s * (D - C);
+        if ((P2 - P1).norm() < RealVectorSpaceConfig::EQUALITY_THRESHOLD) 	// The collision occurs
             return true;
     }
     return false;
 }
 
+// Check collision between capsule (determined with line segment AB and 'radius') and sphere (determined with 'obs = (x_c, y_c, z_c, r)')
 bool base::RealVectorSpace::collisionCapsuleToSphere(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
 {
 	radius += obs(3);
@@ -340,7 +341,7 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
     Eigen::MatrixXf distances(robot->getParts().size(), env->getParts().size());
 	std::shared_ptr<std::vector<Eigen::MatrixXf>> planes = std::make_shared<std::vector<Eigen::MatrixXf>>
 		(std::vector<Eigen::MatrixXf>(env->getParts().size(), Eigen::MatrixXf(6, robot->getParts().size())));
-	std::shared_ptr<Eigen::VectorXf> plane;
+	std::shared_ptr<Eigen::MatrixXf> nearest_pts;
 	std::shared_ptr<Eigen::MatrixXf> XYZ = robot->computeXYZ(q);
 	for (int i = 0; i < robot->getParts().size(); i++)
 	{
@@ -351,46 +352,46 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 				fcl::AABB AABB = env->getParts()[j]->getAABB();
 				Eigen::VectorXf obs(6);
 				obs << AABB.min_[0], AABB.min_[1], AABB.min_[2], AABB.max_[0], AABB.max_[1], AABB.max_[2];
-                tie(distances(i,j), plane) = distanceCapsuleToCuboid(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
-				std::cout << "(i,j) = (" <<i<<","<<j<<"). Distance: " << distances(i,j) << std::endl;
-				if (plane != nullptr)
-				{
-					std::cout << "Nearest point obs:  " << plane->head(3).transpose() << std::endl;
-					std::cout << "Nearest point link: " << (plane->head(3)+plane->tail(3)).transpose() << std::endl;
-				}
-				std::cout << "r(i): " << robot->getRadius(i) << std::endl;
-				std::cout << "XYZ(i):   " << XYZ->col(i).transpose() << std::endl;
-				std::cout << "XYZ(i+1): " << XYZ->col(i+1).transpose() << std::endl;
-				std::cout << "---------------------------------------" << std::endl;
+                tie(distances(i,j), nearest_pts) = distanceCapsuleToCuboid(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
+				// std::cout << "(i,j) = (" <<i<<","<<j<<"). Distance: " << distances(i,j) << std::endl;
+				// if (nearest_pts != nullptr)
+				// {
+				// 	std::cout << "Nearest point link: " << nearest_pts->col(1).transpose() << std::endl;
+				// 	std::cout << "Nearest point obs:  " << nearest_pts->col(0).transpose() << std::endl;
+				// }
+				// std::cout << "r(i): " << robot->getRadius(i) << std::endl;
+				// std::cout << "XYZ(i):   " << XYZ->col(i).transpose() << std::endl;
+				// std::cout << "XYZ(i+1): " << XYZ->col(i+1).transpose() << std::endl;
+				// std::cout << "---------------------------------------" << std::endl;
             }
 			// else if (env->getParts()[j]->getNodeType() == fcl::NODE_TYPE::GEOM_SPHERE)
 			// {
-            //     tie(distances(i,j), plane) = distanceCapsuleToSphere(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
+            //     tie(distances(i,j), nearest_pts) = distanceCapsuleToSphere(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
             // }
             if (distances(i,j) <= 0)		// The collision occurs
                 return {0, nullptr};
 			
-			planes->at(j).col(i) = *plane;
+			planes->at(j).col(i) << nearest_pts->col(1), nearest_pts->col(0) - nearest_pts->col(1);
         }
     }
 	return {distances.minCoeff(), planes};
 }
 
-// Get distance (and plane) between line segment AB and cuboid (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)')
-std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::distanceCapsuleToCuboid
+// Get distance (and nearest points) between capsule (determined with line segment AB and 'radius') and cuboid (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)')
+std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::distanceCapsuleToCuboid
 	(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
 {
 	Capsule_Cuboid capsule_cuboid(A, B, radius, obs);
-	return capsule_cuboid.getDistance();
+	capsule_cuboid.compute();
+	return {capsule_cuboid.getDistance(), capsule_cuboid.getNearestPoints()};
 }
 
 // Get distance (and nearest points) between two line segments, AB and CD
-std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::distanceLineSegToLineSeg
+std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::distanceLineSegToLineSeg
 	(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C, const Eigen::Vector3f &D)
 {
     float d_c = INFINITY;
-	std::shared_ptr<Eigen::VectorXf> plane = std::make_shared<Eigen::VectorXf>(6);
-    Eigen::Vector3f P1, P2;
+    std::shared_ptr<Eigen::MatrixXf> nearest_pts = std::make_shared<Eigen::MatrixXf>(3, 2);
     double alpha1 = (B - A).squaredNorm();
     double alpha2 = (B - A).dot(D - C);
     double beta1 = (C - D).dot(B - A);
@@ -402,12 +403,11 @@ std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::dista
 	
 	if (t > 0 && t < 1 && s > 0 && s < 1)
 	{
-        P1 = C + s * (D - C);
-        P2 = A + t * (B - A);
-		d_c = (P1 - P2).norm();
+        nearest_pts->col(0) = A + t * (B - A);
+        nearest_pts->col(1) = C + s * (D - C);
+		d_c = (nearest_pts->col(1) - nearest_pts->col(0)).norm();
         if (d_c < RealVectorSpaceConfig::EQUALITY_THRESHOLD) 	// The collision occurs
             return {0, nullptr};
-		*plane << P1, P2 - P1;
     }
     else
 	{
@@ -422,105 +422,101 @@ std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::dista
             if (opt(i) < 0)
                 if (i == 0 || i == 2)     	// s = 0, t = 0
 				{
-					P1 = C; 
-					P2 = A;
+					nearest_pts->col(1) = C; 
+					nearest_pts->col(0) = A;
 				}
                 else if (i == 1)      		// s = 1, t = 0
 				{
-                    P1 = D; 
-					P2 = A;
+                    nearest_pts->col(1) = D; 
+					nearest_pts->col(0) = A;
 				}
                 else                      	// t = 1, s = 0
 				{
-                    P1 = C; 
-					P2 = B;
+                    nearest_pts->col(1) = C; 
+					nearest_pts->col(0) = B;
 				}
             else if (opt(i) > 1)
 			{
 				if (i == 1 || i == 3)    	// s = 1, t = 1
 				{
-					P1 = D; 
-					P2 = B;
+					nearest_pts->col(1) = D; 
+					nearest_pts->col(0) = B;
 				}
                 else if (i == 0)        	// s = 0, t = 1
 				{
-					P1 = C; 
-					P2 = B;
+					nearest_pts->col(1) = C; 
+					nearest_pts->col(0) = B;
 				}                    
                 else                    	// t = 0, s = 1
 				{
-					P1 = D; 
-					P2 = A;
+					nearest_pts->col(1) = D; 
+					nearest_pts->col(0) = A;
 				}
 			}
             else
 			{
 				if (i == 0)                	// s = 0, t € [0,1]
 				{
-					P1 = C; 
-					P2 = A + opt(i) * (B - A);
+					nearest_pts->col(1) = C; 
+					nearest_pts->col(0) = A + opt(i) * (B - A);
 				}                    
                 else if (i == 1)       		// s = 1, t € [0,1]
 				{
-                    P1 = D; 
-					P2 = A + opt(i) * (B - A);
+                    nearest_pts->col(1) = D; 
+					nearest_pts->col(0) = A + opt(i) * (B - A);
 				}
                 else if (i == 2)           	// t = 0, s € [0,1]
 				{				
-                    P1 = C + opt(i) * (D - C); 
-					P2 = A;
+                    nearest_pts->col(1) = C + opt(i) * (D - C); 
+					nearest_pts->col(0) = A;
 				}
                 else                       	// t = 1, s € [0,1]
 				{
-                    P1 = C + opt(i) * (D - C); 
-					P2 = B;
+                    nearest_pts->col(1) = C + opt(i) * (D - C); 
+					nearest_pts->col(0) = B;
 				}
 			}
             
-            d_c_temp = (P1 - P2).norm();
+            d_c_temp = (nearest_pts->col(1) - nearest_pts->col(0)).norm();
             if (d_c_temp < d_c)
-			{
                 d_c = d_c_temp;
-                *plane << P1, P2 - P1;
-			}
         }
     }
-	return {d_c, plane};
+	return {d_c, nearest_pts};
 }
 
-// Get distance (and plane) between line segment AB and point C
-std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::distanceLineSegToPoint
+// Get distance (and nearest points) between line segment AB and point C
+std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::distanceLineSegToPoint
 	(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C)
 {
-	std::shared_ptr<Eigen::VectorXf> plane = std::make_shared<Eigen::VectorXf>(6);
 	float d_c;
-    Eigen::Vector3f P1 = C;
-    Eigen::Vector3f P2;
+    std::shared_ptr<Eigen::MatrixXf> nearest_pts = std::make_shared<Eigen::MatrixXf>(3, 2);
+    nearest_pts->col(1) = C;
     float t_opt = (C - A).dot(B - A) / (B - A).squaredNorm();
     if (t_opt < 0)
 	{	
 		d_c = (C - A).norm();
-		P2 = A;
+		nearest_pts->col(0) = A;
 	}
     else if (t_opt > 1)
 	{
 		d_c = (C - B).norm();
-        P2 = B;
+        nearest_pts->col(0) = B;
 	}
     else
 	{
-		P2 = A + t_opt * (B - A);
-        if ((C - P2).norm() < RealVectorSpaceConfig::EQUALITY_THRESHOLD)
+		nearest_pts->col(0) = A + t_opt * (B - A);
+        if ((C - nearest_pts->col(0)).norm() < RealVectorSpaceConfig::EQUALITY_THRESHOLD)
             return {0, nullptr};
 	}
-    *plane << P1, P2 - P1;
-	return {d_c, plane};
+	return {d_c, nearest_pts};
 }
 
-std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::distanceCapsuleToSphere
+// Get distance (and nearest points) between capsule (determined with line segment AB and 'radius') and sphere (determined with 'obs = (x_c, y_c, z_c, r)')
+std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::distanceCapsuleToSphere
 	(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
 {
-	std::shared_ptr<Eigen::VectorXf> plane = std::make_shared<Eigen::VectorXf>(6);
+    std::shared_ptr<Eigen::MatrixXf> nearest_pts = std::make_shared<Eigen::MatrixXf>(3, 2);
 	double AO = (A - obs.head(3)).norm();
     double d_c = AO - obs(3);
     if (d_c < radius)	// The collision occurs
@@ -537,7 +533,6 @@ std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::dista
     double AB = (A - B).norm();
     double s = (AB + AO + BO) / 2;
     double alpha = acos((AO * AO + AB * AB - BO * BO) / (2 * AO * AB));
-    Eigen::Vector3f P1, P2;
     d_c_temp = 2 * sqrt(s * (s - AB) * (s - AO) * (s - BO)) / AB - obs(3);     // h = 2 * P / AB; d_c_temp = h - obs(3);
     if (alpha < M_PI / 2)
 	{
@@ -548,22 +543,21 @@ std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::dista
             if (d_c_temp < radius)	// The collision occurs
 			    return {0, nullptr};    
             
-            P2 = A + AO * cos(alpha) / AB * (B - A);
-            P1 = P2 + d_c / (obs.head(3) - P2).norm() * (obs.head(3) - P2);
+            nearest_pts->col(0) = A + AO * cos(alpha) / AB * (B - A);
+            nearest_pts->col(1) = nearest_pts->col(0) + d_c / (obs.head(3) - nearest_pts->col(0)).norm() * (obs.head(3) - nearest_pts->col(0));
         }
         else
 		{
-            P1 = B + d_c / BO * (obs.head(3) - B);  
-            P2 = B;
+            nearest_pts->col(1) = B + d_c / BO * (obs.head(3) - B);  
+            nearest_pts->col(0) = B;
         }
     }
     else
 	{
-        P1 = A + d_c / AO * (obs.head(3) - A);  
-        P2 = A;
+        nearest_pts->col(1) = A + d_c / AO * (obs.head(3) - A);  
+        nearest_pts->col(0) = A;
     }
-    *plane << P1, P2-P1;
-    return {d_c, plane};
+    return {d_c, nearest_pts};
 }
 
 // ------------------------------------------------ Class LineSeg_Cuboid -------------------------------------------------------//
@@ -576,29 +570,31 @@ base::RealVectorSpace::Capsule_Cuboid::Capsule_Cuboid(const Eigen::Vector3f &A_,
 	obs = obs_;
 }
 
-std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::Capsule_Cuboid::getDistance()
+void base::RealVectorSpace::Capsule_Cuboid::compute()
 {
 	projectionLineSegOnSide(1, 2, 0, 4, 5, 3);   // Projection on x_min or x_max
 	projectionLineSegOnSide(0, 2, 1, 3, 5, 4);   // Projection on y_min or y_max
 	projectionLineSegOnSide(0, 1, 2, 3, 4, 5);   // Projection on z_min or z_max     
 	if (d_c == 0)
-		return {0, nullptr};
+	{
+		nearest_pts = nullptr;
+		return;
+	}
 
 	int M = (projections.col(0) + projections.col(1)).maxCoeff();
 	if (M > 0) 						// Projection of one or two points exists
 	{
 		int idx = (dist_AB_obs(0) < dist_AB_obs(1)) ? 0 : 1;
 		d_c = dist_AB_obs.minCoeff();
-		P2 = AB.col(idx);
+		nearest_pts->col(0) = AB.col(idx);
 		Eigen::Index I;
 		projections.col(idx).maxCoeff(&I);
 		if (I == 0 || I == 3)
-			P1 << obs(I), AB.col(idx).tail(2);
+			nearest_pts->col(1) << obs(I), AB.col(idx).tail(2);
 		else if (I == 1 || I == 4)
-			P1 << AB(0, idx), obs(I), AB(2, idx);
+			nearest_pts->col(1) << AB(0, idx), obs(I), AB(2, idx);
 		else if (I == 2 || I == 5)
-			P1 = AB.col(idx).head(2), obs(I);		
-		*plane << P1, P2 - P1;
+			nearest_pts->col(1) = AB.col(idx).head(2), obs(I);
 		
 		if (M == 1 && idx == 0)   		// Projection of 'A' exists, but projection of 'B' does not exist
 			checkEdges(B, idx);
@@ -607,8 +603,8 @@ std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::Capsu
 	}
 	else								// There is no projection of any point
 		checkOtherCases();
-				
-	return {d_c - radius, plane};
+
+	d_c -= radius;
 }
 
 void base::RealVectorSpace::Capsule_Cuboid::projectionLineSegOnSide(int min1, int min2, int min3, int max1, int max2, int max3)
@@ -736,10 +732,10 @@ std::shared_ptr<Eigen::MatrixXf> base::RealVectorSpace::Capsule_Cuboid::getLineS
 void base::RealVectorSpace::Capsule_Cuboid::distanceToMoreLineSegments(const Eigen::MatrixXf &line_segments)
 {
 	float d_c_temp;
-	std::shared_ptr<Eigen::VectorXf> plane_temp;
+	std::shared_ptr<Eigen::MatrixXf> nearest_pts_temp;
 	for (int k = 0; k < line_segments.cols(); k += 2)
 	{
-		tie(d_c_temp, plane_temp) = distanceLineSegToLineSeg(A, B, line_segments.col(k), line_segments.col(k+1));
+		tie(d_c_temp, nearest_pts_temp) = distanceLineSegToLineSeg(A, B, line_segments.col(k), line_segments.col(k+1));
 		if (d_c_temp == 0)
 		{
 			d_c = 0;
@@ -748,7 +744,7 @@ void base::RealVectorSpace::Capsule_Cuboid::distanceToMoreLineSegments(const Eig
 		else if (d_c_temp < d_c)
 		{
 			d_c = d_c_temp;
-			plane = plane_temp;
+			nearest_pts = nearest_pts_temp;
 		}
 	}
 }
@@ -760,31 +756,31 @@ void base::RealVectorSpace::Capsule_Cuboid::checkOtherCases()
 		if (A(1) < obs(1) && B(1) < obs(1))
 		{
 			if (A(2) < obs(2) && B(2) < obs(2)) 		// < x_min, < y_min, < z_min
-				tie(d_c, plane) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(0), obs(1), obs(2)));
+				tie(d_c, nearest_pts) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(0), obs(1), obs(2)));
 			else if (A(2) > obs(5) && B(2) > obs(5)) 	// < x_min, < y_min, > z_max
-				tie(d_c, plane) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(0), obs(1), obs(5)));
+				tie(d_c, nearest_pts) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(0), obs(1), obs(5)));
 			else    									// < x_min, < y_min
-				tie(d_c, plane) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(1), obs(2)), 
-																 Eigen::Vector3f(obs(0), obs(1), obs(5)));
+				tie(d_c, nearest_pts) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(1), obs(2)), 
+																 	   Eigen::Vector3f(obs(0), obs(1), obs(5)));
 		}
 		else if (A(1) > obs(4) && B(1) > obs(4))
 		{
 			if (A(2) < obs(2) && B(2) < obs(2)) 		// < x_min, > y_max, < z_min
-				tie(d_c, plane) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(0), obs(4), obs(2)));                        
+				tie(d_c, nearest_pts) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(0), obs(4), obs(2)));                        
 			else if (A(2) > obs(5) && B(2) > obs(5)) 	// < x_min, > y_max, > z_max
-				tie(d_c, plane) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(0), obs(4), obs(5)));
+				tie(d_c, nearest_pts) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(0), obs(4), obs(5)));
 			else    									// < x_min, > y_max
-				tie(d_c, plane) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(4), obs(2)), 
-																 Eigen::Vector3f(obs(0), obs(4), obs(5)));
+				tie(d_c, nearest_pts) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(4), obs(2)), 
+																 	   Eigen::Vector3f(obs(0), obs(4), obs(5)));
 		}
 		else
 		{
 			if (A(2) < obs(2) && B(2) < obs(2)) 		// < x_min, < z_min
-				tie(d_c, plane) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(1), obs(2)), 
-																 Eigen::Vector3f(obs(0), obs(4), obs(2)));
+				tie(d_c, nearest_pts) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(1), obs(2)), 
+																 	   Eigen::Vector3f(obs(0), obs(4), obs(2)));
 			else if (A(2) > obs(5) && B(2) > obs(5)) 	// < x_min, > z_max
-				tie(d_c, plane) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(1), obs(5)), 
-																 Eigen::Vector3f(obs(0), obs(4), obs(5)));
+				tie(d_c, nearest_pts) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(1), obs(5)), 
+																 	   Eigen::Vector3f(obs(0), obs(4), obs(5)));
 			else    									// < x_min
 			{
 				Eigen::MatrixXf line_segments(3, 8);
@@ -801,31 +797,31 @@ void base::RealVectorSpace::Capsule_Cuboid::checkOtherCases()
 		if (A(1) < obs(1) && B(1) < obs(1))
 		{
 			if (A(2) < obs(2) && B(2) < obs(2)) 		// > x_max, < y_min, < z_min
-				tie(d_c, plane) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(3), obs(1), obs(2)));
+				tie(d_c, nearest_pts) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(3), obs(1), obs(2)));
 			else if (A(2) > obs(5) && B(2) > obs(5)) 	// > x_max, < y_min, > z_max
-				tie(d_c, plane) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(3), obs(1), obs(5)));
+				tie(d_c, nearest_pts) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(3), obs(1), obs(5)));
 			else    									// > x_max, < y_min
-				tie(d_c, plane) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(3), obs(1), obs(2)),
-																 Eigen::Vector3f(obs(3), obs(1), obs(5)));                    
+				tie(d_c, nearest_pts) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(3), obs(1), obs(2)),
+																 	   Eigen::Vector3f(obs(3), obs(1), obs(5)));                    
 		}
 		else if (A(1) > obs(4) && B(1) > obs(4))
 		{
 			if (A(2) < obs(2) && B(2) < obs(2)) 		// > x_max, > y_max, < z_min
-				tie(d_c, plane) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(3), obs(4), obs(2)));
+				tie(d_c, nearest_pts) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(3), obs(4), obs(2)));
 			else if (A(2) > obs(5) && B(2) > obs(5)) 	// > x_max, > y_max, > z_max
-				tie(d_c, plane) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(3), obs(4), obs(5)));
+				tie(d_c, nearest_pts) = distanceLineSegToPoint(A, B, Eigen::Vector3f(obs(3), obs(4), obs(5)));
 			else    									// > x_max, > y_max
-				tie(d_c, plane) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(3), obs(4), obs(2)), 
-																 Eigen::Vector3f(obs(3), obs(4), obs(5)));                     
+				tie(d_c, nearest_pts) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(3), obs(4), obs(2)), 
+																 	   Eigen::Vector3f(obs(3), obs(4), obs(5)));                     
 		}
 		else
 		{
 			if (A(2) < obs(2) && B(2) < obs(2)) 		// > x_max, < z_min
-				tie(d_c, plane) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(3), obs(1), obs(2)),
-																 Eigen::Vector3f(obs(3), obs(4), obs(2)));
+				tie(d_c, nearest_pts) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(3), obs(1), obs(2)),
+																 	   Eigen::Vector3f(obs(3), obs(4), obs(2)));
 			else if (A(2) > obs(5) && B(2) > obs(5)) 	// > x_max, > z_max
-				tie(d_c, plane) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(3), obs(1), obs(5)), 
-																 Eigen::Vector3f(obs(3), obs(4), obs(5)));
+				tie(d_c, nearest_pts) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(3), obs(1), obs(5)), 
+																 	   Eigen::Vector3f(obs(3), obs(4), obs(5)));
 			else    									// > x_max
 			{
 				Eigen::MatrixXf line_segments(3, 8);
@@ -842,11 +838,11 @@ void base::RealVectorSpace::Capsule_Cuboid::checkOtherCases()
 		if (A(1) < obs(1) && B(1) < obs(1))
 		{
 			if (A(2) < obs(2) && B(2) < obs(2)) 		// < y_min, < z_min
-				tie(d_c, plane) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(1), obs(2)), 
-																 Eigen::Vector3f(obs(3), obs(1), obs(2))); 
+				tie(d_c, nearest_pts) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(1), obs(2)), 
+																 	   Eigen::Vector3f(obs(3), obs(1), obs(2))); 
 			else if (A(2) > obs(5) && B(2) > obs(5)) 	// < y_min, > z_max
-				tie(d_c, plane) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(1), obs(5)), 
-																 Eigen::Vector3f(obs(3), obs(1), obs(5))); 
+				tie(d_c, nearest_pts) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(1), obs(5)), 
+																 	   Eigen::Vector3f(obs(3), obs(1), obs(5))); 
 			else    									// < y_min
 			{
 				Eigen::MatrixXf line_segments(3, 8);
@@ -859,11 +855,11 @@ void base::RealVectorSpace::Capsule_Cuboid::checkOtherCases()
 		else if (A(1) > obs(4) && B(1) > obs(4))
 		{
 			if (A(2) < obs(2) && B(2) < obs(2)) 		// > y_max, < z_min
-				tie(d_c, plane) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(4), obs(2)), 
-																 Eigen::Vector3f(obs(3), obs(4), obs(2)));                        
+				tie(d_c, nearest_pts) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(4), obs(2)), 
+																 	   Eigen::Vector3f(obs(3), obs(4), obs(2)));                        
 			else if (A(2) > obs(5) && B(2) > obs(5)) 	// > y_max, > z_max
-				tie(d_c, plane) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(4), obs(5)),
-																 Eigen::Vector3f(obs(3), obs(4), obs(5)));                             
+				tie(d_c, nearest_pts) = distanceLineSegToLineSeg(A, B, Eigen::Vector3f(obs(0), obs(4), obs(5)),
+																 	   Eigen::Vector3f(obs(3), obs(4), obs(5)));                             
 			else    									// > y_max
 			{
 				Eigen::MatrixXf line_segments(3, 8);

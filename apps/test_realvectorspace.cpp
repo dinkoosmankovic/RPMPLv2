@@ -36,10 +36,10 @@ int main(int argc, char **argv)
 	try
 	{
 		int num = 0;
-		while (num++ < 1)
+		while (num++ < 10000)
 		{
-			// std::shared_ptr<base::State> q = ss->randomState();
-			std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f(-0.380458, 0.582361));		
+			std::shared_ptr<base::State> q = ss->randomState();
+			// std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f(-0.380458, 0.582361));		
 			std::cout << "Num: " << num << " Configuration: " << q << std::endl;
 
 			std::cout << "WITHOUT FCL --------------------" << std::endl;
