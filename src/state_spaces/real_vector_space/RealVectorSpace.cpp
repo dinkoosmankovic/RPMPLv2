@@ -116,34 +116,36 @@ bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q)
 		{
             if (env->getParts()[j]->getNodeType() == fcl::NODE_TYPE::GEOM_BOX)
 			{
+				// std::cout << "(i,j) = (" <<i<<","<<j<<")" << std::endl;
+				// std::cout << "r(i): " << robot->getRadius(i) << std::endl;
+				// std::cout << "XYZ(i):   " << XYZ->col(i).transpose() << std::endl;
+				// std::cout << "XYZ(i+1): " << XYZ->col(i+1).transpose() << std::endl;
 				fcl::AABB AABB = env->getParts()[j]->getAABB();
 				Eigen::VectorXf obs(6);
 				obs << AABB.min_[0], AABB.min_[1], AABB.min_[2], AABB.max_[0], AABB.max_[1], AABB.max_[2];
-				collision = collisionCapsuleToCuboid(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
+				if (collisionCapsuleToCuboid(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs))
+					return false;
             }
-			else if (env->getParts()[j]->getNodeType() == fcl::NODE_TYPE::GEOM_SPHERE)
-			{
-                // collision = collisionCapsuleToSphere(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
-            }
-            if (collision)	// The collision occurs
-			{    
-                return true;
-            }
+			// else if (env->getParts()[j]->getNodeType() == fcl::NODE_TYPE::GEOM_SPHERE)
+			// {
+            //     if (collisionCapsuleToSphere(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs))
+			// 		return false;
+            // }
         }
     }
-    return false;
+    return true;
 }
 
 // Check collision between capsule (determined with line segment AB and 'radius') and cuboid (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)')
 bool base::RealVectorSpace::collisionCapsuleToCuboid(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
 {
     bool collision = false;
-    float r_new = radius * sqrt(2) / 2;
+    float r_new = radius * sqrt(3) / 3;
 
 	if (A(0) > obs(0) - r_new && A(1) > obs(1) - r_new && A(2) > obs(2) - r_new &&
-		A(0) < obs(3) + r_new && A(1) < obs(3) + r_new && A(2) < obs(4) + r_new ||
+		A(0) < obs(3) + r_new && A(1) < obs(4) + r_new && A(2) < obs(5) + r_new ||
 		B(0) > obs(0) - r_new && B(1) > obs(1) - r_new && B(2) > obs(2) - r_new &&
-		B(0) < obs(3) + r_new && B(1) < obs(3) + r_new && B(2) < obs(4) + r_new)
+		B(0) < obs(3) + r_new && B(1) < obs(4) + r_new && B(2) < obs(5) + r_new)
 		return true;
     else if (A(0) < obs(0) - radius && B(0) < obs(0) - radius || A(0) > obs(3) + radius && B(0) > obs(3) + radius ||
            	 A(1) < obs(1) - radius && B(1) < obs(1) - radius || A(1) > obs(4) + radius && B(1) > obs(4) + radius ||
@@ -155,16 +157,21 @@ bool base::RealVectorSpace::collisionCapsuleToCuboid(const Eigen::Vector3f &A, c
     else if (A(0) > obs(3))  				// > x_max
         collision = collisionCapsuleToRectangle(A, B, radius, obs, 3);
     
-    if (!collision && A(1) < obs(1))     	// < y_min
-        collision = collisionCapsuleToRectangle(A, B, radius, obs, 1);
-    else if (!collision && A(1) > obs(4)) 	// > y_max
-        collision = collisionCapsuleToRectangle(A, B, radius, obs, 4);
-    
-    if (!collision && A(2) < obs(2))     	// < z_min
-        collision = collisionCapsuleToRectangle(A, B, radius, obs, 2);
-    else if (!collision && A(2) > obs(5)) 	// > z_max
-        collision = collisionCapsuleToRectangle(A, B, radius, obs, 5);
-	
+	if (!collision)
+	{
+		if (A(1) < obs(1))     				// < y_min
+			collision = collisionCapsuleToRectangle(A, B, radius, obs, 1);
+		else if (A(1) > obs(4)) 			// > y_max
+			collision = collisionCapsuleToRectangle(A, B, radius, obs, 4);
+		
+		if (!collision)
+		{
+			if (A(2) < obs(2))     			// < z_min
+				collision = collisionCapsuleToRectangle(A, B, radius, obs, 2);
+			else if (A(2) > obs(5)) 		// > z_max
+				collision = collisionCapsuleToRectangle(A, B, radius, obs, 5);
+		}
+	}
     return collision;
 }
 
@@ -174,7 +181,6 @@ bool base::RealVectorSpace::collisionCapsuleToRectangle(const Eigen::Vector3f &A
 														Eigen::VectorXf &obs, int coord)
 {
 	float obs_coord = obs(coord);
-    float r_new = radius * sqrt(2) / 2;
     if (coord > 2)
         coord -= 3;
     
@@ -185,7 +191,7 @@ bool base::RealVectorSpace::collisionCapsuleToRectangle(const Eigen::Vector3f &A
 	Eigen::Vector2f M = A_rec + t * (B_rec - A_rec);
 	Eigen::Vector3f A_proj = get3DPoint(A_rec, obs_coord, coord);
 	Eigen::Vector3f B_proj = get3DPoint(B_rec, obs_coord, coord);
-    if (t > 0 && t < 1)
+    if (t > 0 && t < 1)		// Line segment AB intersects the plane 'obs(coord)'
 	{
 		if (M(0) > rec(0) - radius && M(0) < rec(2) + radius && 
 			M(1) > rec(1) - radius && M(1) < rec(3) + radius) 	// Whether point lies on the oversized rectangle
@@ -196,7 +202,7 @@ bool base::RealVectorSpace::collisionCapsuleToRectangle(const Eigen::Vector3f &A
 				M(0) < rec(0) && M(1) > rec(3) && (M - Eigen::Vector2f(rec(0), rec(3))).norm() < radius ||
 				M(0) > rec(1) && M(1) < rec(2) && (M - Eigen::Vector2f(rec(1), rec(2))).norm() < radius ||
 				M(0) > rec(1) && M(1) > rec(3) && (M - Eigen::Vector2f(rec(1), rec(3))).norm() < radius)
-				return true;
+					return true;
 		}
 	}
 	else if (std::min((A - A_proj).norm(), (B - B_proj).norm()) > radius)
@@ -212,18 +218,18 @@ bool base::RealVectorSpace::collisionCapsuleToRectangle(const Eigen::Vector3f &A
 				if (std::min((A - A_proj).norm(), (B - B_proj).norm()) < radius)
 					return true;
 			}
-			else
+			else																					// Only projection of point A
 			{
 				if (std::min(checkCases(A, B, rec, B_rec, obs_coord, coord), (A - A_proj).norm()) < radius)
 					return true;
 			}
 		}
-		else if (B_rec(0) > rec(0) && B_rec(0) < rec(2) && B_rec(1) > rec(1) && B_rec(1) < rec(3))
+		else if (B_rec(0) > rec(0) && B_rec(0) < rec(2) && B_rec(1) > rec(1) && B_rec(1) < rec(3))	// Only projection of point B
 		{
 			if (std::min(checkCases(A, B, rec, A_rec, obs_coord, coord), (B- B_proj).norm()) < radius)
 				return true;
 		}
-		else
+		else																						// No projections						
 		{
 			if (checkCases(A, B, rec, A_rec, obs_coord, coord) < radius)
 				return true;
@@ -239,8 +245,8 @@ bool base::RealVectorSpace::collisionCapsuleToRectangle(const Eigen::Vector3f &A
 float base::RealVectorSpace::checkCases(const Eigen::Vector3f &A, const Eigen::Vector3f &B, Eigen::Vector4f &rec, 
 										Eigen::Vector2f &point, float obs_coord, int coord)
 {
-	float d_c1 = 0;
-	float d_c2 = 0;
+	float d_c1 = INFINITY;
+	float d_c2 = INFINITY;
 	if (point(0) < rec(0))
 	{
 		Eigen::Vector3f C = get3DPoint(Eigen::Vector2f(rec(0), rec(1)), obs_coord, coord);
@@ -266,7 +272,6 @@ float base::RealVectorSpace::checkCases(const Eigen::Vector3f &A, const Eigen::V
 		Eigen::Vector3f D = get3DPoint(Eigen::Vector2f(rec(2), rec(3)), obs_coord, coord);
 		d_c2 = std::get<0>(distanceLineSegToLineSeg(A, B, C, D));
 	}
-	
 	return std::min(d_c1, d_c2);
 }
 
@@ -302,7 +307,25 @@ bool base::RealVectorSpace::collisionLineSegToLineSeg(const Eigen::Vector3f &A, 
 
 bool base::RealVectorSpace::collisionCapsuleToSphere(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
 {
+	radius += obs(3);
+    if ((A - obs.head(3)).norm() < radius || (B - obs.head(3)).norm() < radius)
+        return true;    // The collision occurs
 
+    else
+	{
+        double a = (B - A).squaredNorm();
+        double b = 2 * (A.dot(B) + (A - B).dot(obs.head(3)) - A.squaredNorm());
+        double c = A.squaredNorm() + obs.head(3).squaredNorm() - 2 * A.dot(obs.head(3)) - radius * radius;
+        double D = b * b - 4 * a * c;
+        if (D >= 0)
+		{
+            double t1 = (-b + sqrt(D)) / (2 * a);
+            double t2 = (-b - sqrt(D)) / (2 * a);
+            if (t1 > 0 && t1 < 1 || t2 > 0 && t2 < 1)
+                return true;
+        }
+    }
+    return false;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------- //
@@ -329,14 +352,25 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 				Eigen::VectorXf obs(6);
 				obs << AABB.min_[0], AABB.min_[1], AABB.min_[2], AABB.max_[0], AABB.max_[1], AABB.max_[2];
                 tie(distances(i,j), plane) = distanceCapsuleToCuboid(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
+				std::cout << "(i,j) = (" <<i<<","<<j<<"). Distance: " << distances(i,j) << std::endl;
+				if (plane != nullptr)
+				{
+					std::cout << "Nearest point obs:  " << plane->head(3).transpose() << std::endl;
+					std::cout << "Nearest point link: " << (plane->head(3)+plane->tail(3)).transpose() << std::endl;
+				}
+				std::cout << "r(i): " << robot->getRadius(i) << std::endl;
+				std::cout << "XYZ(i):   " << XYZ->col(i).transpose() << std::endl;
+				std::cout << "XYZ(i+1): " << XYZ->col(i+1).transpose() << std::endl;
+				std::cout << "---------------------------------------" << std::endl;
             }
-			else if (env->getParts()[j]->getNodeType() == fcl::NODE_TYPE::GEOM_SPHERE)
-			{
-                // tie(distances(i,j), plane) = distanceCapsuleToSphere(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
-            }
-			planes->at(j).col(i) = *plane;
+			// else if (env->getParts()[j]->getNodeType() == fcl::NODE_TYPE::GEOM_SPHERE)
+			// {
+            //     tie(distances(i,j), plane) = distanceCapsuleToSphere(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
+            // }
             if (distances(i,j) <= 0)		// The collision occurs
                 return {0, nullptr};
+			
+			planes->at(j).col(i) = *plane;
         }
     }
 	return {distances.minCoeff(), planes};
@@ -350,7 +384,7 @@ std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::dista
 	return capsule_cuboid.getDistance();
 }
 
-// Get distance (and plane) between two line segments, AB and CD
+// Get distance (and nearest points) between two line segments, AB and CD
 std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::distanceLineSegToLineSeg
 	(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C, const Eigen::Vector3f &D)
 {
@@ -378,14 +412,12 @@ std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::dista
     else
 	{
 		float d_c_temp;
-		float var1 = 1 / (B-A).squaredNorm();
-        float var2 = 1 / (C-D).squaredNorm();
-        Eigen::Vector4f opt((A - C).dot(A - B) * var1,	// s = 0
-							(A - D).dot(A - B) * var1,	// s = 1
-							(A - C).dot(D - C) * var2,	// t = 0
-							(B - C).dot(D - C) * var2);	// t = 1
-		
-        for (int i = 0; i < 3; i++)
+        float alpha3 = (C - D).squaredNorm();
+        Eigen::Vector4f opt((A - C).dot(A - B) / alpha1,	// s = 0
+							(A - D).dot(A - B) / alpha1,	// s = 1
+							(A - C).dot(D - C) / alpha3,	// t = 0
+							(B - C).dot(D - C) / alpha3);	// t = 1
+        for (int i = 0; i < 4; i++)
 		{
             if (opt(i) < 0)
                 if (i == 0 || i == 2)     	// s = 0, t = 0
@@ -403,7 +435,7 @@ std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::dista
                     P1 = C; 
 					P2 = B;
 				}
-            else if (opt(i) > 0)
+            else if (opt(i) > 1)
 			{
 				if (i == 1 || i == 3)    	// s = 1, t = 1
 				{
@@ -434,7 +466,7 @@ std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::dista
 					P2 = A + opt(i) * (B - A);
 				}
                 else if (i == 2)           	// t = 0, s € [0,1]
-				{
+				{				
                     P1 = C + opt(i) * (D - C); 
 					P2 = A;
 				}
@@ -488,7 +520,50 @@ std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::dista
 std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::distanceCapsuleToSphere
 	(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
 {
+	std::shared_ptr<Eigen::VectorXf> plane = std::make_shared<Eigen::VectorXf>(6);
+	double AO = (A - obs.head(3)).norm();
+    double d_c = AO - obs(3);
+    if (d_c < radius)	// The collision occurs
+        return {0, nullptr};
+    
+    double BO = (B - obs.head(3)).norm();
+    double d_c_temp = BO - obs(3);
+    if (d_c_temp < radius) 	// The collision occurs
+        return {0, nullptr};    
+    
+    if (d_c_temp < d_c)
+        d_c = d_c_temp; 
 
+    double AB = (A - B).norm();
+    double s = (AB + AO + BO) / 2;
+    double alpha = acos((AO * AO + AB * AB - BO * BO) / (2 * AO * AB));
+    Eigen::Vector3f P1, P2;
+    d_c_temp = 2 * sqrt(s * (s - AB) * (s - AO) * (s - BO)) / AB - obs(3);     // h = 2 * P / AB; d_c_temp = h - obs(3);
+    if (alpha < M_PI / 2)
+	{
+        double beta = acos((BO * BO + AB * AB - AO * AO) / (2 * BO * AB));
+        if (beta < M_PI / 2) 	// Acute triangle
+		{    
+            d_c = d_c_temp;
+            if (d_c_temp < radius)	// The collision occurs
+			    return {0, nullptr};    
+            
+            P2 = A + AO * cos(alpha) / AB * (B - A);
+            P1 = P2 + d_c / (obs.head(3) - P2).norm() * (obs.head(3) - P2);
+        }
+        else
+		{
+            P1 = B + d_c / BO * (obs.head(3) - B);  
+            P2 = B;
+        }
+    }
+    else
+	{
+        P1 = A + d_c / AO * (obs.head(3) - A);  
+        P2 = A;
+    }
+    *plane << P1, P2-P1;
+    return {d_c, plane};
 }
 
 // ------------------------------------------------ Class LineSeg_Cuboid -------------------------------------------------------//
@@ -507,7 +582,7 @@ std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::Capsu
 	projectionLineSegOnSide(0, 2, 1, 3, 5, 4);   // Projection on y_min or y_max
 	projectionLineSegOnSide(0, 1, 2, 3, 4, 5);   // Projection on z_min or z_max     
 	if (d_c == 0)
-		return {d_c, plane};
+		return {0, nullptr};
 
 	int M = (projections.col(0) + projections.col(1)).maxCoeff();
 	if (M > 0) 						// Projection of one or two points exists
@@ -518,21 +593,19 @@ std::tuple<float, std::shared_ptr<Eigen::VectorXf>> base::RealVectorSpace::Capsu
 		Eigen::Index I;
 		projections.col(idx).maxCoeff(&I);
 		if (I == 0 || I == 3)
-			P1 << obs(I), AB.col(idx).segment(1, 2);
+			P1 << obs(I), AB.col(idx).tail(2);
 		else if (I == 1 || I == 4)
 			P1 << AB(0, idx), obs(I), AB(2, idx);
 		else if (I == 2 || I == 5)
-			P1 = AB.col(idx).head(2), obs(I);
-		
-		plane = std::make_shared<Eigen::VectorXf>(6);
+			P1 = AB.col(idx).head(2), obs(I);		
 		*plane << P1, P2 - P1;
 		
-		if (M == 1 && idx == 0)   	// Projection of 'A' exists, but projection of 'B' does not exist
+		if (M == 1 && idx == 0)   		// Projection of 'A' exists, but projection of 'B' does not exist
 			checkEdges(B, idx);
-		else if (M == 1)           	// Projection of 'B' exists, but projection of 'A' does not exist
+		else if (M == 1 && idx == 1) 	// Projection of 'B' exists, but projection of 'A' does not exist
 			checkEdges(A, idx);
 	}
-	else							// There is no projection of any point
+	else								// There is no projection of any point
 		checkOtherCases();
 				
 	return {d_c - radius, plane};
@@ -543,19 +616,19 @@ void base::RealVectorSpace::Capsule_Cuboid::projectionLineSegOnSide(int min1, in
 	// 'min3' and 'max3' corresponds to the coordinate which is constant
 	for (int i = 0; i < 2; i++)
 	{
-		if (AB(min1, i) > obs(min1) && AB(min1, i) < obs(max1) && AB(min2, i) > obs(min2) && AB(min2, i) < obs(max2))
+		if (AB(min1, i) >= obs(min1) && AB(min1, i) <= obs(max1) && AB(min2, i) >= obs(min2) && AB(min2, i) <= obs(max2))
 		{
 			if (AB(min3,i) > obs(min3) && AB(min3,i) < obs(max3))
 			{
 				d_c = 0;
 				return;
 			}
-			else if (AB(min3, i) < obs(min3))
+			else if (AB(min3, i) <= obs(min3))
 			{
 				projections(min3, i) = 1;
 				dist_AB_obs(i) = obs(min3) - AB(min3, i);
 			}
-			else if (AB(min3, i) > obs(max3))
+			else if (AB(min3, i) >= obs(max3))
 			{
 				projections(max3, i) = 1;
 				dist_AB_obs(i) = AB(min3, i) - obs(max3);
@@ -564,10 +637,10 @@ void base::RealVectorSpace::Capsule_Cuboid::projectionLineSegOnSide(int min1, in
 	}
 }
 
-void base::RealVectorSpace::Capsule_Cuboid::checkEdges(Eigen::Vector3f &point, int k)
+void base::RealVectorSpace::Capsule_Cuboid::checkEdges(Eigen::Vector3f &point, int idx)
 {
 	std::shared_ptr<Eigen::MatrixXf> line_segments;
-	if (projections(0, k))  		// Projection on x_min
+	if (projections(0, idx))  		// Projection on x_min
 	{
 		if (!collisionCapsuleToRectangle(A, B, 0, obs, 0))
 			line_segments = getLineSegments(Eigen::Vector2f(point(1), point(2)), obs(1), obs(2), obs(4), obs(5), obs(0), 0);
@@ -577,7 +650,7 @@ void base::RealVectorSpace::Capsule_Cuboid::checkEdges(Eigen::Vector3f &point, i
 			return;
 		}
 	}				
-	else if (projections(3, k))  	// Projection on x_max
+	else if (projections(3, idx))  	// Projection on x_max
 	{
 		if (!collisionCapsuleToRectangle(A, B, 0, obs, 3))           
 			line_segments = getLineSegments(Eigen::Vector2f(point(1), point(2)), obs(1), obs(2), obs(4), obs(5), obs(3), 0);
@@ -587,7 +660,7 @@ void base::RealVectorSpace::Capsule_Cuboid::checkEdges(Eigen::Vector3f &point, i
 			return;
 		}
 	}				
-	else if (projections(1, k))  	// Projection on y_min
+	else if (projections(1, idx))  	// Projection on y_min
 	{
 		if (!collisionCapsuleToRectangle(A, B, 0, obs, 1))
 			line_segments = getLineSegments(Eigen::Vector2f(point(0), point(2)), obs(0), obs(2), obs(3), obs(5), obs(1), 1);
@@ -597,7 +670,7 @@ void base::RealVectorSpace::Capsule_Cuboid::checkEdges(Eigen::Vector3f &point, i
 			return;
 		}
 	}
-	else if (projections(4, k))  	// Projection on y_max
+	else if (projections(4, idx))  	// Projection on y_max
 	{
 		if (!collisionCapsuleToRectangle(A, B, 0, obs, 4))           
 			line_segments = getLineSegments(Eigen::Vector2f(point(0), point(2)), obs(0), obs(2), obs(3), obs(5), obs(4), 1);
@@ -607,7 +680,7 @@ void base::RealVectorSpace::Capsule_Cuboid::checkEdges(Eigen::Vector3f &point, i
 			return;
 		}
 	}
-	else if (projections(2, k))  	// Projection on z_min
+	else if (projections(2, idx))  	// Projection on z_min
 	{
 		if (!collisionCapsuleToRectangle(A, B, 0, obs, 2))
 			line_segments = getLineSegments(Eigen::Vector2f(point(0), point(1)), obs(0), obs(1), obs(3), obs(4), obs(2), 2);
@@ -617,7 +690,7 @@ void base::RealVectorSpace::Capsule_Cuboid::checkEdges(Eigen::Vector3f &point, i
 			return;
 		}
 	}
-	else if (projections(5, k))  	// Projection on z_max 
+	else if (projections(5, idx))  	// Projection on z_max 
 	{
 		if (!collisionCapsuleToRectangle(A, B, 0, obs, 5))            
 			line_segments = getLineSegments(Eigen::Vector2f(point(0), point(1)), obs(0), obs(1), obs(3), obs(4), obs(5), 2);
@@ -627,7 +700,6 @@ void base::RealVectorSpace::Capsule_Cuboid::checkEdges(Eigen::Vector3f &point, i
 			return;
 		}
 	}
-
 	distanceToMoreLineSegments(*line_segments);
 }
 

@@ -51,12 +51,12 @@ namespace base
 		class Capsule_Cuboid
 		{
 			private:
-			float d_c = INFINITY; 
-			std::shared_ptr<Eigen::VectorXf> plane = nullptr;
+			float d_c = INFINITY;
+			std::shared_ptr<Eigen::VectorXf> plane = std::make_shared<Eigen::VectorXf>(6);
 			Eigen::Vector3f A, B, P1, P2;
 			Eigen::MatrixXi projections = Eigen::MatrixXi::Zero(6, 2);			// Determines whether projections on obs exist. First column is for point 'A', and second is for point 'B'
-			Eigen::Vector2f dist_AB_obs = Eigen::Vector2f(INFINITY, INFINITY);	// Distances of 'A' and 'B' to obs (if projections exist)
-			Eigen::MatrixXf AB = Eigen::MatrixXf(3, 2);
+			Eigen::Vector2f dist_AB_obs = Eigen::Vector2f(INFINITY, INFINITY);	// Distances of 'A' and 'B' to 'obs' (if projections exist)
+			Eigen::MatrixXf AB = Eigen::MatrixXf(3, 2);							// Contains points 'A' and 'B'
 			Eigen::VectorXf obs;
 			float radius;
 			void projectionLineSegOnSide(int min1, int min2, int min3, int max1, int max2, int max3);

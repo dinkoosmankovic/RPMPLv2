@@ -30,6 +30,10 @@ add_executable(test_xarm6 test_xarm6.cpp)
 target_compile_features(test_xarm6 PRIVATE cxx_std_17)
 target_link_libraries(test_xarm6 PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
 
+add_executable(test_realvectorspace test_realvectorspace.cpp)
+target_compile_features(test_realvectorspace PRIVATE cxx_std_17)
+target_link_libraries(test_realvectorspace PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
+
 add_executable(test_rbtconnect_fcl test_rbtconnect_fcl.cpp)
 target_compile_features(test_rbtconnect_fcl PRIVATE cxx_std_17)
 target_link_libraries(test_rbtconnect_fcl PUBLIC rpmpl_library ${PROJECT_LIBRARIES})

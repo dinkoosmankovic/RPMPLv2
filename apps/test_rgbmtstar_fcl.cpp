@@ -24,9 +24,9 @@ int main(int argc, char **argv)
 	ConfigurationReader::initConfiguration();
 	// scenario::Scenario scenario("data/planar_2dof/scenario_easy.yaml");
 	// scenario::Scenario scenario("data/planar_2dof/scenario1.yaml");
-	scenario::Scenario scenario("data/planar_2dof/scenario2.yaml");
+	// scenario::Scenario scenario("data/planar_2dof/scenario2.yaml");
 	// scenario::Scenario scenario("data/xarm6/scenario_easy.yaml");
-	// scenario::Scenario scenario("data/xarm6/scenario3.yaml");
+	scenario::Scenario scenario("data/xarm6/scenario3.yaml");
 	// scenario::Scenario scenario("data/xarm6/scenario4.yaml");
 
 	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
