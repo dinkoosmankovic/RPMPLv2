@@ -51,8 +51,9 @@ find_package(yaml-cpp REQUIRED)
 add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
 add_subdirectory(external/googletest)
+add_subdirectory(external/QuadProgpp)
 
-set(PROJECT_LIBRARIES gtest glog::glog nanoflann kdl_parser orocos-kdl fcl yaml-cpp)
+set(PROJECT_LIBRARIES gtest glog::glog nanoflann kdl_parser orocos-kdl fcl yaml-cpp quadprog)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data/
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)

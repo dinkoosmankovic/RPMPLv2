@@ -13,6 +13,6 @@ if __name__ == "__main__":
     # with open('../data/planar_2dof/scenario_easy.yaml', 'r') as file:
     with open('../data/planar_2dof/scenario1.yaml', 'r') as file:
         obstacles = yaml.safe_load(file)     
-    path = [-0.380458,  0.582361]
+    path = [-0.0242987,   0.465162]
     visualize(path, obstacles=obstacles, image_file=None, is_trajectory=False, fps=10.0)
     

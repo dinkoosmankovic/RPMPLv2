@@ -42,6 +42,8 @@ namespace base
 		
 		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceCapsuleToCuboid
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
+		std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceCapsuleToCuboidQP
+			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
 		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceLineSegToLineSeg
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C, const Eigen::Vector3f &D);
 		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceLineSegToPoint

@@ -26,7 +26,7 @@ obstacles:
 robot:
   type: "xARM6"
   urdf: "data/xarm6/xarm6.urdf"
-  space: "RealVectorSpaceFCL"
+  space: "RealVectorSpace"
   dimensions: 6
   start: [1.5708, 1.3849, 3.3275, 1.5708, 0, 0]
   goal: [-1.5708, 1.3849, 3.3275, 1.5708, 0, 0]

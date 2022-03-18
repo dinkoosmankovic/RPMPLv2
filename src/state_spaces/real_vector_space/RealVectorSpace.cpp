@@ -7,6 +7,7 @@
 #include <ostream>
 #include <Eigen/Dense>
 #include "ConfigurationReader.h"
+#include <QuadProg++.hh>
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 
@@ -342,6 +343,7 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 	std::shared_ptr<std::vector<Eigen::MatrixXf>> planes = std::make_shared<std::vector<Eigen::MatrixXf>>
 		(std::vector<Eigen::MatrixXf>(env->getParts().size(), Eigen::MatrixXf(6, robot->getParts().size())));
 	std::shared_ptr<Eigen::MatrixXf> nearest_pts;
+	std::shared_ptr<Eigen::MatrixXf> nearest_ptsQP;
 	std::shared_ptr<Eigen::MatrixXf> XYZ = robot->computeXYZ(q);
 	for (int i = 0; i < robot->getParts().size(); i++)
 	{
@@ -353,16 +355,25 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 				Eigen::VectorXf obs(6);
 				obs << AABB.min_[0], AABB.min_[1], AABB.min_[2], AABB.max_[0], AABB.max_[1], AABB.max_[2];
                 tie(distances(i,j), nearest_pts) = distanceCapsuleToCuboid(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
-				// std::cout << "(i,j) = (" <<i<<","<<j<<"). Distance: " << distances(i,j) << std::endl;
+				std::cout << "(i,j) = (" <<i<<","<<j<<"). " << std::endl;
+				std::cout << "Distance: " << distances(i,j) << std::endl;
+				// float dQP;
+                // tie(dQP, nearest_ptsQP) = distanceCapsuleToCuboidQP(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
+				// std::cout << "Distance: " << dQP << std::endl;
 				// if (nearest_pts != nullptr)
 				// {
-				// 	std::cout << "Nearest point link: " << nearest_pts->col(1).transpose() << std::endl;
-				// 	std::cout << "Nearest point obs:  " << nearest_pts->col(0).transpose() << std::endl;
+				// 	std::cout << "Nearest point link: " << nearest_pts->col(0).transpose() << std::endl;
+				// 	std::cout << "Nearest point link: " << nearest_ptsQP->col(0).transpose() << std::endl;
+				// 	std::cout << "Nearest point obs:  " << nearest_pts->col(1).transpose() << std::endl;
+				// 	std::cout << "Nearest point obs:  " << nearest_ptsQP->col(1).transpose() << std::endl;
 				// }
+				// if (std::abs(distances(i,j) - dQP) > 0.001)
+				// 	std::cout << "****************************** DIFFERENT *************************************" << std::endl;
+
 				// std::cout << "r(i): " << robot->getRadius(i) << std::endl;
 				// std::cout << "XYZ(i):   " << XYZ->col(i).transpose() << std::endl;
 				// std::cout << "XYZ(i+1): " << XYZ->col(i+1).transpose() << std::endl;
-				// std::cout << "---------------------------------------" << std::endl;
+				std::cout << "-------------------------------------------------------------" << std::endl;
             }
 			// else if (env->getParts()[j]->getNodeType() == fcl::NODE_TYPE::GEOM_SPHERE)
 			// {
@@ -377,7 +388,8 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 	return {distances.minCoeff(), planes};
 }
 
-// Get distance (and nearest points) between capsule (determined with line segment AB and 'radius') and cuboid (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)')
+// Get distance (and nearest points) between capsule (determined with line segment AB and 'radius') 
+// and cuboid (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)')
 std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::distanceCapsuleToCuboid
 	(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
 {
@@ -512,7 +524,8 @@ std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::dista
 	return {d_c, nearest_pts};
 }
 
-// Get distance (and nearest points) between capsule (determined with line segment AB and 'radius') and sphere (determined with 'obs = (x_c, y_c, z_c, r)')
+// Get distance (and nearest points) between capsule (determined with line segment AB and 'radius') 
+// and sphere (determined with 'obs = (x_c, y_c, z_c, r)')
 std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::distanceCapsuleToSphere
 	(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
 {
@@ -909,3 +922,84 @@ void base::RealVectorSpace::Capsule_Cuboid::checkOtherCases()
 	}
 }
 // -----------------------------------------------------------------------------------------------------------------------------//
+
+// Get distance (and nearest points) between capsule (determined with line segment AB and 'radius') 
+// and cuboid (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)') using QuadProgPP
+std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::distanceCapsuleToCuboidQP
+	(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
+{
+    std::shared_ptr<Eigen::MatrixXf> nearest_pts = std::make_shared<Eigen::MatrixXf>(3, 2);
+    Eigen::Vector3f AB = B - A;
+    Eigen::Matrix4f G_temp(4, 4); 	G_temp << 	2,       	0,   		0,   		-2*AB(0),
+									 			0,       	2,   		0,  		-2*AB(1),
+									 			0,       	0,  		2,   		-2*AB(2),
+									 			-2*AB(0), 	-2*AB(1), 	-2*AB(2), 	2*AB.squaredNorm();
+    Eigen::Vector4f g0_temp; 		g0_temp << -2 * A, 2 * A.dot(AB);
+	Eigen::MatrixXf CI_temp(8, 4); 	CI_temp << Eigen::MatrixXf::Identity(4, 4), -1 * Eigen::MatrixXf::Identity(4, 4);
+	Eigen::VectorXf ci0_temp(8); 	ci0_temp << -1 * obs.head(3), 0, obs.tail(3), 1;
+	Eigen::Vector4f sol; 		sol << (obs.head(3) + obs.tail(3)) / 2, 0.5;
+
+	// Eigen::Vector4f grad_inv = -1 * (G_temp * sol1 + g0_temp);
+	// Eigen::Vector4f sol2 = sol1 + grad_inv;
+	// Eigen::Vector4f sol;
+	// while (sol2(0) >= obs(0) && sol2(0) <= obs(3) && sol2(1) >= obs(1) && sol2(1) <= obs(4) && 
+	// 	   sol2(2) >= obs(2) && sol2(2) <= obs(5) && sol2(3) >= 0 && sol2(3) <= 1)
+	// {
+	// 	std::cout << "Povecavam grad. Modul grad: " << grad_inv.norm() << std::endl;
+	// 	sol1 = sol2;
+	// 	sol2 = sol1 + grad_inv;
+	// }
+	// if (sol1(0) >= obs(0) && sol1(0) <= obs(3) && sol1(1) >= obs(1) && sol1(1) <= obs(4) && 
+	// 	   sol1(2) >= obs(2) && sol1(2) <= obs(5) && sol1(3) >= 0 && sol1(3) <= 1)
+	// std::cout << "sol1 inside" << std::endl;
+
+	// for (int j = 0; j < 10; j++)
+	// {
+	// 	grad_inv /= 2;
+	// 	sol = sol1 + grad_inv;
+	// 	std::cout << "Modul grad: " << grad_inv.norm() << std::endl;
+	// 	if (sol(0) >= obs(0) && sol(0) <= obs(3) && sol(1) >= obs(1) && sol(1) <= obs(4) && 
+	// 	   sol(2) >= obs(2) && sol(2) <= obs(5) && sol(3) >= 0 && sol(3) <= 1) 		// inside bounds
+	// 		{sol1 = sol;
+	// 		std::cout << "inside" << std::endl;}
+	// 	else																		// outside of bounds
+	// 		{sol2 = sol;
+	// 		std::cout << "outside" << std::endl;}
+	// 	std::cout << "sol: " << sol.transpose() << std::endl;
+	// }
+	// float sol_val = 0.5 * sol.dot(G_temp * sol) + sol.transpose() * g0_temp;
+
+
+	quadprogpp::Matrix<double> G(4, 4), CE(4, 0), CI(4, 8);
+  	quadprogpp::Vector<double> g0(4), ce0(0), ci0(8), sol1(4);
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 4; j++)
+			G[i][j] = G_temp(i, j);
+
+	for (int i = 0; i < 8; i++)
+		for (int j = 0; j < 4; j++)
+			CI[j][i] = CI_temp(i, j);
+
+	for (int i = 0; i < 4; i++)
+		g0[i] = g0_temp(i);
+
+	for (int i = 0; i < 8; i++)
+		ci0[i] = ci0_temp(i);
+
+	for (int i = 0; i < 4; i++)
+		sol1[i] = sol(i);
+
+	// 	minimizes 1/2 x^T G x + x^T g0
+	//  s.t.
+	//  CE^T * x + ce0 =  0
+	//  CI^T * x + ci0 >= 0
+	double sol_val = quadprogpp::solve_quadprog(G, g0, CE, ce0, CI, ci0, sol1);
+
+    float d_c = sqrt(sol_val + A.squaredNorm());
+    if (d_c < RealVectorSpaceConfig::EQUALITY_THRESHOLD)
+		return {0, nullptr};
+	
+	nearest_pts->col(0) = A + AB * sol1[3];
+	nearest_pts->col(1) << sol1[0], sol1[1], sol1[2];
+	return {d_c - radius, nearest_pts};
+}
