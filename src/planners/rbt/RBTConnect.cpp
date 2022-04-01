@@ -37,10 +37,11 @@ bool planning::rbt::RBTConnect::solve()
 	while (true)
 	{
 		/* Generating bur */
+		// LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
+		LOG(INFO) << "Num states: " << plannerInfo->getNumStates();
 		q_e = ss->randomState();
 		//LOG(INFO) << q_rand->getCoord().transpose();
 		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_e);
-		// LOG(INFO) << "Iteration: " << iter;
 		//LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
 		if (getDistance(q_near) > RBTConnectConfig::D_CRIT)
 		{
@@ -62,17 +63,13 @@ bool planning::rbt::RBTConnect::solve()
 				trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new, q_near);
 			}
 		}
+		treeIdx = 1 - treeIdx;	// Swapping trees
 
 		/* Bur-Connect */
 		if (status != planning::rrt::Status::Trapped)
 		{
-            treeIdx = 1 - treeIdx;	// Swapping trees
 			q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_new);
 			status = connectSpine(trees[treeIdx], kdtrees[treeIdx], q_near, q_new);
-		}
-		else 
-		{
-			treeIdx = 1 - treeIdx; 	// Swapping trees
 		}
 
         plannerInfo->setNumIterations(plannerInfo->getNumIterations() + 1);

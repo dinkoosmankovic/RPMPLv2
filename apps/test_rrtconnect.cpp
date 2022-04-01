@@ -1,7 +1,11 @@
 #include <RRTConnect.h>
 #include <iostream>
-#include <RealVectorSpace.h>
+#include <RealVectorSpaceFCL.h>
+#include <Environment.h>
+#include <Planar2DOF.h>
+#include <Scenario.h>
 #include <ConfigurationReader.h>
+
 #include <glog/logging.h>
 
 
@@ -11,28 +15,46 @@ int main(int argc, char **argv)
 	std::srand((unsigned int) time(0));
 	FLAGS_logtostderr = true;
 	LOG(INFO) << "GLOG successfully initialized!";
-	//base::RealVectorSpace *space = new base::RealVectorSpace(2);
+	// std::shared_ptr<robots::Planar2DOF> robot = std::make_shared<robots::Planar2DOF>("data/planar_2dof/planar_2dof.urdf");
+	// std::shared_ptr<env::Environment> env = std::make_shared<env::Environment>("data/planar_2dof/obstacles_easy.yaml" );
+	// std::shared_ptr<base::StateSpace> ss = std::make_shared<base::RealVectorSpaceFCL>(2, robot, env);
+	// std::shared_ptr<base::State> start = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({-M_PI/2 ,0}));
+	// std::shared_ptr<base::State> goal = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({M_PI/2 ,0}));
+
 	ConfigurationReader::initConfiguration();
-	std::shared_ptr<base::StateSpace> ss = std::make_shared<base::RealVectorSpace>(2);
+	// scenario::Scenario scenario("data/planar_2dof/scenario_easy.yaml");
+	// scenario::Scenario scenario("data/planar_2dof/scenario1.yaml");
+	// scenario::Scenario scenario("data/planar_2dof/scenario2.yaml");
+	// scenario::Scenario scenario("data/xarm6/scenario_easy.yaml");
+	// scenario::Scenario scenario("data/xarm6/scenario1.yaml");
+	scenario::Scenario scenario("data/xarm6/scenario2.yaml");
+
+	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
+	LOG(INFO) << "Environment parts: " << scenario.getEnvironment()->getParts().size();
 	LOG(INFO) << "Dimensions: " << ss->getDimensions();
-	LOG(INFO) << "StateSpace Type: " << ss->getStateSpaceType();
-	std::shared_ptr<base::State> start = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({0,0}));
-	std::shared_ptr<base::State> goal = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({1,1}));
+	LOG(INFO) << "State space type: " << ss->getStateSpaceType();
+	LOG(INFO) << "Start: " << scenario.getStart();
+	LOG(INFO) << "Goal: " << scenario.getGoal();
 	try
 	{
-		std::unique_ptr<planning::rrt::RRTConnect> planner = std::make_unique<planning::rrt::RRTConnect>(ss, start, goal);
+		std::unique_ptr<planning::rrt::RRTConnect> planner = std::make_unique<planning::rrt::RRTConnect>(ss, scenario.getStart(), scenario.getGoal());
 		bool res = planner->solve();
-		LOG(INFO) << "RRTConnect planning finished.";
+		LOG(INFO) << "RRTConnect planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
+		LOG(INFO) << "Number of nodes: " << planner->getPlannerInfo()->getNumStates();
+		LOG(INFO) << "Number of iterations: " << planner->getPlannerInfo()->getNumIterations();
+		LOG(INFO) << "Planning time: " << planner->getPlannerInfo()->getPlanningTime() << " [ms]";
+			
 		if (res)
 		{
 			std::vector<std::shared_ptr<base::State>> path = planner->getPath();
 			for (int i = 0; i < path.size(); i++)
 			{
-				std::cout << path.at(i) << std::endl;
+				std::cout << path.at(i)->getCoord().transpose() << std::endl;
 			}
 			// TODO: read from configuration yaml
-			planner->outputPlannerData("/tmp/plannerData.log");
+			
 		}
+		planner->outputPlannerData("/tmp/plannerData.log");
 
 	}
 	catch (std::domain_error& e)

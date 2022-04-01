@@ -24,6 +24,6 @@ def visualize(q=None, obstacles=None, image_file=None, is_trajectory=False, fps=
     print("Number of joints: ", len(robot.actuated_joints))
 
     if not is_trajectory:
-        planar_2dof.show( q, obstacles, image_file)
+        planar_2dof.show(q, obstacles, image_file)
     else:
         planar_2dof.animate(q, obstacles=obstacles, fps=fps, image_file=image_file)

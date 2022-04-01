@@ -24,6 +24,6 @@ def visualize(q=None, obstacles=None, image_file=None, is_trajectory=False, fps=
     print("Number of joints: ", len(robot.actuated_joints))
 
     if not is_trajectory:
-        xarm6.show( q, obstacles, image_file)
+        xarm6.show(q, obstacles, image_file)
     else:
         xarm6.animate(q, obstacles=obstacles, fps=fps, image_file=image_file)

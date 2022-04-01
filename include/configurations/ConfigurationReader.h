@@ -32,13 +32,13 @@ public:
             RealVectorSpaceConfig::EQUALITY_THRESHOLD = RealVectorSpaceConfigRoot["EQUALITY_THRESHOLD"].as<float>();
 
         if (RRTConnectConfigRoot["MAX_ITER"].IsDefined())
-            RRTConnectConfig::MAX_ITER = RRTConnectConfigRoot["MAX_ITER"].as<int>();
+            RRTConnectConfig::MAX_ITER = RRTConnectConfigRoot["MAX_ITER"].as<unsigned long>();
         if (RRTConnectConfigRoot["MAX_EXTENSION_STEPS"].IsDefined())
             RRTConnectConfig::MAX_EXTENSION_STEPS = RRTConnectConfigRoot["MAX_EXTENSION_STEPS"].as<int>();
         if (RRTConnectConfigRoot["EPS_STEP"].IsDefined())
             RRTConnectConfig::EPS_STEP = RRTConnectConfigRoot["EPS_STEP"].as<float>();
         if (RRTConnectConfigRoot["MAX_NUM_STATES"].IsDefined())
-            RRTConnectConfig::MAX_NUM_STATES = RRTConnectConfigRoot["MAX_NUM_STATES"].as<int>();
+            RRTConnectConfig::MAX_NUM_STATES = RRTConnectConfigRoot["MAX_NUM_STATES"].as<unsigned long>();
         if (RRTConnectConfigRoot["MAX_PLANNING_TIME"].IsDefined())
             RRTConnectConfig::MAX_PLANNING_TIME = RRTConnectConfigRoot["MAX_PLANNING_TIME"].as<float>();
 

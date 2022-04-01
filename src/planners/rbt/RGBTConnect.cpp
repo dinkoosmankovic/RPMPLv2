@@ -38,10 +38,11 @@ bool planning::rbt::RGBTConnect::solve()
 	while (true)
 	{
 		/* Generating generalized bur */
+		// LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
+		LOG(INFO) << "Num states: " << plannerInfo->getNumStates();
 		q_e = ss->randomState();
 		// LOG(INFO) << q_rand->getCoord().transpose();
 		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_e);
-		// LOG(INFO) << "Iteration: " << iter;
 		// LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
 		if (getDistance(q_near) > RBTConnectConfig::D_CRIT)
 		{
@@ -68,20 +69,16 @@ bool planning::rbt::RGBTConnect::solve()
 				trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new, q_near);
 			}
 		}
+		treeIdx = 1 - treeIdx; 	// Swapping trees
 
 		/* Bur-Connect */
 		if (status != planning::rrt::Status::Trapped)
 		{
-            treeIdx = 1 - treeIdx;	// Swapping trees
 			q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_new);
 			status = connectGenSpine(trees[treeIdx], kdtrees[treeIdx], q_near, q_new);
 		}
-		else 
-		{
-			treeIdx = 1 - treeIdx; 	// Swapping trees
-		}
 
-	 plannerInfo->setNumIterations(plannerInfo->getNumIterations() + 1);
+	 	plannerInfo->setNumIterations(plannerInfo->getNumIterations() + 1);
 		plannerInfo->addIterationTime(getElapsedTime(time_start));
 		plannerInfo->setNumStates(trees[0]->getStates()->size() + trees[1]->getStates()->size());
 		if (checkStoppingCondition(status, time_start))
@@ -104,15 +101,13 @@ std::tuple<planning::rrt::Status, std::shared_ptr<std::vector<std::shared_ptr<ba
     for (int i = 0; i < RGBTConnectConfig::NUM_LAYERS; i++)
     {
         std::shared_ptr<base::State> q_temp = ss->newState(q_new);
-        // tie(status, q_new) = extendSpine(q_temp, q_e, d_c);
-        tie(status, q_new) = extendSpine(q_temp, q_e);
+        tie(status, q_new) = extendSpine(q_temp, q_e, d_c);
 		q_new_list->emplace_back(q_new);
         // d_c = getDistanceUnderestimation(q_new, q->getPlanes());
 		d_c = getDistance(q_new);
+		std::cout << "d_c " << d_c << std::endl;
         if (d_c < RBTConnectConfig::D_CRIT || status == planning::rrt::Reached)
-        {
             break;
-        }
     }
     return {status, q_new_list};
 }
@@ -151,52 +146,45 @@ planning::rrt::Status planning::rbt::RGBTConnect::connectGenSpine(std::shared_pt
 	return status;
 }
 
+// Get minimal distance from 'q' to obstacles
+// Also set corresponding 'planes' (which are approximating the obstacles) for the configuation 'q'
+float planning::rbt::RGBTConnect::getDistance(std::shared_ptr<base::State> q)
+{
+    float d_c;
+    std::shared_ptr<std::vector<Eigen::MatrixXf>> planes;
+	if (q->getDistance() > 0)
+	{
+		d_c = q->getDistance();
+        planes = q->getPlanes();
+	}
+	else
+	{
+		tie(d_c, planes) = ss->getDistanceAndPlanes(q);
+		q->setDistance(d_c);
+        q->setPlanes(planes);
+	}
+	return d_c;
+}
+
 // Returns the underestimation of distance-to-obstacles 'd_c', i.e. returns the distance-to-planes
 float planning::rbt::RGBTConnect::getDistanceUnderestimation(std::shared_ptr<base::State> q, std::shared_ptr<std::vector<Eigen::MatrixXf>> planes)
 {
-    int numObstacles = ss->env->getParts().size();
-    int numLinks = ss->robot->getParts().size();
-    Eigen::MatrixXf D(numLinks, numObstacles);
-    Eigen::Vector3f P1, P21;    // planes = [P1; P2-P1];
-    Eigen::Vector3f A, B;       // origins of two adjacent frames
-    Eigen::Vector2f lambda;
-	std::shared_ptr<std::vector<KDL::Frame>> frames = ss->robot->computeForwardKinematics(q);
+    float d_c = INFINITY;
+    Eigen::Vector3f P1, P21;    // planes = [P1; P21]. P21 = P2 - P1, where P1 - obstacle nearest point, P2 - robot nearest point
+	std::shared_ptr<Eigen::MatrixXf> XYZ = ss->robot->computeXYZ(q);
     
-    for (int j = 0; j < numObstacles; j++)
+    for (int i = 0; i < ss->robot->getParts().size(); i++)
     {
-        for (int k = 0; k < numLinks; k++)
+        for (int j = 0; j < ss->env->getParts().size(); j++)
         {
-            P1 << planes->at(j).col(k).head(3);
-            P21 << planes->at(j).col(k).tail(3);
-            A << frames->at(k).p(0), frames->at(k).p(1), frames->at(k).p(2);
-            B << frames->at(k+1).p(0), frames->at(k+1).p(1), frames->at(k+1).p(2);
-            lambda << (P21.dot(A) - P21.dot(P1)) / P21.norm(),
-                      (P21.dot(B) - P21.dot(P1)) / P21.norm();
-            D(k,j) = lambda.minCoeff();
+            P1 << planes->at(j).col(i).head(3);
+            P21 << planes->at(j).col(i).tail(3);
+            d_c = std::min(d_c, std::min((P21.dot(XYZ->col(i)) - P21.dot(P1)) / P21.norm(), 
+									 	 (P21.dot(XYZ->col(i+1)) - P21.dot(P1)) / P21.norm()));
         }
     }
-    return D.minCoeff();
+    return d_c;
 }
-
-// Get minimal distance from 'q' to obstacles
-// Also set corresponding 'planes' (which are approximating the obstacles) for the configuation 'q'
-// float planning::rbt::RGBTConnect::getDistance(std::shared_ptr<base::State> q)
-// {
-//     float d_c;
-//     std::shared_ptr<std::vector<Eigen::MatrixXf>> planes;
-// 	if (q->getDistance() > 0)
-// 	{
-// 		d_c = q->getDistance();
-//         planes = q->getPlanes();
-// 	}
-// 	else
-// 	{
-// 		tie(d_c, planes) = ss->getDistanceAndPlanes(q);
-// 		q->setDistance(d_c);
-//         q->setPlanes(planes);
-// 	}
-// 	return d_c;
-// }
 
 void planning::rbt::RGBTConnect::outputPlannerData(std::string filename) const
 {

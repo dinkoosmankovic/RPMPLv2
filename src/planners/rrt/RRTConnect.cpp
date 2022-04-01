@@ -60,21 +60,23 @@ bool planning::rrt::RRTConnect::solve()
 	while (true)
 	{
 		/* Extend */
+		// LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
+		LOG(INFO) << "Num states: " << plannerInfo->getNumStates();
 		q_rand = getSS()->randomState();
 		// LOG(INFO) << q_rand->getCoord().transpose();
 		q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_rand);
-		// LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
 		// LOG(INFO) << "Tree: " << trees[treeIdx]->getTreeName();
 		tie(status, q_new) = extend(q_near, q_rand);
+		// LOG(INFO) << "Status: " << status;
 
-		if (status != planning::rrt::Trapped)
+		if (status != planning::rrt::Status::Trapped)
 		{	
 			// LOG(INFO) << "Not Trapped";
 			trees[treeIdx]->upgradeTree(kdtrees[treeIdx], q_new, q_near);
 
 			/* Connect */
             treeIdx = 1 - treeIdx; 	// Swapping trees
-			// LOG(INFO) << "Trying to connect to: ";// << q_new->getCoord().transpose() << " from " << trees[treeIdx]->getTreeName();
+			// LOG(INFO) << "Trying to connect to: " << q_new->getCoord().transpose() << " from " << trees[treeIdx]->getTreeName();
 			q_near = trees[treeIdx]->getNearestState(kdtrees[treeIdx], q_new);
 			status = connect(trees[treeIdx], kdtrees[treeIdx], q_near, q_new);
 		}
@@ -89,7 +91,7 @@ bool planning::rrt::RRTConnect::solve()
 		if (checkStoppingCondition(status, time_start))
 		{
 			plannerInfo->setPlanningTime(getElapsedTime(time_start));
-			return status == planning::rrt::Reached ? true : false;
+			return status == planning::rrt::Status::Reached ? true : false;
 		}
 	}
 }
@@ -103,21 +105,21 @@ std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rrt::R
 																								  std::shared_ptr<base::State> q_e)
 {
 	std::shared_ptr<base::State> q_new = ss->interpolate(q, q_e, RRTConnectConfig::EPS_STEP);
-	// LOG(INFO) << q_new->getCoord().transpose();
+	// LOG(INFO) << "q_new: " << q_new->getCoord().transpose();
 	if (q_new != nullptr && ss->isValid(q, q_new))
 	{
 		if (ss->equal(q_new, q_e))
 		{
 			// LOG(INFO) << "Reached";
-			return {planning::rrt::Reached, q_new};
+			return {planning::rrt::Status::Reached, q_new};
 		}
 		else
 		{
 			// LOG(INFO) << "Advanced.";
-			return {planning::rrt::Advanced, q_new};
+			return {planning::rrt::Status::Advanced, q_new};
 		}
 	}
-	return {planning::rrt::Trapped, q};
+	return {planning::rrt::Status::Trapped, q};
 }
 
 planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<KdTree> kdtree, 
@@ -125,13 +127,13 @@ planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::T
 {
 	// LOG(INFO) << "Inside connect.";
 	std::shared_ptr<base::State> q_new = q;
-	planning::rrt::Status status = planning::rrt::Advanced;
+	planning::rrt::Status status = planning::rrt::Status::Advanced;
 	int numExt = 0;  // TODO: should be read from configuration
-	while (status == planning::rrt::Advanced && numExt++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
+	while (status == planning::rrt::Status::Advanced && numExt++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
 	{
 		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
 		tie(status, q_new) = extend(q_temp, q_e);
-		if (status != planning::rrt::Trapped)
+		if (status != planning::rrt::Status::Trapped)
 		{
 			tree->upgradeTree(kdtree, q_new, q_temp);
 		}
@@ -178,7 +180,7 @@ float planning::rrt::RRTConnect::getElapsedTime(std::chrono::steady_clock::time_
 
 bool planning::rrt::RRTConnect::checkStoppingCondition(Status status, std::chrono::steady_clock::time_point &time_start)
 {
-	if (status == planning::rrt::Reached)
+	if (status == planning::rrt::Status::Reached)
 	{
 		computePath();
 		return true;

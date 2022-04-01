@@ -43,7 +43,14 @@ std::ostream &base::operator<<(std::ostream &os, const base::RealVectorSpace &sp
 std::shared_ptr<base::State> base::RealVectorSpace::randomState()
 {
 	std::shared_ptr<base::State> state = std::make_shared<base::RealVectorSpaceState>(dimensions);
-	state->setCoord(Eigen::VectorXf::Random(dimensions));
+	Eigen::VectorXf rand = Eigen::VectorXf::Random(dimensions);
+	std::vector<std::vector<float>> limits = robot->getLimits();
+	for (size_t i = 0; i < dimensions; ++i)
+	{
+		rand[i] = ((limits[i][1] - limits[i][0]) * rand[i] + limits[i][0] + limits[i][1]) / 2;
+	}
+	//LOG(INFO) << "random coord: " << rand.transpose();
+	state->setCoord(rand);
 	return state;
 }
 
@@ -71,25 +78,22 @@ bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const s
 std::shared_ptr<base::State> base::RealVectorSpace::interpolate(const std::shared_ptr<base::State> q1, 
 																const std::shared_ptr<base::State> q2, float step, float D)
 {
-	std::shared_ptr<base::State> q_t = std::make_shared<base::RealVectorSpaceState>(dimensions);
+	std::shared_ptr<base::State> q_new = std::make_shared<base::RealVectorSpaceState>(dimensions);
 	Eigen::VectorXf eig;
-	if (D < 0) 	// D = -1 is the default obs_coord
-	{
+	if (D < 0) 	// D = -1 is the default value
 		D = (q2->getCoord() - q1->getCoord()).norm();
-	}
 	
 	if (step < D)
 	{
 		eig = (q2->getCoord() - q1->getCoord()) / D;
-		q_t->setCoord(q1->getCoord() + step * eig);
+		q_new->setCoord(q1->getCoord() + step * eig);
 	}
 	else
-	{
-		q_t->setCoord(q2->getCoord());
-	}
-	// here we check the validity of the motion q1->q_t
-	if (isValid(q_t))
-		return q_t;
+		q_new->setCoord(q2->getCoord());
+	
+	// here we check the validity of the motion q1 -> q_new
+	if (isValid(q_new))
+		return q_new;
 	else
 		return nullptr;
 }
@@ -188,7 +192,7 @@ bool base::RealVectorSpace::collisionCapsuleToRectangle(const Eigen::Vector3f &A
 	Eigen::Vector4f rec; rec << obs.head(coord), obs.segment(coord+1, 2-coord), obs.segment(3, coord), obs.tail(2-coord);
 	Eigen::Vector2f A_rec; A_rec << A.head(coord), A.tail(2-coord);
 	Eigen::Vector2f B_rec; B_rec << B.head(coord), B.tail(2-coord);
-    float t = (obs_coord - A(coord)) / (B(coord) - A(coord));
+    float t = (B(coord) - A(coord)) != 0 ? (obs_coord - A(coord)) / (B(coord) - A(coord)) : INFINITY;
 	Eigen::Vector2f M = A_rec + t * (B_rec - A_rec);
 	Eigen::Vector3f A_proj = get3DPoint(A_rec, obs_coord, coord);
 	Eigen::Vector3f B_proj = get3DPoint(B_rec, obs_coord, coord);
@@ -203,7 +207,7 @@ bool base::RealVectorSpace::collisionCapsuleToRectangle(const Eigen::Vector3f &A
 				M(0) < rec(0) && M(1) > rec(3) && (M - Eigen::Vector2f(rec(0), rec(3))).norm() < radius ||
 				M(0) > rec(1) && M(1) < rec(2) && (M - Eigen::Vector2f(rec(1), rec(2))).norm() < radius ||
 				M(0) > rec(1) && M(1) > rec(3) && (M - Eigen::Vector2f(rec(1), rec(3))).norm() < radius)
-					return true;
+				return true;
 		}
 	}
 	else if (std::min((A - A_proj).norm(), (B - B_proj).norm()) > radius)
@@ -354,9 +358,9 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 				fcl::AABB AABB = env->getParts()[j]->getAABB();
 				Eigen::VectorXf obs(6);
 				obs << AABB.min_[0], AABB.min_[1], AABB.min_[2], AABB.max_[0], AABB.max_[1], AABB.max_[2];
-                tie(distances(i,j), nearest_pts) = distanceCapsuleToCuboid(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
-				std::cout << "(i,j) = (" <<i<<","<<j<<"). " << std::endl;
-				std::cout << "Distance: " << distances(i,j) << std::endl;
+                tie(distances(i, j), nearest_pts) = distanceCapsuleToCuboid(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
+				// std::cout << "(i, j) = (" <<i<<", "<<j<<"). " << std::endl;
+				// std::cout << "Distance: " << distances(i,j) << std::endl;
 				// float dQP;
                 // tie(dQP, nearest_ptsQP) = distanceCapsuleToCuboidQP(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
 				// std::cout << "Distance: " << dQP << std::endl;
@@ -373,13 +377,13 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 				// std::cout << "r(i): " << robot->getRadius(i) << std::endl;
 				// std::cout << "XYZ(i):   " << XYZ->col(i).transpose() << std::endl;
 				// std::cout << "XYZ(i+1): " << XYZ->col(i+1).transpose() << std::endl;
-				std::cout << "-------------------------------------------------------------" << std::endl;
+				// std::cout << "-------------------------------------------------------------" << std::endl;
             }
 			// else if (env->getParts()[j]->getNodeType() == fcl::NODE_TYPE::GEOM_SPHERE)
 			// {
-            //     tie(distances(i,j), nearest_pts) = distanceCapsuleToSphere(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
+            //     tie(distances(i, j), nearest_pts) = distanceCapsuleToSphere(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
             // }
-            if (distances(i,j) <= 0)		// The collision occurs
+            if (distances(i, j) <= 0)		// The collision occurs
                 return {0, nullptr};
 			
 			planes->at(j).col(i) << nearest_pts->col(1), nearest_pts->col(0) - nearest_pts->col(1);
@@ -937,41 +941,10 @@ std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::dista
     Eigen::Vector4f g0_temp; 		g0_temp << -2 * A, 2 * A.dot(AB);
 	Eigen::MatrixXf CI_temp(8, 4); 	CI_temp << Eigen::MatrixXf::Identity(4, 4), -1 * Eigen::MatrixXf::Identity(4, 4);
 	Eigen::VectorXf ci0_temp(8); 	ci0_temp << -1 * obs.head(3), 0, obs.tail(3), 1;
-	Eigen::Vector4f sol; 		sol << (obs.head(3) + obs.tail(3)) / 2, 0.5;
-
-	// Eigen::Vector4f grad_inv = -1 * (G_temp * sol1 + g0_temp);
-	// Eigen::Vector4f sol2 = sol1 + grad_inv;
-	// Eigen::Vector4f sol;
-	// while (sol2(0) >= obs(0) && sol2(0) <= obs(3) && sol2(1) >= obs(1) && sol2(1) <= obs(4) && 
-	// 	   sol2(2) >= obs(2) && sol2(2) <= obs(5) && sol2(3) >= 0 && sol2(3) <= 1)
-	// {
-	// 	std::cout << "Povecavam grad. Modul grad: " << grad_inv.norm() << std::endl;
-	// 	sol1 = sol2;
-	// 	sol2 = sol1 + grad_inv;
-	// }
-	// if (sol1(0) >= obs(0) && sol1(0) <= obs(3) && sol1(1) >= obs(1) && sol1(1) <= obs(4) && 
-	// 	   sol1(2) >= obs(2) && sol1(2) <= obs(5) && sol1(3) >= 0 && sol1(3) <= 1)
-	// std::cout << "sol1 inside" << std::endl;
-
-	// for (int j = 0; j < 10; j++)
-	// {
-	// 	grad_inv /= 2;
-	// 	sol = sol1 + grad_inv;
-	// 	std::cout << "Modul grad: " << grad_inv.norm() << std::endl;
-	// 	if (sol(0) >= obs(0) && sol(0) <= obs(3) && sol(1) >= obs(1) && sol(1) <= obs(4) && 
-	// 	   sol(2) >= obs(2) && sol(2) <= obs(5) && sol(3) >= 0 && sol(3) <= 1) 		// inside bounds
-	// 		{sol1 = sol;
-	// 		std::cout << "inside" << std::endl;}
-	// 	else																		// outside of bounds
-	// 		{sol2 = sol;
-	// 		std::cout << "outside" << std::endl;}
-	// 	std::cout << "sol: " << sol.transpose() << std::endl;
-	// }
-	// float sol_val = 0.5 * sol.dot(G_temp * sol) + sol.transpose() * g0_temp;
-
+	Eigen::Vector4f sol_temp; 		sol_temp << (obs.head(3) + obs.tail(3)) / 2, 0.5;
 
 	quadprogpp::Matrix<double> G(4, 4), CE(4, 0), CI(4, 8);
-  	quadprogpp::Vector<double> g0(4), ce0(0), ci0(8), sol1(4);
+  	quadprogpp::Vector<double> g0(4), ce0(0), ci0(8), sol(4);
 	for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 4; j++)
 			G[i][j] = G_temp(i, j);
@@ -987,19 +960,19 @@ std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::dista
 		ci0[i] = ci0_temp(i);
 
 	for (int i = 0; i < 4; i++)
-		sol1[i] = sol(i);
+		sol[i] = sol_temp(i);
 
 	// 	minimizes 1/2 x^T G x + x^T g0
 	//  s.t.
 	//  CE^T * x + ce0 =  0
 	//  CI^T * x + ci0 >= 0
-	double sol_val = quadprogpp::solve_quadprog(G, g0, CE, ce0, CI, ci0, sol1);
+	double sol_val = quadprogpp::solve_quadprog(G, g0, CE, ce0, CI, ci0, sol);
 
     float d_c = sqrt(sol_val + A.squaredNorm());
     if (d_c < RealVectorSpaceConfig::EQUALITY_THRESHOLD)
 		return {0, nullptr};
 	
-	nearest_pts->col(0) = A + AB * sol1[3];
-	nearest_pts->col(1) << sol1[0], sol1[1], sol1[2];
+	nearest_pts->col(0) = A + AB * sol[3];
+	nearest_pts->col(1) << sol[0], sol[1], sol[2];
 	return {d_c - radius, nearest_pts};
 }

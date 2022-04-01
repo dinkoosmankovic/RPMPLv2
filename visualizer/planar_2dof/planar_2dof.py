@@ -1,3 +1,4 @@
+import math
 from urdfpy import URDF
 import pyrender
 from state_spaces.real_vector_space import RealVectorSpace
@@ -176,7 +177,20 @@ class Planar2DOF(RealVectorSpace):
 
     def animate(self, q_traj=None, obstacles=None, fps=10.0, image_file=None):
         import time
-        cfgs = [self.get_config(q) for q in q_traj]
+        # cfgs = [self.get_config(q) for q in q_traj]
+        cfgs = []
+        idx = 0
+        eps = 0.05
+        while idx < len(q_traj) - 1:
+            q1 = np.array(q_traj[idx])
+            q2 = np.array(q_traj[idx + 1])
+            D = np.linalg.norm(q2 - q1)
+            cfgs.append(self.get_config(q1))
+            for i in range(0, math.floor(D / eps)):
+                q1 += eps * (q2 - q1) / np.linalg.norm(q2 - q1)
+                cfgs.append(self.get_config(q1))
+            idx += 1
+        cfgs.append(self.get_config(q2))
 
         # Create the scene
         fk = self.robot.link_fk(cfg=cfgs[0])

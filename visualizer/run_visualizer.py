@@ -4,15 +4,15 @@ import yaml
 
 
 if __name__ == "__main__":
-    # parser = LogParser("/tmp/plannerData.log")
-    # path = parser.get_path()
+    parser = LogParser("/tmp/plannerData.log")
+    path = parser.get_path()
     #for p in path:
     #    print(p)
     #print(path)
     #visualize(path[0], "test.png")
-    # with open('../data/planar_2dof/scenario_easy.yaml', 'r') as file:
-    with open('../data/planar_2dof/scenario1.yaml', 'r') as file:
-        obstacles = yaml.safe_load(file)     
-    path = [-0.0242987,   0.465162]
-    visualize(path, obstacles=obstacles, image_file=None, is_trajectory=False, fps=10.0)
+    with open('../data/planar_2dof/scenario2.yaml', 'r') as file:
+        obstacles = yaml.safe_load(file)
+    visualize(path, obstacles=obstacles, image_file=None, is_trajectory=True, fps=10.0) 
+    # path = [-0.0242987,   0.465162]
+    # visualize(path, obstacles=obstacles, image_file=None, is_trajectory=False, fps=10.0)
     
