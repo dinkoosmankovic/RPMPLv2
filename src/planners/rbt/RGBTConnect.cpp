@@ -103,9 +103,8 @@ std::tuple<planning::rrt::Status, std::shared_ptr<std::vector<std::shared_ptr<ba
         std::shared_ptr<base::State> q_temp = ss->newState(q_new);
         tie(status, q_new) = extendSpine(q_temp, q_e, d_c);
 		q_new_list->emplace_back(q_new);
-        // d_c = getDistanceUnderestimation(q_new, q->getPlanes());
-		d_c = getDistance(q_new);
-		std::cout << "d_c " << d_c << std::endl;
+        d_c = getDistanceUnderestimation(q_new, q->getPlanes());
+		// d_c = getDistance(q_new); 	// If you want to use real distance
         if (d_c < RBTConnectConfig::D_CRIT || status == planning::rrt::Reached)
             break;
     }
@@ -170,17 +169,17 @@ float planning::rbt::RGBTConnect::getDistance(std::shared_ptr<base::State> q)
 float planning::rbt::RGBTConnect::getDistanceUnderestimation(std::shared_ptr<base::State> q, std::shared_ptr<std::vector<Eigen::MatrixXf>> planes)
 {
     float d_c = INFINITY;
-    Eigen::Vector3f P1, P21;    // planes = [P1; P21]. P21 = P2 - P1, where P1 - obstacle nearest point, P2 - robot nearest point
+    Eigen::Vector3f M, MN;    // planes << M, MN; where MN = N - M, where N is robot nearest point, and M is obstacle nearest point
 	std::shared_ptr<Eigen::MatrixXf> XYZ = ss->robot->computeXYZ(q);
     
     for (int i = 0; i < ss->robot->getParts().size(); i++)
     {
         for (int j = 0; j < ss->env->getParts().size(); j++)
         {
-            P1 << planes->at(j).col(i).head(3);
-            P21 << planes->at(j).col(i).tail(3);
-            d_c = std::min(d_c, std::min((P21.dot(XYZ->col(i)) - P21.dot(P1)) / P21.norm(), 
-									 	 (P21.dot(XYZ->col(i+1)) - P21.dot(P1)) / P21.norm()));
+            M << planes->at(j).col(i).head(3);
+            MN << planes->at(j).col(i).tail(3);
+            d_c = std::min(d_c, std::min(std::abs(MN.dot(XYZ->col(i) - M)) / MN.norm(), 
+									 	 std::abs(MN.dot(XYZ->col(i+1) - M)) / MN.norm()) - ss->robot->getRadius(i));
         }
     }
     return d_c;

@@ -128,7 +128,7 @@ bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q)
 				fcl::AABB AABB = env->getParts()[j]->getAABB();
 				Eigen::VectorXf obs(6);
 				obs << AABB.min_[0], AABB.min_[1], AABB.min_[2], AABB.max_[0], AABB.max_[1], AABB.max_[2];
-				if (collisionCapsuleToCuboid(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs))
+				if (collisionCapsuleToBox(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs))
 					return false;
             }
 			// else if (env->getParts()[j]->getNodeType() == fcl::NODE_TYPE::GEOM_SPHERE)
@@ -141,8 +141,8 @@ bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q)
     return true;
 }
 
-// Check collision between capsule (determined with line segment AB and 'radius') and cuboid (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)')
-bool base::RealVectorSpace::collisionCapsuleToCuboid(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
+// Check collision between capsule (determined with line segment AB and 'radius') and box (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)')
+bool base::RealVectorSpace::collisionCapsuleToBox(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
 {
     bool collision = false;
     float r_new = radius * sqrt(3) / 3;
@@ -347,8 +347,8 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 	std::shared_ptr<std::vector<Eigen::MatrixXf>> planes = std::make_shared<std::vector<Eigen::MatrixXf>>
 		(std::vector<Eigen::MatrixXf>(env->getParts().size(), Eigen::MatrixXf(6, robot->getParts().size())));
 	std::shared_ptr<Eigen::MatrixXf> nearest_pts;
-	std::shared_ptr<Eigen::MatrixXf> nearest_ptsQP;
 	std::shared_ptr<Eigen::MatrixXf> XYZ = robot->computeXYZ(q);
+	// std::cout << "q: " << q->getCoord().transpose() << std::endl;
 	for (int i = 0; i < robot->getParts().size(); i++)
 	{
     	for (int j = 0; j < env->getParts().size(); j++)
@@ -358,22 +358,22 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 				fcl::AABB AABB = env->getParts()[j]->getAABB();
 				Eigen::VectorXf obs(6);
 				obs << AABB.min_[0], AABB.min_[1], AABB.min_[2], AABB.max_[0], AABB.max_[1], AABB.max_[2];
-                tie(distances(i, j), nearest_pts) = distanceCapsuleToCuboid(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
+                tie(distances(i, j), nearest_pts) = distanceCapsuleToBox(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
 				// std::cout << "(i, j) = (" <<i<<", "<<j<<"). " << std::endl;
 				// std::cout << "Distance: " << distances(i,j) << std::endl;
 				// float dQP;
-                // tie(dQP, nearest_ptsQP) = distanceCapsuleToCuboidQP(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
+				// std::shared_ptr<Eigen::MatrixXf> nearest_ptsQP;
+                // tie(dQP, nearest_ptsQP) = distanceCapsuleToBoxQP(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
 				// std::cout << "Distance: " << dQP << std::endl;
+				// if (std::abs(distances(i, j) - dQP) > 0.001)
+				// 	std::cout << "****************************** DIFFERENT *************************************" << std::endl;
 				// if (nearest_pts != nullptr)
 				// {
-				// 	std::cout << "Nearest point link: " << nearest_pts->col(0).transpose() << std::endl;
-				// 	std::cout << "Nearest point link: " << nearest_ptsQP->col(0).transpose() << std::endl;
-				// 	std::cout << "Nearest point obs:  " << nearest_pts->col(1).transpose() << std::endl;
-				// 	std::cout << "Nearest point obs:  " << nearest_ptsQP->col(1).transpose() << std::endl;
+				// 	std::cout << "Nearest point link:    " << nearest_pts->col(0).transpose() << std::endl;
+				// 	// std::cout << "Nearest point link QP: " << nearest_ptsQP->col(0).transpose() << std::endl;
+				// 	std::cout << "Nearest point obs:     " << nearest_pts->col(1).transpose() << std::endl;
+				// 	// std::cout << "Nearest point obs QP:  " << nearest_ptsQP->col(1).transpose() << std::endl;
 				// }
-				// if (std::abs(distances(i,j) - dQP) > 0.001)
-				// 	std::cout << "****************************** DIFFERENT *************************************" << std::endl;
-
 				// std::cout << "r(i): " << robot->getRadius(i) << std::endl;
 				// std::cout << "XYZ(i):   " << XYZ->col(i).transpose() << std::endl;
 				// std::cout << "XYZ(i+1): " << XYZ->col(i+1).transpose() << std::endl;
@@ -383,6 +383,7 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 			// {
             //     tie(distances(i, j), nearest_pts) = distanceCapsuleToSphere(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
             // }
+
             if (distances(i, j) <= 0)		// The collision occurs
                 return {0, nullptr};
 			
@@ -393,13 +394,13 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 }
 
 // Get distance (and nearest points) between capsule (determined with line segment AB and 'radius') 
-// and cuboid (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)')
-std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::distanceCapsuleToCuboid
+// and box (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)')
+std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::distanceCapsuleToBox
 	(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
 {
-	Capsule_Cuboid capsule_cuboid(A, B, radius, obs);
-	capsule_cuboid.compute();
-	return {capsule_cuboid.getDistance(), capsule_cuboid.getNearestPoints()};
+	Capsule_Box capsule_box(A, B, radius, obs);
+	capsule_box.compute();
+	return {capsule_box.getDistance(), capsule_box.getNearestPoints()};
 }
 
 // Get distance (and nearest points) between two line segments, AB and CD
@@ -408,10 +409,11 @@ std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::dista
 {
     float d_c = INFINITY;
     std::shared_ptr<Eigen::MatrixXf> nearest_pts = std::make_shared<Eigen::MatrixXf>(3, 2);
+    std::shared_ptr<Eigen::MatrixXf> nearest_pts_temp = std::make_shared<Eigen::MatrixXf>(3, 2);
     double alpha1 = (B - A).squaredNorm();
     double alpha2 = (B - A).dot(D - C);
-    double beta1 = (C - D).dot(B - A);
-    double beta2 = (C - D).dot(D - C);
+    double beta1  = (C - D).dot(B - A);
+    double beta2  = (C - D).dot(D - C);
     double gamma1 = (A - C).dot(A - B);
     double gamma2 = (A - C).dot(C - D);
     double s = (alpha1 * gamma2 - alpha2 * gamma1) / (alpha1 * beta2 - alpha2 * beta1);
@@ -436,66 +438,71 @@ std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::dista
         for (int i = 0; i < 4; i++)
 		{
             if (opt(i) < 0)
-                if (i == 0 || i == 2)     	// s = 0, t = 0
+			{
+				if (i == 0 || i == 2)     	// s = 0, t = 0
 				{
-					nearest_pts->col(1) = C; 
-					nearest_pts->col(0) = A;
+					nearest_pts_temp->col(0) = A;
+					nearest_pts_temp->col(1) = C; 
 				}
                 else if (i == 1)      		// s = 1, t = 0
 				{
-                    nearest_pts->col(1) = D; 
-					nearest_pts->col(0) = A;
+					nearest_pts_temp->col(0) = A;
+                    nearest_pts_temp->col(1) = D; 
 				}
                 else                      	// t = 1, s = 0
 				{
-                    nearest_pts->col(1) = C; 
-					nearest_pts->col(0) = B;
+					nearest_pts_temp->col(0) = B;
+                    nearest_pts_temp->col(1) = C; 
 				}
+			}
             else if (opt(i) > 1)
 			{
 				if (i == 1 || i == 3)    	// s = 1, t = 1
 				{
-					nearest_pts->col(1) = D; 
-					nearest_pts->col(0) = B;
+					nearest_pts_temp->col(0) = B;
+					nearest_pts_temp->col(1) = D; 
 				}
                 else if (i == 0)        	// s = 0, t = 1
 				{
-					nearest_pts->col(1) = C; 
-					nearest_pts->col(0) = B;
+					nearest_pts_temp->col(0) = B;
+					nearest_pts_temp->col(1) = C; 
 				}                    
                 else                    	// t = 0, s = 1
 				{
-					nearest_pts->col(1) = D; 
-					nearest_pts->col(0) = A;
+					nearest_pts_temp->col(0) = A;
+					nearest_pts_temp->col(1) = D; 
 				}
 			}
             else
 			{
-				if (i == 0)                	// s = 0, t € [0,1]
+				if (i == 0)                	// s = 0, t € [0, 1]
 				{
-					nearest_pts->col(1) = C; 
-					nearest_pts->col(0) = A + opt(i) * (B - A);
+					nearest_pts_temp->col(0) = A + opt(i) * (B - A);
+					nearest_pts_temp->col(1) = C; 
 				}                    
-                else if (i == 1)       		// s = 1, t € [0,1]
+                else if (i == 1)       		// s = 1, t € [0, 1]
 				{
-                    nearest_pts->col(1) = D; 
-					nearest_pts->col(0) = A + opt(i) * (B - A);
+					nearest_pts_temp->col(0) = A + opt(i) * (B - A);
+                    nearest_pts_temp->col(1) = D; 
 				}
-                else if (i == 2)           	// t = 0, s € [0,1]
-				{				
-                    nearest_pts->col(1) = C + opt(i) * (D - C); 
-					nearest_pts->col(0) = A;
-				}
-                else                       	// t = 1, s € [0,1]
+                else if (i == 2)           	// t = 0, s € [0, 1]
 				{
-                    nearest_pts->col(1) = C + opt(i) * (D - C); 
-					nearest_pts->col(0) = B;
+					nearest_pts_temp->col(0) = A;
+                    nearest_pts_temp->col(1) = C + opt(i) * (D - C); 
+				}
+                else                       	// t = 1, s € [0, 1]
+				{
+					nearest_pts_temp->col(0) = B;
+                    nearest_pts_temp->col(1) = C + opt(i) * (D - C); 
 				}
 			}
             
-            d_c_temp = (nearest_pts->col(1) - nearest_pts->col(0)).norm();
+            d_c_temp = (nearest_pts_temp->col(1) - nearest_pts_temp->col(0)).norm();
             if (d_c_temp < d_c)
+			{
                 d_c = d_c_temp;
+				*nearest_pts = *nearest_pts_temp;
+			}
         }
     }
 	return {d_c, nearest_pts};
@@ -522,7 +529,7 @@ std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::dista
     else
 	{
 		nearest_pts->col(0) = A + t_opt * (B - A);
-        if ((C - nearest_pts->col(0)).norm() < RealVectorSpaceConfig::EQUALITY_THRESHOLD)
+        if ((nearest_pts->col(1) - nearest_pts->col(0)).norm() < RealVectorSpaceConfig::EQUALITY_THRESHOLD)
             return {0, nullptr};
 	}
 	return {d_c, nearest_pts};
@@ -577,8 +584,8 @@ std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::dista
     return {d_c, nearest_pts};
 }
 
-// ------------------------------------------------ Class LineSeg_Cuboid -------------------------------------------------------//
-base::RealVectorSpace::Capsule_Cuboid::Capsule_Cuboid(const Eigen::Vector3f &A_, const Eigen::Vector3f &B_, float radius_, Eigen::VectorXf &obs_)
+// ------------------------------------------------ Class Capsule_Box -------------------------------------------------------//
+base::RealVectorSpace::Capsule_Box::Capsule_Box(const Eigen::Vector3f &A_, const Eigen::Vector3f &B_, float radius_, Eigen::VectorXf &obs_)
 {
 	A = A_;
 	B = B_;
@@ -587,7 +594,7 @@ base::RealVectorSpace::Capsule_Cuboid::Capsule_Cuboid(const Eigen::Vector3f &A_,
 	obs = obs_;
 }
 
-void base::RealVectorSpace::Capsule_Cuboid::compute()
+void base::RealVectorSpace::Capsule_Box::compute()
 {
 	projectionLineSegOnSide(1, 2, 0, 4, 5, 3);   // Projection on x_min or x_max
 	projectionLineSegOnSide(0, 2, 1, 3, 5, 4);   // Projection on y_min or y_max
@@ -624,7 +631,7 @@ void base::RealVectorSpace::Capsule_Cuboid::compute()
 	d_c -= radius;
 }
 
-void base::RealVectorSpace::Capsule_Cuboid::projectionLineSegOnSide(int min1, int min2, int min3, int max1, int max2, int max3)
+void base::RealVectorSpace::Capsule_Box::projectionLineSegOnSide(int min1, int min2, int min3, int max1, int max2, int max3)
 {
 	// 'min3' and 'max3' corresponds to the coordinate which is constant
 	for (int i = 0; i < 2; i++)
@@ -650,7 +657,7 @@ void base::RealVectorSpace::Capsule_Cuboid::projectionLineSegOnSide(int min1, in
 	}
 }
 
-void base::RealVectorSpace::Capsule_Cuboid::checkEdges(Eigen::Vector3f &point, int idx)
+void base::RealVectorSpace::Capsule_Box::checkEdges(Eigen::Vector3f &point, int idx)
 {
 	std::shared_ptr<Eigen::MatrixXf> line_segments;
 	if (projections(0, idx))  		// Projection on x_min
@@ -716,7 +723,7 @@ void base::RealVectorSpace::Capsule_Cuboid::checkEdges(Eigen::Vector3f &point, i
 	distanceToMoreLineSegments(*line_segments);
 }
 
-std::shared_ptr<Eigen::MatrixXf> base::RealVectorSpace::Capsule_Cuboid::getLineSegments
+std::shared_ptr<Eigen::MatrixXf> base::RealVectorSpace::Capsule_Box::getLineSegments
 	(const Eigen::Vector2f &point, float min1, float min2, float max1, float max2, float coord_value, int coord)
 {
 	std::shared_ptr<Eigen::MatrixXf> line_segments = std::make_shared<Eigen::MatrixXf>(3, 2);
@@ -746,7 +753,7 @@ std::shared_ptr<Eigen::MatrixXf> base::RealVectorSpace::Capsule_Cuboid::getLineS
 	return line_segments;	
 }
 	
-void base::RealVectorSpace::Capsule_Cuboid::distanceToMoreLineSegments(const Eigen::MatrixXf &line_segments)
+void base::RealVectorSpace::Capsule_Box::distanceToMoreLineSegments(const Eigen::MatrixXf &line_segments)
 {
 	float d_c_temp;
 	std::shared_ptr<Eigen::MatrixXf> nearest_pts_temp;
@@ -766,7 +773,7 @@ void base::RealVectorSpace::Capsule_Cuboid::distanceToMoreLineSegments(const Eig
 	}
 }
 
-void base::RealVectorSpace::Capsule_Cuboid::checkOtherCases()
+void base::RealVectorSpace::Capsule_Box::checkOtherCases()
 {
 	if (A(0) < obs(0) && B(0) < obs(0))
 	{
@@ -928,8 +935,8 @@ void base::RealVectorSpace::Capsule_Cuboid::checkOtherCases()
 // -----------------------------------------------------------------------------------------------------------------------------//
 
 // Get distance (and nearest points) between capsule (determined with line segment AB and 'radius') 
-// and cuboid (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)') using QuadProgPP
-std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::distanceCapsuleToCuboidQP
+// and box (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)') using QuadProgPP
+std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::distanceCapsuleToBoxQP
 	(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
 {
     std::shared_ptr<Eigen::MatrixXf> nearest_pts = std::make_shared<Eigen::MatrixXf>(3, 2);

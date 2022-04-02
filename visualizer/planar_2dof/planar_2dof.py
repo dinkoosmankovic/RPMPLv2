@@ -180,7 +180,7 @@ class Planar2DOF(RealVectorSpace):
         # cfgs = [self.get_config(q) for q in q_traj]
         cfgs = []
         idx = 0
-        eps = 0.05
+        eps = 0.1
         while idx < len(q_traj) - 1:
             q1 = np.array(q_traj[idx])
             q2 = np.array(q_traj[idx + 1])

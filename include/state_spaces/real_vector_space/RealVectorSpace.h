@@ -1,5 +1,6 @@
 //
-// Created by dinko on 7.3.21..
+// Created by dinko on 7.3.21.
+// Modified by nermin on 07.03.22.
 //
 
 #ifndef RPMPL_REALVECTORSPACE_H
@@ -33,16 +34,16 @@ namespace base
 		virtual std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> getDistanceAndPlanes(const std::shared_ptr<base::State> q) override;
 		
 	private:
-		static bool collisionCapsuleToCuboid(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
+		static bool collisionCapsuleToBox(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
 		static bool collisionCapsuleToRectangle(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs, int coord);
 		static bool collisionLineSegToLineSeg(const Eigen::Vector3f &A, const Eigen::Vector3f &B, Eigen::Vector3f &C, Eigen::Vector3f &D);
 		static float checkCases(const Eigen::Vector3f &A, const Eigen::Vector3f &B, Eigen::Vector4f &rec, Eigen::Vector2f &point, float obs_coord, int coord);
 		static const Eigen::Vector3f get3DPoint(const Eigen::Vector2f &point, float coord_value, int coord);
 		static bool collisionCapsuleToSphere(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
 		
-		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceCapsuleToCuboid
+		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceCapsuleToBox
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
-		std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceCapsuleToCuboidQP
+		std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceCapsuleToBoxQP
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
 		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceLineSegToLineSeg
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C, const Eigen::Vector3f &D);
@@ -50,7 +51,7 @@ namespace base
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C);
 		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceCapsuleToSphere
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
-		class Capsule_Cuboid
+		class Capsule_Box
 		{
 			private:
 			float d_c = INFINITY;
@@ -69,7 +70,7 @@ namespace base
 			void checkOtherCases();
 
 			public:
-			Capsule_Cuboid(const Eigen::Vector3f &A_, const Eigen::Vector3f &B_, float radius_, Eigen::VectorXf &obs_);
+			Capsule_Box(const Eigen::Vector3f &A_, const Eigen::Vector3f &B_, float radius_, Eigen::VectorXf &obs_);
 			void compute();
 			float getDistance() { return d_c; }
 			std::shared_ptr<Eigen::MatrixXf> getNearestPoints() { return nearest_pts; }

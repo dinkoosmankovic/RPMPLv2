@@ -21,10 +21,10 @@ int main(int argc, char **argv)
 	// std::shared_ptr<base::State> goal = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({M_PI/2, 0}));
 
 	ConfigurationReader::initConfiguration();
-	scenario::Scenario scenario("data/planar_2dof/scenario_test.yaml");
-	scenario::Scenario scenarioFCL("data/planar_2dof/scenario1.yaml");
-	// scenario::Scenario scenario("data/xarm6/scenario_test.yaml");
-	// scenario::Scenario scenarioFCL("data/xarm6/scenario3.yaml");
+	// scenario::Scenario scenario("data/planar_2dof/scenario_test.yaml");
+	// scenario::Scenario scenarioFCL("data/planar_2dof/scenario1.yaml");
+	scenario::Scenario scenario("data/xarm6/scenario_test.yaml");
+	scenario::Scenario scenarioFCL("data/xarm6/scenario1.yaml");
 
 	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
 	std::shared_ptr<base::StateSpace> ssFCL = scenarioFCL.getStateSpace();
@@ -36,19 +36,19 @@ int main(int argc, char **argv)
 	try
 	{
 		int num = 0;
-		while (num++ < 1)
+		while (num++ < 10)
 		{
 			std::shared_ptr<base::State> q = ss->randomState();
-			// std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f(-0.380458, 0.582361));		
+			// std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f(-2, -2.5));		
 			std::cout << "Num: " << num << " Configuration: " << q << std::endl;
 
-			std::cout << "WITHOUT FCL --------------------" << std::endl;
+			std::cout << "-------------------- WITHOUT FCL --------------------" << std::endl;
 			bool valid = ss->isValid(q);
 			std::cout << "Is valid: " << (valid ? "true" : "false") << std::endl;
 			float d_c = ss->getDistance(q); if (d_c == 0) d_c = -1;
-			// std::cout << "Distance: " << d_c << std::endl;
+			std::cout << "Distance: " << d_c << std::endl;
 
-			// std::cout << "WITH FCL -----------------------" << std::endl;
+			// std::cout << "-------------------- WITH FCL -----------------------" << std::endl;
 			// bool validFCL = ssFCL->isValid(q);
 			// std::cout << "Is valid: " << (validFCL ? "true" : "false") << std::endl;
 			// float d_cFCL = ssFCL->getDistance(q);
