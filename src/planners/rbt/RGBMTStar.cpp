@@ -63,7 +63,6 @@ bool planning::rbt::RGBMTStar::solve()
 		LOG(INFO) << "Num states: " << plannerInfo->getNumStates();
         // Adding a new tree rooted in 'q_rand'
 		q_rand = getRandomState();
-        std::cout << q_rand->getCoord().transpose() << std::endl;
         TREES.emplace_back(base::Tree("local", treeNewIdx));
         // kdtrees.emplace_back(std::make_shared<KdTree>(ss->getDimensions(), TREES[treeNewIdx], nanoflann::KDTreeSingleIndexAdaptorParams(10)));
         // TREES[treeNewIdx].upgradeTree(kdtrees[treeNewIdx], q_rand, nullptr, -1, nullptr, 0);
@@ -216,15 +215,12 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::getRandomState(){
             std::mt19937 generator(rd());
             if (numLocal > numStates[idx])
             {
-                std::cout << "Gaussian. numLocal/numMain: " << numLocal << "/" << numStates[idx] << std::endl;
 	            std::vector<std::vector<float>> limits = ss->robot->getLimits();
-                std::uniform_int_distribution<int> distribution1(0, TREES[idx].getStates()->size() - 1);
-                std::shared_ptr<base::State> q = TREES[idx].getState(distribution1(generator));
                 for (int i = 0; i < ss->getDimensions(); i++)   // Gaussian distribution
                 {   
-                    std::normal_distribution<float> distribution2
-                        (q->getCoord(i), (limits[i][1] - limits[i][0]) * ((float) numStates[idx] / (6 * numLocal)));
-                    q_rand->setCoord(distribution2(generator), i);
+                    std::normal_distribution<float> distribution(TREES[idx].getState(0)->getCoord(i), 
+                        (limits[i][1] - limits[i][0]) * ((float) numStates[idx] / (6 * numLocal)));
+                    q_rand->setCoord(distribution(generator), i);
                     
                     if (q_rand->getCoord(i) < limits[i][0])
                         q_rand->setCoord(limits[i][0], i);
