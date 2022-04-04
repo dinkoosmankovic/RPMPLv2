@@ -348,7 +348,6 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 		(std::vector<Eigen::MatrixXf>(env->getParts().size(), Eigen::MatrixXf(6, robot->getParts().size())));
 	std::shared_ptr<Eigen::MatrixXf> nearest_pts;
 	std::shared_ptr<Eigen::MatrixXf> XYZ = robot->computeXYZ(q);
-	// std::cout << "q: " << q->getCoord().transpose() << std::endl;
 	for (int i = 0; i < robot->getParts().size(); i++)
 	{
     	for (int j = 0; j < env->getParts().size(); j++)
@@ -359,14 +358,15 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 				Eigen::VectorXf obs(6);
 				obs << AABB.min_[0], AABB.min_[1], AABB.min_[2], AABB.max_[0], AABB.max_[1], AABB.max_[2];
                 tie(distances(i, j), nearest_pts) = distanceCapsuleToBox(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
+
 				// std::cout << "(i, j) = (" <<i<<", "<<j<<"). " << std::endl;
-				// std::cout << "Distance: " << distances(i,j) << std::endl;
-				// float dQP;
-				// std::shared_ptr<Eigen::MatrixXf> nearest_ptsQP;
-                // tie(dQP, nearest_ptsQP) = distanceCapsuleToBoxQP(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
-				// std::cout << "Distance: " << dQP << std::endl;
-				// if (std::abs(distances(i, j) - dQP) > 0.001)
-				// 	std::cout << "****************************** DIFFERENT *************************************" << std::endl;
+				// std::cout << "Distance:    " << distances(i, j) << std::endl;
+				// // float dQP;
+				// // std::shared_ptr<Eigen::MatrixXf> nearest_ptsQP;
+                // // tie(dQP, nearest_ptsQP) = distanceCapsuleToBoxQP(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
+				// // std::cout << "Distance QP: " << dQP << std::endl;
+				// // if (std::abs(distances(i, j) - dQP) > 1e-3)
+				// // 	std::cout << "****************************** DIFFERENT *************************************" << std::endl;
 				// if (nearest_pts != nullptr)
 				// {
 				// 	std::cout << "Nearest point link:    " << nearest_pts->col(0).transpose() << std::endl;
@@ -605,25 +605,28 @@ void base::RealVectorSpace::Capsule_Box::compute()
 		return;
 	}
 
-	int M = (projections.col(0) + projections.col(1)).maxCoeff();
-	if (M > 0) 						// Projection of one or two points exists
+	int num_proj = (projections.col(0) + projections.col(1)).maxCoeff();
+	if (num_proj > 0) 					// Projection of one or two points exists
 	{
-		int idx = (dist_AB_obs(0) < dist_AB_obs(1)) ? 0 : 1;
+		int idx_point = (dist_AB_obs(0) < dist_AB_obs(1)) ? 0 : 1;
 		d_c = dist_AB_obs.minCoeff();
-		nearest_pts->col(0) = AB.col(idx);
-		Eigen::Index I;
-		projections.col(idx).maxCoeff(&I);
-		if (I == 0 || I == 3)
-			nearest_pts->col(1) << obs(I), AB.col(idx).tail(2);
-		else if (I == 1 || I == 4)
-			nearest_pts->col(1) << AB(0, idx), obs(I), AB(2, idx);
-		else if (I == 2 || I == 5)
-			nearest_pts->col(1) = AB.col(idx).head(2), obs(I);
+		nearest_pts->col(0) = AB.col(idx_point);
+		Eigen::Index idx_coord;
+		projections.col(idx_point).maxCoeff(&idx_coord);
+		if (idx_coord == 0 || idx_coord == 3)
+			nearest_pts->col(1) << obs(idx_coord), AB.col(idx_point).tail(2);
+		else if (idx_coord == 1 || idx_coord == 4)
+			nearest_pts->col(1) << AB(0, idx_point), obs(idx_coord), AB(2, idx_point);
+		else if (idx_coord == 2 || idx_coord == 5)
+			nearest_pts->col(1) << AB.col(idx_point).head(2), obs(idx_coord);
 		
-		if (M == 1 && idx == 0)   		// Projection of 'A' exists, but projection of 'B' does not exist
-			checkEdges(B, idx);
-		else if (M == 1 && idx == 1) 	// Projection of 'B' exists, but projection of 'A' does not exist
-			checkEdges(A, idx);
+		if (num_proj == 1)
+		{
+			if (idx_point == 0)   		// Projection of 'A' exists, but projection of 'B' does not exist)
+				checkEdges(B, idx_point);
+			else 						// Projection of 'B' exists, but projection of 'A' does not exist
+				checkEdges(A, idx_point);
+		}		
 	}
 	else								// There is no projection of any point
 		checkOtherCases();
@@ -727,28 +730,31 @@ std::shared_ptr<Eigen::MatrixXf> base::RealVectorSpace::Capsule_Box::getLineSegm
 	(const Eigen::Vector2f &point, float min1, float min2, float max1, float max2, float coord_value, int coord)
 {
 	std::shared_ptr<Eigen::MatrixXf> line_segments = std::make_shared<Eigen::MatrixXf>(3, 2);
+	int num = 0;
 	if (point(0) < min1)
 	{
 		line_segments->col(0) = get3DPoint(Eigen::Vector2f(min1, min2), coord_value, coord);
 		line_segments->col(1) = get3DPoint(Eigen::Vector2f(min1, max2), coord_value, coord);
+		num += 2;
 	}
 	else if (point(0) > max1)
 	{
 		line_segments->col(0) = get3DPoint(Eigen::Vector2f(max1, min2), coord_value, coord);
 		line_segments->col(1) = get3DPoint(Eigen::Vector2f(max1, max2), coord_value, coord);
+		num += 2;
 	}
 				
 	if (point(1) < min2)
 	{
-		line_segments->conservativeResize(3, 4);
-		line_segments->col(2) = get3DPoint(Eigen::Vector2f(min1, min2), coord_value, coord);
-		line_segments->col(3) = get3DPoint(Eigen::Vector2f(max1, min2), coord_value, coord);
+		line_segments->conservativeResize(3, 2 + num);
+		line_segments->col(num) 	= get3DPoint(Eigen::Vector2f(min1, min2), coord_value, coord);
+		line_segments->col(num + 1) = get3DPoint(Eigen::Vector2f(max1, min2), coord_value, coord);
 	}
 	else if (point(1) > max2)
 	{
-		line_segments->conservativeResize(3, 4);
-		line_segments->col(2) = get3DPoint(Eigen::Vector2f(min1, max2), coord_value, coord);
-		line_segments->col(3) = get3DPoint(Eigen::Vector2f(max1, max2), coord_value, coord);
+		line_segments->conservativeResize(3, 2 + num);
+		line_segments->col(num) 	= get3DPoint(Eigen::Vector2f(min1, max2), coord_value, coord);
+		line_segments->col(num + 1) = get3DPoint(Eigen::Vector2f(max1, max2), coord_value, coord);
 	}
 	return line_segments;	
 }
@@ -760,7 +766,7 @@ void base::RealVectorSpace::Capsule_Box::distanceToMoreLineSegments(const Eigen:
 	for (int k = 0; k < line_segments.cols(); k += 2)
 	{
 		tie(d_c_temp, nearest_pts_temp) = distanceLineSegToLineSeg(A, B, line_segments.col(k), line_segments.col(k+1));
-		if (d_c_temp == 0)
+		if (d_c_temp <= 0)
 		{
 			d_c = 0;
 			return;
@@ -768,7 +774,7 @@ void base::RealVectorSpace::Capsule_Box::distanceToMoreLineSegments(const Eigen:
 		else if (d_c_temp < d_c)
 		{
 			d_c = d_c_temp;
-			nearest_pts = nearest_pts_temp;
+			*nearest_pts = *nearest_pts_temp;
 		}
 	}
 }

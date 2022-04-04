@@ -150,14 +150,11 @@ planning::rrt::Status planning::rbt::RGBTConnect::connectGenSpine(std::shared_pt
 float planning::rbt::RGBTConnect::getDistance(std::shared_ptr<base::State> q)
 {
     float d_c;
-    std::shared_ptr<std::vector<Eigen::MatrixXf>> planes;
 	if (q->getDistance() > 0)
-	{
 		d_c = q->getDistance();
-        planes = q->getPlanes();
-	}
 	else
 	{
+    	std::shared_ptr<std::vector<Eigen::MatrixXf>> planes;
 		tie(d_c, planes) = ss->getDistanceAndPlanes(q);
 		q->setDistance(d_c);
         q->setPlanes(planes);
@@ -180,6 +177,11 @@ float planning::rbt::RGBTConnect::getDistanceUnderestimation(std::shared_ptr<bas
             MN << planes->at(j).col(i).tail(3);
             d_c = std::min(d_c, std::min(std::abs(MN.dot(XYZ->col(i) - M)) / MN.norm(), 
 									 	 std::abs(MN.dot(XYZ->col(i+1) - M)) / MN.norm()) - ss->robot->getRadius(i));
+			// std::cout << "(i, j) = (" <<i<<", "<<j<<") " << std::endl;
+			// std::cout << "link NP = " << (MN + M).transpose() << std::endl;
+			// std::cout << "obs NP  = " << M.transpose() << std::endl;
+			// std::cout << "MN = " << MN.norm() - ss->robot->getRadius(i) << std::endl;
+			// std::cout << ".................................." << std::endl;
         }
     }
     return d_c;
