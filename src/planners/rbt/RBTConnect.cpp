@@ -33,6 +33,7 @@ bool planning::rbt::RBTConnect::solve()
 	std::shared_ptr<base::State> q_e, q_near, q_new;
 	planning::rrt::Status status;
 	plannerInfo->setNumIterations(0);
+    plannerInfo->setNumStates(2);
 
 	while (true)
 	{

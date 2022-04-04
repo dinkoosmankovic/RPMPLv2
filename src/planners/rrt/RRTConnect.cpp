@@ -56,6 +56,7 @@ bool planning::rrt::RRTConnect::solve()
 	std::shared_ptr<base::State> q_rand, q_near, q_new;
 	planning::rrt::Status status;
 	plannerInfo->setNumIterations(0);
+    plannerInfo->setNumStates(2);
 
 	while (true)
 	{

@@ -56,12 +56,13 @@ bool planning::rbt::RGBMTStar::solve()
     std::vector<std::shared_ptr<base::State>> statesReached;       // Reached states from other trees
     float cost;
     plannerInfo->setNumIterations(0);
+    plannerInfo->setNumStates(2);
 
     while (true)
     {
 		// LOG(INFO) << "Iteration: " << plannerInfo->getNumIterations();
 		LOG(INFO) << "Num states: " << plannerInfo->getNumStates();
-        std::cout << "Main: " << numStates[0] + numStates[1] << " Local: " << plannerInfo->getNumStates() - numStates[0] - numStates[1] << std::endl;
+        std::cout << "Num main: " << numStates[0] + numStates[1] << " Num local: " << plannerInfo->getNumStates() - numStates[0] - numStates[1] << std::endl;
         // Adding a new tree rooted in 'q_rand'
 		q_rand = getRandomState();
         TREES.emplace_back(base::Tree("local", treeNewIdx));
@@ -208,29 +209,32 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::getRandomState(){
     while (true)
     {
         std::shared_ptr<base::State> q_rand = ss->randomState();    // Uniform distribution
-        // if (TREES.size() > 2)
-        // {
-        //     int idx = (numStates[0] < numStates[1]) ? 0 : 1;
-        //     numLocal = plannerInfo->getNumStates() - numStates[0] - numStates[1];
-        //     std::random_device rd;
-        //     std::mt19937 generator(rd());
-        //     if (numLocal > numStates[idx])
-        //     {
-        //         std::cout << "Gaussian dist. numLocal / numMain: " << numLocal << " / " << numStates[idx] << std::endl;
-	    //         std::vector<std::vector<float>> limits = ss->robot->getLimits();
-        //         for (int i = 0; i < ss->getDimensions(); i++)   // Gaussian distribution
-        //         {   
-        //             std::normal_distribution<float> distribution(TREES[idx].getState(0)->getCoord(i), 
-        //                 (limits[i][1] - limits[i][0]) * ((float) numStates[idx] / (6 * numLocal)));
-        //             q_rand->setCoord(distribution(generator), i);
+        if (plannerInfo->getNumStates() > RRTConnectConfig::MAX_NUM_STATES / 2 && TREES.size() > 2)
+        {
+            int idx = (numStates[0] < numStates[1]) ? 0 : 1;
+            numLocal = plannerInfo->getNumStates() - numStates[0] - numStates[1];
+            if (numLocal > numStates[0] + numStates[1])
+            {
+                std::cout << "Gaussian dist." << std::endl;
+                // std::cout << "Num local / Num main: " << numLocal << " / " << numStates[idx] << std::endl;
+                std::random_device rd;
+                std::mt19937 generator(rd());
+                std::uniform_int_distribution<int> dist_idx(0, TREES[idx].getStates()->size() - 1);
+                std::shared_ptr<base::State> q = TREES[idx].getState(dist_idx(generator));
+	            std::vector<std::vector<float>> limits = ss->robot->getLimits();
+                float coeff = (numStates[0] + numStates[1]) / (6.0 * numLocal);
+                for (int i = 0; i < ss->getDimensions(); i++)   // Gaussian distribution
+                {   
+                    std::normal_distribution<float> distribution(q->getCoord(i), (limits[i][1] - limits[i][0]) * coeff);
+                    q_rand->setCoord(distribution(generator), i);
                     
-        //             if (q_rand->getCoord(i) < limits[i][0])
-        //                 q_rand->setCoord(limits[i][0], i);
-        //             else if (q_rand->getCoord(i) > limits[i][1])
-        //                 q_rand->setCoord(limits[i][1], i);
-        //         }
-        //     }
-        // }
+                    if (q_rand->getCoord(i) < limits[i][0])
+                        q_rand->setCoord(limits[i][0], i);
+                    else if (q_rand->getCoord(i) > limits[i][1])
+                        q_rand->setCoord(limits[i][1], i);
+                }
+            }
+        }
         if (ss->isValid(q_rand))    // If q_rand is collision-free, it is accepted
             return q_rand;
     }

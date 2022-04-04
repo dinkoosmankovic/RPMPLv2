@@ -197,16 +197,15 @@ class Xarm6(RealVectorSpace):
         # init_cam_pose = np.array([[ 0.86595061,  0.28855402, -0.81698498, -0.76317579],\
         #                           [-0.49829176,  0.567737,   -1.3105419,  -1.27955438],\
         #                           [ 0.04283523,  0.77098072,  1.27083259,  1.64027461],\
-        #                            [ 0.,          0.,          0.,          1.        ] ]
+        #                           [ 0.,          0.,          0.,          1.        ]])
 
         init_cam_pose = np.array([[1, 0, 0, 0],\
                                   [0, 1, 0, 0],\
                                   [0, 0, 1, 2],\
-                                  [0, 0, 0, 1]]
+                                  [0, 0, 0, 1]])
 
-        )
-        #init_cam_pose[2, 3] = 2.0
-        #init_cam_pose[2, 2] = 2.0
+        # init_cam_pose[2, 3] = 2.0
+        # init_cam_pose[2, 2] = 2.0
         scene.add(cam, pose=init_cam_pose)
 
         # adding obstacles to the scene

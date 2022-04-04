@@ -47,20 +47,20 @@ int main(int argc, char **argv)
 			std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(Q);
 			std::cout << "Num: " << num << " Configuration: " << q << std::endl;
 			
-			if (ss->isValid(q))
-			{
-				tie(d_c, planes) = ss->getDistanceAndPlanes(q);
-				float d_c_under = planner->getDistanceUnderestimation(q, planes);
-				if (abs(d_c - d_c_under) > 1e-3)
-				{
-					std::cout << "************************ different ************************" << std::endl;
-					std::cout << "d_c = " << d_c << std::endl;
-					std::cout << "d_c_under = " << d_c_under << std::endl;
-					throw;
-				}
-			}
-			else
-				std::cout << "invalid " << std::endl;
+			// if (ss->isValid(q))
+			// {
+			// 	tie(d_c, planes) = ss->getDistanceAndPlanes(q);
+			// 	float d_c_under = planner->getDistanceUnderestimation(q, planes);
+			// 	if (abs(d_c - d_c_under) > 1e-3)
+			// 	{
+			// 		std::cout << "************************ different ************************" << std::endl;
+			// 		std::cout << "d_c = " << d_c << std::endl;
+			// 		std::cout << "d_c_under = " << d_c_under << std::endl;
+			// 		throw;
+			// 	}
+			// }
+			// else
+			// 	std::cout << "invalid " << std::endl;
 			
 
 			// std::cout << "-------------------- WITHOUT FCL --------------------" << std::endl;
