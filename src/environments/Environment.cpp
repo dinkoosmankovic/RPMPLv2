@@ -11,15 +11,15 @@
 
 #include <glog/logging.h>
 
-typedef std::shared_ptr <fcl::CollisionGeometry> CollisionGeometryPtr;
+typedef std::shared_ptr <fcl::CollisionGeometry<float>> CollisionGeometryPtr;
 
 env::Environment::~Environment() {}
 
 env::Environment::Environment(const std::string &filename)
 {
     YAML::Node node = YAML::LoadFile(filename);
-    std::vector<std::shared_ptr<fcl::CollisionObject> > parts_;
-	for (size_t i = 0; i < node["obstacles"].size(); ++i)
+    std::vector<std::shared_ptr<fcl::CollisionObject<float>>> parts_;
+    for (size_t i = 0; i < node["obstacles"].size(); ++i)
 	{
         YAML::Node obstacle = node["obstacles"][i];
         if(obstacle["box"].IsDefined())
@@ -35,40 +35,47 @@ env::Environment::Environment(const std::string &filename)
             float tx = trans[0].as<float>();
             float ty = trans[1].as<float>();
             float tz = trans[2].as<float>();
-            fcl::Transform3f tf(fcl::Vec3f(tx, ty, tz));
-            std::shared_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, tf));
+
+            YAML::Node rot = obstacle["box"]["rot"];
+            float rx = rot[1].as<float>();
+            float ry = rot[2].as<float>();
+            float rz = rot[3].as<float>();
+            float rw = rot[0].as<float>();
+            
+            fcl::Vector3f tr(tx, ty, tz);
+            fcl::Quaternionf quat(rw, rx, ry, rz);
+
+            //LOG(INFO) << "Object tf: " << quat << "\n" << tr << "\n------------";
+            std::shared_ptr<fcl::CollisionObject<float>> ob(new fcl::CollisionObject<float>(fclBox, quat.matrix(), tr));
             ob->computeAABB();
             parts_.emplace_back(ob);
         }
     }        
 }
 
-env::Environment::Environment(const fcl::Box &box, const fcl::Transform3f &tf)
+env::Environment::Environment(const fcl::Box<float> &box, const fcl::Transform3<float> &tf)
 {
     CollisionGeometryPtr fclBox(new fcl::Box(box.side[0], box.side[1], box.side[2]));
-	std::shared_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, tf));
+	std::shared_ptr<fcl::CollisionObject<float>> ob(new fcl::CollisionObject(fclBox, tf));
 
     ob->computeAABB();
     parts_.emplace_back(ob);
 }
 
-env::Environment::Environment(const std::vector<env::Obstacle> &obs)
+env::Environment::Environment(std::vector<env::Obstacle> obs)
 {
     for (size_t i = 0; i < obs.size(); ++i)
     {
-
-        CollisionGeometryPtr fclBox(new fcl::Box(obs[i].first.side[0], obs[i].first.side[1], obs[i].first.side[2]));
-        std::shared_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, obs[i].second));
-
+        CollisionGeometryPtr fclBox(new fcl::Box<float>(obs[i].first.side[0], obs[i].first.side[1], obs[i].first.side[2]));
+        std::shared_ptr<fcl::CollisionObject<float>> ob(new fcl::CollisionObject(fclBox, obs[i].second));
         ob->computeAABB();
-        LOG(INFO) << ob->getAABB().min_ << "\t" << ob->getAABB().max_;
-
+        LOG(INFO) << "Obstacle range: " << ob->getAABB().min_.transpose() << "\t" << ob->getAABB().max_.transpose();
         parts_.emplace_back(ob);
     }
 
 }
 
-const std::vector<std::shared_ptr<fcl::CollisionObject>> &env::Environment::Environment::getParts() const
+const std::vector<std::shared_ptr<fcl::CollisionObject<float>>> &env::Environment::Environment::getParts() const
 {
 	return parts_;
 }

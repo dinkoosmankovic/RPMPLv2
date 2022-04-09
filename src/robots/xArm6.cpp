@@ -9,13 +9,10 @@
 #include "urdf/model.h"
 #include "RealVectorSpaceState.h"
 
-#include <fcl/distance.h>
-#include <fcl/BVH/BVH_model.h>
-
 #include <glog/logging.h>
 #include "stl_reader.h"
 
-typedef std::shared_ptr <fcl::CollisionGeometry> CollisionGeometryPtr;
+typedef std::shared_ptr <fcl::CollisionGeometryf> CollisionGeometryPtr;
 
 robots::xARM6::~xARM6() {}
 
@@ -59,8 +56,8 @@ robots::xARM6::xARM6(std::string robot_desc)
 		//LOG(INFO) << link_frame;
 		if (links[i]->collision->geometry->type == urdf::Geometry::MESH)
 		{
-			fcl::Vec3f p[3];
-			fcl::BVHModel<fcl::OBBRSS>* model = new fcl::BVHModel<fcl::OBBRSS>;
+			fcl::Vector3f p[3];
+			fcl::BVHModel<fcl::OBBRSS<float>>* model = new fcl::BVHModel<fcl::OBBRSS<float>>;
     		model->beginModel();
 
 			const auto mesh_ptr = dynamic_cast<const urdf::Mesh*>(links[i]->collision->geometry.get());
@@ -73,7 +70,7 @@ robots::xARM6::xARM6(std::string robot_desc)
 				{
 					const float* c = mesh.vrt_coords (mesh.tri_corner_ind (j, icorner));
 					//LOG(INFO) << "(" << c[0] << ", " << c[1] << ", " << c[2] << ") ";
-					p[icorner] = fcl::Vec3f(c[0], c[1], c[2]); 
+					p[icorner] = fcl::Vector3f(c[0], c[1], c[2]); 
 				}
 				//LOG(INFO) << "+++++++++++++++++++++++++++++";
 				model->addTriangle(p[0], p[1], p[2]);
@@ -99,7 +96,7 @@ const KDL::Tree& robots::xARM6::getRobotTree() const
     return robot_tree;
 }
 
-const std::vector<std::unique_ptr<fcl::CollisionObject> >& robots::xARM6::getParts() const
+const std::vector<std::unique_ptr<fcl::CollisionObject<float>>> &robots::xARM6::getParts() const
 {
 	return parts_;
 }
@@ -218,13 +215,13 @@ void robots::xARM6::setState(std::shared_ptr<base::State> q_)
 
 void robots::xARM6::test()
 {
-	CollisionGeometryPtr fclBox(new fcl::Box(0.5, 1.0, 3.0));
-	fcl::Transform3f tf; tf.setTranslation(fcl::Vec3f(1, 1, 1.5));
-	std::unique_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, tf));
+	CollisionGeometryPtr fclBox(new fcl::Box<float>(0.5, 1.0, 3.0));
+	fcl::Transform3f tf; tf.translation() = fcl::Vector3f(1, 1, 1.5);
+	std::unique_ptr<fcl::CollisionObject<float>> ob(new fcl::CollisionObject<float>(fclBox, tf));
 	for (size_t i = 0; i < parts_.size(); ++i)
 	{
-		fcl::DistanceRequest request;
-		fcl::DistanceResult result;
+		fcl::DistanceRequest<float> request;
+		fcl::DistanceResult<float> result;
 		fcl::distance(parts_[i].get(), ob.get(), request, result);
 		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
 		std::cout << "distance from " << i+1 << ": " << result.min_distance << std::endl;
@@ -235,23 +232,24 @@ void robots::xARM6::test()
 fcl::Transform3f robots::xARM6::KDL2fcl(const KDL::Frame &in)
 {
 	fcl::Transform3f out;
-    double x,y,z,w;
+    double x, y, z, w;
     in.M.GetQuaternion(x, y, z, w);
-    fcl::Vec3f t(in.p[0], in.p[1], in.p[2]);
-    fcl::Quaternion3f q(w, x, y, z);
-    out.setQuatRotation(q);
-    out.setTranslation(t);
+    fcl::Vector3f t(in.p[0], in.p[1], in.p[2]);
+    fcl::Quaternionf q(w, x, y, z);
+    out.linear() = q.matrix();
+    out.translation() = t;
     return out;
 }
 
 KDL::Frame robots::xARM6::fcl2KDL(const fcl::Transform3f &in)
 {
-    fcl::Quaternion3f q = in.getQuatRotation();
-    fcl::Vec3f t = in.getTranslation();
+    fcl::Matrix3f R = in.rotation();
+	fcl::Quaternionf q(R);
+    fcl::Vector3f t = in.translation();
 
     KDL::Frame f;
     f.p = KDL::Vector(t[0],t[1],t[2]);
-    f.M = KDL::Rotation::Quaternion(q.getX(), q.getY(), q.getZ(), q.getW());
+    f.M = KDL::Rotation::Quaternion(q.x(), q.y(), q.z(), q.w());
 
     return f;
 }

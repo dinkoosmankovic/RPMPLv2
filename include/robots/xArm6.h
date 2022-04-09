@@ -10,7 +10,6 @@
 #include <vector>
 #include <string>
 
-#include <fcl/broadphase/broadphase.h>
 #include <kdl_parser/kdl_parser.hpp>
 #include <kdl/frames_io.hpp>
 #include <kdl/treefksolverpos_recursive.hpp>
@@ -27,7 +26,7 @@ namespace robots
 		float computeStep(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2, float fi,
 						  std::shared_ptr<Eigen::MatrixXf> XYZ) override;
 		const KDL::Tree &getRobotTree() const;
-		const std::vector<std::unique_ptr<fcl::CollisionObject>> &getParts() const override;
+		const std::vector<std::unique_ptr<fcl::CollisionObject<float>>> &getParts() const override;
 		void setState(std::shared_ptr<base::State> q_) override;
 		const std::vector<std::vector<float>> &getLimits() const override;
 		const int getDimensions() override;
@@ -40,7 +39,7 @@ namespace robots
 		float getEnclosingRadius(std::shared_ptr<Eigen::MatrixXf> XYZ, int j_start, int j_proj);
 	
 	private:
-		std::vector<std::unique_ptr<fcl::CollisionObject>> parts_;
+		std::vector<std::unique_ptr<fcl::CollisionObject<float>>> parts_;
 		std::vector<KDL::Frame> init_poses;
 		KDL::Tree robot_tree;
 		KDL::Chain robot_chain;

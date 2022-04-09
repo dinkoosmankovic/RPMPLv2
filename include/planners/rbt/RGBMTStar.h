@@ -18,7 +18,7 @@ namespace planning
 			RGBMTStar(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> goal_);
 			~RGBMTStar();
 			bool solve() override;
-			void outputPlannerData(std::string filename) const override;
+			void outputPlannerData(std::string filename, bool outputStatesAndPaths = true, bool appendOutput = false) const override;
 
 		protected:
             std::vector<size_t> numStates;              // Total number of states for each tree

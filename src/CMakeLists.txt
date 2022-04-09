@@ -12,6 +12,7 @@ set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/include/environments
         ${PROJECT_SOURCE_DIR}/include/scenario
         ${PROJECT_SOURCE_DIR}/include/configurations
+        ${PROJECT_SOURCE_DIR}/include/benchmark
         ${PROJECT_SOURCE_DIR}/external/QuadProgpp/src
 )
 
@@ -31,8 +32,8 @@ add_library(rpmpl_library SHARED ${SRC_LIST} ${HEADER_LIST})
 # We need this directory, and users of our library will need it too
 target_include_directories(rpmpl_library PUBLIC ${INCLUDE_DIRS} )
 
-# All users of this library will need at least C++11
-target_compile_features(rpmpl_library PUBLIC cxx_std_11)
+# All users of this library will need at least C++17
+target_compile_features(rpmpl_library PUBLIC cxx_std_17)
 
 # IDEs should put the headers in a nice place
 source_group(

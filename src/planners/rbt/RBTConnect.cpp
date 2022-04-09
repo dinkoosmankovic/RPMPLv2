@@ -222,7 +222,7 @@ planning::rrt::Status planning::rbt::RBTConnect::connectSpine(std::shared_ptr<ba
 	return status;
 }
 
-void planning::rbt::RBTConnect::outputPlannerData(std::string filename) const
+void planning::rbt::RBTConnect::outputPlannerData(std::string filename, bool outputStatesAndPaths, bool appendOutput) const
 {
 	std::ofstream outputFile;
 	outputFile.open(filename);

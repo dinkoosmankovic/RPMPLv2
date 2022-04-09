@@ -13,6 +13,7 @@ namespace base
 		StateSpaceType stateSpaceType;
 		std::shared_ptr<robots::AbstractRobot> robot;
 		std::shared_ptr<env::Environment> env;
+		std::shared_ptr<fcl::BroadPhaseCollisionManagerf> collisionManager;
 
 		StateSpace(){};
 		virtual ~StateSpace() = 0;

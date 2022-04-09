@@ -25,6 +25,7 @@ namespace base
 		bool isValid(const std::shared_ptr<base::State> q) override;
 		float getDistance(const std::shared_ptr<base::State> q) override;
 		std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> getDistanceAndPlanes(const std::shared_ptr<base::State> q) override;
+		std::shared_ptr<fcl::BroadPhaseCollisionManagerf> getCollisionManager() { return collisionManager; }
 	};
 }
 #endif //RPMPL_REALVECTORSPACE_H

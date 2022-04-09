@@ -6,13 +6,11 @@
 #include "RealVectorSpaceState.h"
 #include <ostream>
 #include <Eigen/Dense>
-#include <glog/log_severity.h>
-#include <glog/logging.h>
 #include <time.h>
-#include <fcl/distance.h>
-#include <fcl/collision.h>
 #include "RealVectorSpaceConfig.h"
 
+#include <glog/log_severity.h>
+#include <glog/logging.h>
 
 base::RealVectorSpaceFCL::~RealVectorSpaceFCL() {}
 
@@ -20,6 +18,13 @@ base::RealVectorSpaceFCL::RealVectorSpaceFCL(int dimensions_, const std::shared_
 											 const std::shared_ptr<env::Environment> env_) : RealVectorSpace(dimensions_, robot_, env_)
 {
 	setStateSpaceType(StateSpaceType::RealVectorSpaceFCL);
+	collisionManager = std::make_shared<fcl::DynamicAABBTreeCollisionManagerf>();
+
+	for (size_t i = 0; i < robot->getParts().size(); ++i)
+	{
+		collisionManager->registerObject(robot->getParts()[i].get());
+	}
+	collisionManager->setup();
 }
 
 std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
@@ -57,8 +62,8 @@ bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q)
 		{
 			// LOG(INFO) << "robot i: " << i;
 			// LOG(INFO) << "env j: " << j;
-			fcl::CollisionRequest request;
-			fcl::CollisionResult result;
+			fcl::CollisionRequest<float> request;
+			fcl::CollisionResult<float> result;
 			fcl::collide(robot->getParts()[i].get(), env->getParts()[j].get(), request, result);
 			if (result.isCollision() )
 				return false;
@@ -77,8 +82,8 @@ float base::RealVectorSpaceFCL::getDistance(const std::shared_ptr<base::State> q
 		robot->getParts()[i]->computeAABB();
 		for (size_t j = 0; j < env->getParts().size(); ++j)
 		{
-			fcl::DistanceRequest request;
-			fcl::DistanceResult result;
+			fcl::DistanceRequest<float> request;
+			fcl::DistanceResult<float> result;
 			fcl::distance(robot->getParts()[i].get(), env->getParts()[j].get(), request, result);
 			//LOG(INFO) << "part " << i <<"\t:" << robot->getParts()[i]->getAABB().min_ <<"\t;\t" << robot->getParts()[i]->getAABB().max_ << "\t" << result.min_distance;
 			min_dist = std::min(min_dist, (float) result.min_distance);
@@ -101,20 +106,19 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 		robot->getParts()[i]->computeAABB();
 		for (size_t j = 0; j < env->getParts().size(); ++j)
 		{
-			// fcl::DistanceRequest request(true);
-			fcl::DistanceRequest request(true, 0.01, 0.01, fcl::GST_INDEP);
-			fcl::DistanceResult result;
+			fcl::DistanceRequest<float> request(true);
+			fcl::DistanceResult<float> result;
 			fcl::distance(robot->getParts()[i].get(), env->getParts()[j].get(), request, result);
 			//LOG(INFO) << "part " << i <<"\t:" << robot->getParts()[i]->getAABB().min_ <<"\t;\t" << robot->getParts()[i]->getAABB().max_ << "\t" << result.min_distance;
 			min_dist = std::min(min_dist, (float) result.min_distance);
 
-			fcl::Vec3f link_point = result.nearest_points[0];
-			link_point = robot->getParts().at(i)->getTransform().getRotation() * link_point;
-			link_point += robot->getParts().at(i)->getTransform().getTranslation();
+			fcl::Vector3f link_point = result.nearest_points[0];
+			link_point = robot->getParts().at(i)->getTransform().rotation() * link_point;
+			link_point += robot->getParts().at(i)->getTransform().translation();
 
-			fcl::Vec3f obs_point = result.nearest_points[1];
-			obs_point = env->getParts().at(j)->getTransform().getRotation() * obs_point;
-			obs_point += env->getParts().at(j)->getTransform().getTranslation();
+			fcl::Vector3f obs_point = result.nearest_points[1];
+			obs_point = env->getParts().at(j)->getTransform().rotation() * obs_point;
+			obs_point += env->getParts().at(j)->getTransform().translation();
 
 			// std::cout << "link: " << i << std::endl;
 			// std::cout << "link_point: " << link_point << std::endl;

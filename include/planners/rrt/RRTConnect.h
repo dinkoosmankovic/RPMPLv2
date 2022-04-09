@@ -22,8 +22,9 @@ namespace planning
 			~RRTConnect();
 			virtual bool solve() override;
 			base::Tree getTree(int treeIdx) const;
-			const std::vector<std::shared_ptr<base::State>> &getPath() const;
-			virtual void outputPlannerData(std::string filename) const override;
+			const std::vector<std::shared_ptr<base::State>> &getPath() const override;
+			virtual void outputPlannerData(std::string filename, bool outputStatesAndPaths = true, bool appendOutput = false) const override;
+			void clearPlanner();
 
 		protected:
 			std::shared_ptr<base::StateSpace> ss;

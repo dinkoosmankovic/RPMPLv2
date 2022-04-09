@@ -20,7 +20,7 @@ namespace planning
 			RBTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> goal_);
 			~RBTConnect();
 			virtual bool solve() override;
-			virtual void outputPlannerData(std::string filename) const override;
+			virtual void outputPlannerData(std::string filename, bool outputStatesAndPaths = true, bool appendOutput = false) const override;
 
 		protected:
 			virtual float getDistance(std::shared_ptr<base::State> q);

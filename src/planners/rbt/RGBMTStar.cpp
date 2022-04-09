@@ -437,7 +437,7 @@ bool planning::rbt::RGBMTStar::checkStoppingCondition(std::shared_ptr<base::Stat
     return false;
 }
 
-void planning::rbt::RGBMTStar::outputPlannerData(std::string filename) const
+void planning::rbt::RGBMTStar::outputPlannerData(std::string filename, bool outputStatesAndPaths, bool appendOutput) const
 {
 	std::ofstream outputFile;
 	outputFile.open(filename);

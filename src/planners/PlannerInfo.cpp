@@ -82,3 +82,23 @@ void PlannerInfo::addCostConvergence(const std::vector<float> &statesCosts)
 		PlannerInfo::statesCosts.emplace_back(statesCosts[i]);
 	}
 }
+
+void PlannerInfo::clearPlannerInfo()
+{
+	iterationsTimesOfExecution.clear();
+	planningTime = 0;
+	numCollisionQueries = 0;
+	numDistanceQueries = 0;
+	numStates = 0;
+	numIterations = 0;
+}
+
+bool PlannerInfo::getSuccessState() const
+{
+	return successState;
+}
+
+void PlannerInfo::setSuccessState(bool successState)
+{
+	PlannerInfo::successState = successState;
+} 

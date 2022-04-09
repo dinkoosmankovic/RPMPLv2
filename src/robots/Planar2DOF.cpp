@@ -4,15 +4,14 @@
 
 #include <iostream>
 #include <vector>
-
 #include "Planar2DOF.h"
 #include "urdf/model.h"
 #include "RealVectorSpaceState.h"
+#include <Eigen/Dense>
 
-#include <fcl/distance.h>
 #include <glog/logging.h>
 
-typedef std::shared_ptr <fcl::CollisionGeometry> CollisionGeometryPtr;
+typedef std::shared_ptr <fcl::CollisionGeometryf> CollisionGeometryPtr;
 
 robots::Planar2DOF::~Planar2DOF() {}
 
@@ -50,11 +49,11 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 							   links[i]->visual->origin.position.z);
 
 			
-			CollisionGeometryPtr fclBox(new fcl::Box(box->dim.x, box->dim.y, box->dim.z));
+			CollisionGeometryPtr fclBox(new fcl::Boxf(box->dim.x, box->dim.y, box->dim.z));
 			//std::cout << "origin: " << origin << std::endl;
 			
 			init_poses.emplace_back(KDL::Frame(origin));
-			parts_.emplace_back(new fcl::CollisionObject(fclBox, fcl::Transform3f()));
+			parts_.emplace_back(new fcl::CollisionObjectf(fclBox, fcl::Transform3f()));
 			radii.emplace_back(box->dim.y / 2);
 		}
 	}
@@ -69,7 +68,7 @@ const KDL::Tree &robots::Planar2DOF::getRobotTree() const
     return robot_tree;
 }
 
-const std::vector<std::unique_ptr<fcl::CollisionObject>> &robots::Planar2DOF::getParts() const
+const std::vector<std::unique_ptr<fcl::CollisionObject<float>>> &robots::Planar2DOF::getParts() const
 {
 	return parts_;
 }
@@ -149,43 +148,62 @@ void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
     
 }
 
-void robots::Planar2DOF::test()
+void robots::Planar2DOF::test(std::shared_ptr<env::Environment> env, std::shared_ptr<base::State> q)
 {
-	CollisionGeometryPtr fclBox(new fcl::Box(1, 1, 0.05));
-	fcl::Transform3f tf; tf.setTranslation(fcl::Vec3f(2.5, 0, 0));
-	std::unique_ptr<fcl::CollisionObject> ob(new fcl::CollisionObject(fclBox, tf));
+	setState(q);
+	std::shared_ptr<fcl::CollisionObject<float>> ob = env->getParts()[0];
 
 	for (size_t i = 0; i < parts_.size(); ++i)
 	{
-		fcl::DistanceRequest request;
-		fcl::DistanceResult result;
+		fcl::DistanceRequest<float> request(true, 0.00, 0.00, fcl::GST_INDEP);
+		fcl::DistanceResult<float> result;
+		result.clear();
 		fcl::distance(parts_[i].get(), ob.get(), request, result);
-		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl;
-		std::cout << "Distance from " << i << ": " << result.min_distance << std::endl << "-------------------------------" << std::endl;
+		LOG(INFO) << "link " << i+1 << "\n" << parts_[i]->getTransform().matrix();
+		LOG(INFO) << "distance from " << i + 1 << ": " << result.min_distance << " p1: " << result.nearest_points[0].transpose()
+				  << "\t p2: " << result.nearest_points[2].transpose();
 	}
+	//fcl::DefaultDistanceData<float> distance_data;
 
+}
+
+fcl::Vector3f robots::Planar2DOF::transformPoint(fcl::Vector3f& v, fcl::Transform3f t)
+{
+	fcl::Vector3f fclVec = t.translation();
+	Eigen::Vector4f trans = Eigen::Vector4f(fclVec[0], fclVec[1], fclVec[2], 1);
+	fcl::Matrix3f rot = t.rotation();
+	Eigen::MatrixXf M = Eigen::MatrixXf::Identity(4,4);
+	for (size_t i = 0; i < 3; ++i)
+		for (size_t j = 0; j < 3; ++j)	
+			M(i,j) = rot(i,j);
+	for (size_t i = 0; i < 3; ++i)
+		M(i,3) = fclVec[i];
+
+	LOG(INFO) << "obj TF:\n" << M << "\n\n"; 
+	Eigen::Vector4f newVec = M * trans;
+	return fcl::Vector3f(newVec(0), newVec(1), newVec(2));
 }
 
 fcl::Transform3f robots::Planar2DOF::KDL2fcl(const KDL::Frame &in)
 {
-	fcl::Transform3f out;
-    double x,y,z,w;
+	fcl::Transform3f out(fcl::Transform3f::Identity());
+    double x, y, z, w;
     in.M.GetQuaternion(x, y, z, w);
-    fcl::Vec3f t(in.p[0], in.p[1], in.p[2]);
-    fcl::Quaternion3f q(w, x, y, z);
-    out.setQuatRotation(q);
-    out.setTranslation(t);
+    fcl::Vector3f t(in.p[0], in.p[1], in.p[2]);
+    fcl::Quaternionf q(w, x, y, z);
+    out.linear() = q.matrix();
+    out.translation() = t;
     return out;
 }
 
 KDL::Frame robots::Planar2DOF::fcl2KDL(const fcl::Transform3f &in)
 {
-    fcl::Quaternion3f q = in.getQuatRotation();
-    fcl::Vec3f t = in.getTranslation();
-
+    fcl::Matrix3f R = in.rotation();
+	fcl::Quaternionf q(R);
+    fcl::Vector3f t = in.translation();
     KDL::Frame f;
     f.p = KDL::Vector(t[0],t[1],t[2]);
-    f.M = KDL::Rotation::Quaternion(q.getX(), q.getY(), q.getZ(), q.getW());
+    f.M = KDL::Rotation::Quaternion(q.x(), q.y(), q.z(), q.w());
 
     return f;
 }

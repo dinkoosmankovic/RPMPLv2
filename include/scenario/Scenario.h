@@ -13,8 +13,7 @@
 #include <string>
 #include <StateSpace.h>
 
-#include <fcl/collision.h>
-#include <fcl/broadphase/broadphase.h>
+#include "fcl/fcl.h"
 
 namespace scenario
 {

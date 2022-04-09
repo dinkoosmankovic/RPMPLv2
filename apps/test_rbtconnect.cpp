@@ -1,11 +1,9 @@
+#include <AbstractPlanner.h>
 #include <RBTConnect.h>
 #include <iostream>
-#include <RealVectorSpaceFCL.h>
-#include <Environment.h>
-#include <Planar2DOF.h>
 #include <Scenario.h>
 #include <ConfigurationReader.h>
-
+#include <CommandLine.h>
 #include <glog/logging.h>
 
 
@@ -15,29 +13,52 @@ int main(int argc, char **argv)
 	std::srand((unsigned int) time(0));
 	FLAGS_logtostderr = true;
 	LOG(INFO) << "GLOG successfully initialized!";
-	// std::shared_ptr<robots::Planar2DOF> robot = std::make_shared<robots::Planar2DOF>("data/planar_2dof/planar_2dof.urdf");
-	// std::shared_ptr<env::Environment> env = std::make_shared<env::Environment>("data/planar_2dof/obstacles_easy.yaml" );
-	// std::shared_ptr<base::StateSpace> ss = std::make_shared<base::RealVectorSpaceFCL>(2, robot, env);
-	// std::shared_ptr<base::State> start = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({-M_PI/2 ,0}));
-	// std::shared_ptr<base::State> goal = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({M_PI/2 ,0}));
+
+	// std::string scenarioFilePath = "data/planar_2dof/scenario_easy.yaml";
+	// std::string scenarioFilePath = "data/planar_2dof/scenario1.yaml";
+	// std::string scenarioFilePath = "data/planar_2dof/scenario2.yaml";
+	// std::string scenarioFilePath = "data/xarm6/scenario_easy.yaml";
+	std::string scenarioFilePath = "data/xarm6/scenario1.yaml";
+	// std::string scenarioFilePath = "data/xarm6/scenario2.yaml";
+
+	bool printHelp = false;
+	CommandLine args("Test RBTConnect command line parser.");
+	args.addArgument({"-s", "--scenario"}, &scenarioFilePath, "Scenario .yaml description file path");
+	args.addArgument({"-h", "--help"},     &printHelp,
+      "Use --scenario scenario_yaml_file_path to "
+      "run with different scenario");
+
+	try
+	{
+		args.parse(argc, argv);
+	}
+	catch (std::runtime_error const &e)
+	{
+		std::cout << e.what() << std::endl;
+		return -1;
+	}
+
+	// When oPrintHelp was set to true, we print a help message and exit.
+	if (printHelp)
+	{
+		args.printHelp();
+		return 0;
+	}
 
 	ConfigurationReader::initConfiguration();
-	// scenario::Scenario scenario("data/planar_2dof/scenario_easy.yaml");
-	// scenario::Scenario scenario("data/planar_2dof/scenario1.yaml");
-	// scenario::Scenario scenario("data/planar_2dof/scenario2.yaml");
-	// scenario::Scenario scenario("data/xarm6/scenario_easy.yaml");
-	scenario::Scenario scenario("data/xarm6/scenario1.yaml");
-	// scenario::Scenario scenario("data/xarm6/scenario2.yaml");
-
+	scenario::Scenario scenario(scenarioFilePath);
 	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
+
+	LOG(INFO) << "Using scenario: " << scenarioFilePath;
 	LOG(INFO) << "Environment parts: " << scenario.getEnvironment()->getParts().size();
 	LOG(INFO) << "Dimensions: " << ss->getDimensions();
 	LOG(INFO) << "State space type: " << ss->getStateSpaceType();
 	LOG(INFO) << "Start: " << scenario.getStart();
 	LOG(INFO) << "Goal: " << scenario.getGoal();
+
 	try
 	{
-		std::unique_ptr<planning::rbt::RBTConnect> planner = std::make_unique<planning::rbt::RBTConnect>(ss, scenario.getStart(), scenario.getGoal());
+		std::unique_ptr<planning::AbstractPlanner> planner = std::make_unique<planning::rbt::RBTConnect>(ss, scenario.getStart(), scenario.getGoal());
 		bool res = planner->solve();
 		LOG(INFO) << "RBTConnect planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
 		LOG(INFO) << "Number of nodes: " << planner->getPlannerInfo()->getNumStates();
@@ -47,16 +68,12 @@ int main(int argc, char **argv)
 		{
 			std::vector<std::shared_ptr<base::State>> path = planner->getPath();
 			for (int i = 0; i < path.size(); i++)
-			{
 				std::cout << path.at(i)->getCoord().transpose() << std::endl;
-			}
-			// TODO: read from configuration yaml
-			
 		}
 		planner->outputPlannerData("/tmp/plannerData.log");
 
 	}
-	catch (std::domain_error& e)
+	catch (std::domain_error &e)
 	{
 		LOG(ERROR) << e.what();
 	}

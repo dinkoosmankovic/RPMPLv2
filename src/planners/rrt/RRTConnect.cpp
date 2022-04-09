@@ -168,6 +168,14 @@ void planning::rrt::RRTConnect::computePath(std::shared_ptr<base::State> q_con0,
 	}
 }
 
+void planning::rrt::RRTConnect::clearPlanner()
+{
+	for (int i = 0; i < TREES.size(); i++)
+		TREES[i].clearTree();
+	path.clear();
+	initPlanner();
+}
+
 const std::vector<std::shared_ptr<base::State>> &planning::rrt::RRTConnect::getPath() const
 {
 	return path;
@@ -183,6 +191,7 @@ bool planning::rrt::RRTConnect::checkStoppingCondition(Status status, std::chron
 {
 	if (status == planning::rrt::Status::Reached)
 	{
+		plannerInfo->setSuccessState(true);
 		computePath();
 		return true;
 	}
@@ -190,34 +199,46 @@ bool planning::rrt::RRTConnect::checkStoppingCondition(Status status, std::chron
 			 getElapsedTime(time_start) >= RRTConnectConfig::MAX_PLANNING_TIME ||
 			 plannerInfo->getNumIterations() >= RRTConnectConfig::MAX_ITER)
 	{
+		plannerInfo->setSuccessState(false);
 		return true;
 	}
 	else
 	return false;
 }
 
-void planning::rrt::RRTConnect::outputPlannerData(std::string filename) const
+void planning::rrt::RRTConnect::outputPlannerData(std::string filename, bool outputStatesAndPaths, bool appendOutput) const
 {
 	std::ofstream outputFile;
-	outputFile.open(filename);
+	std::ios_base::openmode mode = std::ofstream::out;
+	if (appendOutput)
+		mode = std::ofstream::app;
+
+	outputFile.open(filename, mode);
+
 	if (outputFile.is_open())
 	{
 		outputFile << "Space Type: " << ss->getStateSpaceType() << std::endl;
 		outputFile << "Space dimension: " << ss->getDimensions() << std::endl;
 		outputFile << "Planner type:\t" << "RRTConnect" << std::endl;
 		outputFile << "Planner info: \n";
+		outputFile << "\t\t Succesfull:\t" << plannerInfo->getSuccessState() << std::endl;
+		outputFile << "\t\t Number of iterations:\t" << plannerInfo->getNumIterations() << std::endl;
 		outputFile << "\t\t Number of nodes:\t" << plannerInfo->getNumStates() << std::endl;
 		outputFile << "\t\t Planning time(ms):\t" << plannerInfo->getPlanningTime() << std::endl;
-		outputFile << TREES[0];
-		outputFile << TREES[1];
-		if (path.size() > 0)
+		if (outputStatesAndPaths)
 		{
-			outputFile << "Path:" << std::endl;
-			for (int i = 0; i < path.size(); i++)
+			outputFile << TREES[0];
+			outputFile << TREES[1];
+			if (path.size() > 0)
 			{
-				outputFile << path.at(i) << std::endl;
+				outputFile << "Path:" << std::endl;
+				for (int i = 0; i < path.size(); i++)
+				{
+					outputFile << path.at(i) << std::endl;
+				}
 			}
 		}
+		outputFile << std::string(25, '-') << std::endl;		
 		outputFile.close();
 	}
 	else

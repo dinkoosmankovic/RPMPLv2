@@ -188,7 +188,7 @@ float planning::rbt::RGBTConnect::getDistanceUnderestimation(std::shared_ptr<bas
     return d_c;
 }
 
-void planning::rbt::RGBTConnect::outputPlannerData(std::string filename) const
+void planning::rbt::RGBTConnect::outputPlannerData(std::string filename, bool outputStatesAndPaths, bool appendOutput) const
 {
 	std::ofstream outputFile;
 	outputFile.open(filename);

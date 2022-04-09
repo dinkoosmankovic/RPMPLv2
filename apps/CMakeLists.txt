@@ -41,3 +41,11 @@ target_link_libraries(test_rgbtconnect PUBLIC rpmpl_library ${PROJECT_LIBRARIES}
 add_executable(test_rgbmtstar test_rgbmtstar.cpp)
 target_compile_features(test_rgbmtstar PRIVATE cxx_std_17)
 target_link_libraries(test_rgbmtstar PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
+
+add_executable(test_rrtconnect_benchmark test_rrtconnect_benchmark.cpp)
+target_compile_features(test_rrtconnect_benchmark PRIVATE cxx_std_17)
+target_link_libraries(test_rrtconnect_benchmark PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
+
+add_executable(test_fcl_distance test_fcl_distance.cpp)
+target_compile_features(test_fcl_distance PRIVATE cxx_std_17)
+target_link_libraries(test_fcl_distance PUBLIC rpmpl_library ${PROJECT_LIBRARIES})

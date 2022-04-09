@@ -21,7 +21,7 @@
 scenario::Scenario::Scenario(std::string configuration_file)
 {
     YAML::Node node = YAML::LoadFile(configuration_file);
-    std::vector<env::Obstacle> obstacles;
+    std::vector<env::Obstacle> obstacles(node["obstacles"].size());
     for (size_t i = 0; i < node["obstacles"].size(); ++i)
 	{
         YAML::Node obstacle = node["obstacles"][i];
@@ -38,8 +38,22 @@ scenario::Scenario::Scenario(std::string configuration_file)
             float tx = trans[0].as<float>();
             float ty = trans[1].as<float>();
             float tz = trans[2].as<float>();
-            fcl::Transform3f tf(fcl::Vec3f(tx, ty, tz));
-            obstacles.emplace_back(std::make_pair(obs, tf));
+            // LOG(INFO) << "read trans";
+
+            YAML::Node rot = obstacle["box"]["rot"];
+            float rx = rot[1].as<float>();
+            float ry = rot[2].as<float>();
+            float rz = rot[3].as<float>();
+            float rw = rot[0].as<float>();
+            
+            fcl::Vector3f tr(tx, ty, tz);
+            fcl::Quaternionf quat(rw, rx, ry, rz);
+            fcl::Transform3f tf(fcl::Transform3f::Identity()); 
+            tf.linear() = quat.matrix(); 
+            tf.translation() = tr;
+            // LOG(INFO) << "Object tf: " << tf.matrix();
+            
+            obstacles[i] = env::Obstacle(std::make_pair(obs, tf));
         }
     }
     env = std::make_shared<env::Environment>(obstacles);

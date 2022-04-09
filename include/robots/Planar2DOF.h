@@ -6,10 +6,14 @@
 #define RPMPL_PLANAR2DOF_H
 
 #include "AbstractRobot.h"
+#include "Environment.h"
 #include <memory>
 #include <vector>
 #include <string>
 
+#include <kdl_parser/kdl_parser.hpp>
+#include <kdl/frames_io.hpp>
+#include <kdl/treefksolverpos_recursive.hpp>
 
 namespace robots
 {
@@ -23,19 +27,19 @@ namespace robots
 		float computeStep(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2, float fi, 
 						  std::shared_ptr<Eigen::MatrixXf> XYZ) override;
 		const KDL::Tree& getRobotTree() const;
-		const std::vector<std::unique_ptr<fcl::CollisionObject>> &getParts() const override;
+		const std::vector<std::unique_ptr<fcl::CollisionObject<float>>> &getParts() const override;
 		void setState(std::shared_ptr<base::State> q_) override;
 		const std::vector<std::vector<float>> &getLimits() const override;
 		const int getDimensions() override;
 		const float getRadius(int dim) override;
-		void test();
+		void test(std::shared_ptr<env::Environment> env, std::shared_ptr<base::State> q);
 
 	private:
 		fcl::Transform3f KDL2fcl(const KDL::Frame &in);
 		KDL::Frame fcl2KDL(const fcl::Transform3f &in);
-	
-	private:
-		std::vector<std::unique_ptr<fcl::CollisionObject>> parts_;
+		fcl::Vector3f transformPoint(fcl::Vector3f& v, fcl::Transform3f t);
+		
+		std::vector<std::unique_ptr<fcl::CollisionObject<float>>> parts_;
 		std::vector<KDL::Frame> init_poses;
 		KDL::Tree robot_tree;
 		KDL::Chain robot_chain;
