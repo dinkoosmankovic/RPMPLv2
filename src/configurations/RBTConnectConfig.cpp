@@ -4,6 +4,6 @@
 
 #include "RBTConnectConfig.h"
 
-float RBTConnectConfig::D_CRIT = 0.03;
-float RBTConnectConfig::DELTA = 3.14159;
-int RBTConnectConfig::NUM_SPINES = 7;
+float RBTConnectConfig::D_CRIT      = 0.03;
+float RBTConnectConfig::DELTA       = 3.14159;
+int RBTConnectConfig::NUM_SPINES    = 7;

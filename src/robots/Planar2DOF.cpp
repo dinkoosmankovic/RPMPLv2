@@ -18,15 +18,12 @@ robots::Planar2DOF::~Planar2DOF() {}
 robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 {
     if (!kdl_parser::treeFromFile(robot_desc, robot_tree))
-	{
 		throw std::runtime_error("Failed to construct kdl tree");
-	}
 
 	urdf::Model model;
 	if (!model.initFile(robot_desc))
-	{
     	throw std::runtime_error("Failed to parse urdf file");
-	}
+	
 	std::cout << model.getName() << std::endl;
 	std::vector<urdf::LinkSharedPtr > links;
 	model.getLinks(links);
@@ -35,7 +32,7 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 	{
 		float lower = model.getJoint("joint"+std::to_string(i+1))->limits->lower;
 		float upper = model.getJoint("joint"+std::to_string(i+1))->limits->upper;
-		limits_.emplace_back(std::vector<float>({lower, upper}));
+		limits.emplace_back(std::vector<float>({lower, upper}));
 	}
 
 	for (size_t i = 0; i < links.size()-1; ++i)
@@ -47,13 +44,12 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 			KDL::Vector origin(links[i]->visual->origin.position.x, 
 							   links[i]->visual->origin.position.y,
 							   links[i]->visual->origin.position.z);
-
 			
 			CollisionGeometryPtr fclBox(new fcl::Boxf(box->dim.x, box->dim.y, box->dim.z));
 			//std::cout << "origin: " << origin << std::endl;
 			
 			init_poses.emplace_back(KDL::Frame(origin));
-			parts_.emplace_back(new fcl::CollisionObjectf(fclBox, fcl::Transform3f()));
+			parts.emplace_back(new fcl::CollisionObjectf(fclBox, fcl::Transform3f()));
 			radii.emplace_back(box->dim.y / 2);
 		}
 	}
@@ -61,16 +57,6 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 	robot_tree.getChain("base_link", "tool", robot_chain);
 	Eigen::Vector2f state; state << 0.0, 0.0;
 	setState(std::make_shared<base::RealVectorSpaceState>(state));
-}
-
-const KDL::Tree &robots::Planar2DOF::getRobotTree() const 
-{
-    return robot_tree;
-}
-
-const std::vector<std::unique_ptr<fcl::CollisionObject<float>>> &robots::Planar2DOF::getParts() const
-{
-	return parts_;
 }
 
 std::shared_ptr<std::vector<KDL::Frame>> robots::Planar2DOF::computeForwardKinematics(std::shared_ptr<base::State> q)
@@ -82,9 +68,7 @@ std::shared_ptr<std::vector<KDL::Frame>> robots::Planar2DOF::computeForwardKinem
 	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions());
 
 	for (size_t i = 0; i < q->getDimensions(); ++i)
-	{
 		jointpositions(i) = q->getCoord()(i);
-	}
 	
 	for (size_t i = 0; i < robot_tree.getNrOfSegments(); ++i)
 	{
@@ -102,25 +86,23 @@ std::shared_ptr<Eigen::MatrixXf> robots::Planar2DOF::computeXYZ(std::shared_ptr<
 	std::shared_ptr<std::vector<KDL::Frame>> frames = computeForwardKinematics(q);
 	std::shared_ptr<Eigen::MatrixXf> XYZ = std::make_shared<Eigen::MatrixXf>(3, getParts().size() + 1);
 	for (int k = 0; k <= getParts().size(); k++)
-	{
 		XYZ->col(k) << frames->at(k).p(0), frames->at(k).p(1), frames->at(k).p(2);
-	}
+	
 	return XYZ;
 }
 
 float robots::Planar2DOF::computeStep(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2, float fi, 
 									  std::shared_ptr<Eigen::MatrixXf> XYZ)
 {
-	// Assumes that number of links = number of DOFs
+	// Assumes that number of links is equal to number of DOFs
 	float d = 0;
 	float r;
 	for (int i = 0; i < getParts().size(); i++)
 	{
 		r = 0;
 		for (int k = i+1; k <= getParts().size(); k++)
-		{
 			r = std::max(r, (XYZ->col(k) - XYZ->col(i)).norm());
-		}
+		
 		d += r * std::abs(q2->getCoord(i) - q1->getCoord(i));
 	}
 	return fi / d;
@@ -133,38 +115,18 @@ void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
 	std::shared_ptr<std::vector<KDL::Frame>> framesFK = computeForwardKinematics(q);
 	
 	//transform Collision geometries
-	//std::cout << parts_.size() << std::endl;
+	//std::cout << parts.size() << std::endl;
 	KDL::Frame tf;
-	for (size_t i = 0; i < parts_.size(); ++i)
+	for (size_t i = 0; i < parts.size(); ++i)
 	{
 		tf = framesFK->at(i) * init_poses[i];
 		//std::cout << tf.p << "\n" << tf.M << "\n++++++++++++++++++++++++\n";
 						
 		//std::cout << "fcl\n";
-		parts_[i]->setTransform(KDL2fcl(tf));
-		parts_[i]->computeAABB(); 
-		//std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
+		parts[i]->setTransform(KDL2fcl(tf));
+		parts[i]->computeAABB(); 
+		//std::cout << parts[i]->getAABB().min_ <<"\t;\t" << parts[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
 	}
-    
-}
-
-void robots::Planar2DOF::test(std::shared_ptr<env::Environment> env, std::shared_ptr<base::State> q)
-{
-	setState(q);
-	std::shared_ptr<fcl::CollisionObject<float>> ob = env->getParts()[0];
-
-	for (size_t i = 0; i < parts_.size(); ++i)
-	{
-		fcl::DistanceRequest<float> request(true, 0.00, 0.00, fcl::GST_INDEP);
-		fcl::DistanceResult<float> result;
-		result.clear();
-		fcl::distance(parts_[i].get(), ob.get(), request, result);
-		LOG(INFO) << "link " << i+1 << "\n" << parts_[i]->getTransform().matrix();
-		LOG(INFO) << "distance from " << i + 1 << ": " << result.min_distance << " p1: " << result.nearest_points[0].transpose()
-				  << "\t p2: " << result.nearest_points[2].transpose();
-	}
-	//fcl::DefaultDistanceData<float> distance_data;
-
 }
 
 fcl::Vector3f robots::Planar2DOF::transformPoint(fcl::Vector3f& v, fcl::Transform3f t)
@@ -179,7 +141,7 @@ fcl::Vector3f robots::Planar2DOF::transformPoint(fcl::Vector3f& v, fcl::Transfor
 	for (size_t i = 0; i < 3; ++i)
 		M(i,3) = fclVec[i];
 
-	LOG(INFO) << "obj TF:\n" << M << "\n\n"; 
+	// LOG(INFO) << "obj TF:\n" << M << "\n\n"; 
 	Eigen::Vector4f newVec = M * trans;
 	return fcl::Vector3f(newVec(0), newVec(1), newVec(2));
 }
@@ -208,17 +170,20 @@ KDL::Frame robots::Planar2DOF::fcl2KDL(const fcl::Transform3f &in)
     return f;
 }
 
-const std::vector<std::vector<float>> &robots::Planar2DOF::getLimits() const
+void robots::Planar2DOF::test(std::shared_ptr<env::Environment> env, std::shared_ptr<base::State> q)
 {
-	return limits_;
-}
+	setState(q);
+	std::shared_ptr<fcl::CollisionObject<float>> ob = env->getParts()[0];
 
-const int robots::Planar2DOF::getDimensions()
-{
-	return 2;
-}
-
-const float robots::Planar2DOF::getRadius(int dim)
-{
-	return radii[dim];
+	for (size_t i = 0; i < parts.size(); ++i)
+	{
+		fcl::DistanceRequest<float> request(true, 0.00, 0.00, fcl::GST_INDEP);
+		fcl::DistanceResult<float> result;
+		result.clear();
+		fcl::distance(parts[i].get(), ob.get(), request, result);
+		LOG(INFO) << "link " << i+1 << "\n" << parts[i]->getTransform().matrix();
+		LOG(INFO) << "distance from " << i + 1 << ": " << result.min_distance << " p1: " << result.nearest_points[0].transpose()
+				  << "\t p2: " << result.nearest_points[2].transpose();
+	}
+	//fcl::DefaultDistanceData<float> distance_data;
 }

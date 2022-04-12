@@ -13,17 +13,18 @@
 namespace env
 {
 	typedef std::pair<fcl::Box<float>, fcl::Transform3<float>> Obstacle;
+	
 	class Environment
 	{
 	public:
-		Environment(const std::string& filename); // filename with description
+		Environment(const std::string &filename); // filename with description
         Environment(const fcl::Box<float> &box, const fcl::Transform3<float> &tf);
 		Environment(std::vector<Obstacle> obs);
 		~Environment();
-		//virtual void computeForwardKinematics(std::shared_ptr<base::State> q) = 0;
-		const std::vector<std::shared_ptr<fcl::CollisionObject<float>>> &getParts() const;
+		const std::vector<std::shared_ptr<fcl::CollisionObject<float>>> &getParts() const { return parts; }
+
 	private:
-		std::vector<std::shared_ptr<fcl::CollisionObject<float>>> parts_;
+		std::vector<std::shared_ptr<fcl::CollisionObject<float>>> parts;
 	};
 }
 #endif //RPMPL_ABSTRACTPLANNER_H

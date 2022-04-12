@@ -18,7 +18,7 @@ env::Environment::~Environment() {}
 env::Environment::Environment(const std::string &filename)
 {
     YAML::Node node = YAML::LoadFile(filename);
-    std::vector<std::shared_ptr<fcl::CollisionObject<float>>> parts_;
+    std::vector<std::shared_ptr<fcl::CollisionObject<float>>> parts;
     for (size_t i = 0; i < node["obstacles"].size(); ++i)
 	{
         YAML::Node obstacle = node["obstacles"][i];
@@ -48,7 +48,7 @@ env::Environment::Environment(const std::string &filename)
             //LOG(INFO) << "Object tf: " << quat << "\n" << tr << "\n------------";
             std::shared_ptr<fcl::CollisionObject<float>> ob(new fcl::CollisionObject<float>(fclBox, quat.matrix(), tr));
             ob->computeAABB();
-            parts_.emplace_back(ob);
+            parts.emplace_back(ob);
         }
     }        
 }
@@ -57,9 +57,8 @@ env::Environment::Environment(const fcl::Box<float> &box, const fcl::Transform3<
 {
     CollisionGeometryPtr fclBox(new fcl::Box(box.side[0], box.side[1], box.side[2]));
 	std::shared_ptr<fcl::CollisionObject<float>> ob(new fcl::CollisionObject(fclBox, tf));
-
     ob->computeAABB();
-    parts_.emplace_back(ob);
+    parts.emplace_back(ob);
 }
 
 env::Environment::Environment(std::vector<env::Obstacle> obs)
@@ -70,12 +69,7 @@ env::Environment::Environment(std::vector<env::Obstacle> obs)
         std::shared_ptr<fcl::CollisionObject<float>> ob(new fcl::CollisionObject(fclBox, obs[i].second));
         ob->computeAABB();
         LOG(INFO) << "Obstacle range: " << ob->getAABB().min_.transpose() << "\t" << ob->getAABB().max_.transpose();
-        parts_.emplace_back(ob);
+        parts.emplace_back(ob);
     }
 
-}
-
-const std::vector<std::shared_ptr<fcl::CollisionObject<float>>> &env::Environment::Environment::getParts() const
-{
-	return parts_;
 }

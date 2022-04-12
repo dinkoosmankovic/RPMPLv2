@@ -16,23 +16,25 @@ namespace base
 	{
 	public:
 		int dimensions;
+
 		RealVectorSpace(int dimensions_);
 		RealVectorSpace(int dimensions_, const std::shared_ptr<robots::AbstractRobot> robot_, const std::shared_ptr<env::Environment> env_);
 		virtual ~RealVectorSpace();
-		int getDimensions() override;
-		friend std::ostream &operator<<(std::ostream &os, const RealVectorSpace &space);
+
+		int getDimensions() override { return dimensions; }
 
 		virtual std::shared_ptr<base::State> randomState() override;
 		virtual std::shared_ptr<base::State> newState(std::shared_ptr<base::State> q) override;
 		virtual std::shared_ptr<base::State> newState(const Eigen::VectorXf &state) override;
-		bool equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
-
-		std::shared_ptr<base::State> interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, float step, float D) override;
+		bool isEqual(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
+		std::shared_ptr<base::State> interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, 
+												 float step, float D) override;
 		bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
 		virtual bool isValid(const std::shared_ptr<base::State> q) override;
 		virtual float getDistance(const std::shared_ptr<base::State> q) override;
 		virtual std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> getDistanceAndPlanes(const std::shared_ptr<base::State> q) override;
-		
+		friend std::ostream &operator<<(std::ostream &os, const RealVectorSpace &space);
+
 	private:
 		static bool collisionCapsuleToBox(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
 		static bool collisionCapsuleToRectangle(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs, int coord);
@@ -51,6 +53,7 @@ namespace base
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C);
 		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceCapsuleToSphere
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
+
 		class Capsule_Box
 		{
 			private:

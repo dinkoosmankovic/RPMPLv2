@@ -18,13 +18,12 @@ base::RealVectorSpaceFCL::RealVectorSpaceFCL(int dimensions_, const std::shared_
 											 const std::shared_ptr<env::Environment> env_) : RealVectorSpace(dimensions_, robot_, env_)
 {
 	setStateSpaceType(StateSpaceType::RealVectorSpaceFCL);
-	collisionManager = std::make_shared<fcl::DynamicAABBTreeCollisionManagerf>();
+	collision_manager = std::make_shared<fcl::DynamicAABBTreeCollisionManagerf>();
 
 	for (size_t i = 0; i < robot->getParts().size(); ++i)
-	{
-		collisionManager->registerObject(robot->getParts()[i].get());
-	}
-	collisionManager->setup();
+		collision_manager->registerObject(robot->getParts()[i].get());
+	
+	collision_manager->setup();
 }
 
 std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
@@ -33,9 +32,8 @@ std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
 	Eigen::VectorXf rand = Eigen::VectorXf::Random(dimensions);
 	std::vector<std::vector<float>> limits = robot->getLimits();
 	for (size_t i = 0; i < dimensions; ++i)
-	{
 		rand[i] = ((limits[i][1] - limits[i][0]) * rand[i] + limits[i][0] + limits[i][1]) / 2;
-	}
+	
 	//LOG(INFO) << "random coord: " << rand.transpose();
 	state->setCoord(rand);
 	return state;

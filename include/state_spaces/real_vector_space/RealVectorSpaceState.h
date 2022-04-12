@@ -1,5 +1,6 @@
 //
-// Created by dinko on 7.3.21..
+// Created by dinko on 7.3.21
+// Modified by nermin on 18.02.22.
 //
 
 #ifndef RPMPL_REALVECTORSPACESTATE_H
@@ -15,10 +16,10 @@ namespace base
 	private:
 		int dimensions;
 		Eigen::VectorXf coord;
-		uint treeIdx = -1;							// Tree index in which the state is stored
-		size_t idx = -1; 							// Index of the state in the tree
-		float d_c = -1;								// Distance-to-obstacles
-		float cost = -1;                  			// Cost-to-come
+		uint tree_idx = -1;												// Tree index in which the state is stored
+		size_t idx = -1; 												// Index of the state in the tree
+		float d_c = -1;													// Distance-to-obstacles
+		float cost = -1;                  								// Cost-to-come
 		std::shared_ptr<std::vector<Eigen::MatrixXf>> planes = nullptr;	// Lines/planes dividing space into two subspaces (free and occupied)
 	
 	public:
@@ -30,7 +31,7 @@ namespace base
 		inline int getDimensions() const override { return dimensions; }
 		inline Eigen::VectorXf getCoord() const override { return coord; }
 		inline float getCoord(int idx) const override { return coord(idx); }
-		inline uint getTreeIdx() const override { return treeIdx; }
+		inline uint getTreeIdx() const override { return tree_idx; }
 		inline size_t getIdx() const override { return idx; }
 		inline float getDistance() const override { return d_c; }
 		inline float getCost() const override { return cost; }
@@ -39,7 +40,7 @@ namespace base
 		inline void setDimensions(int dimensions_) { dimensions = dimensions_; }
 		inline void setCoord(Eigen::VectorXf coord_) override { coord = coord_; }
 		inline void setCoord(const float coord_, int idx) override { coord(idx) = coord_; }
-		inline void setTreeIdx(uint treeIdx_) override { treeIdx = treeIdx_; }
+		inline void setTreeIdx(uint treeIdx_) override { tree_idx = treeIdx_; }
 		inline void setIdx(size_t idx_) override { idx = idx_; }
 		inline void setDistance(float d_c_) override { d_c = d_c_; }
 		inline void setCost(float cost_) override { cost = cost_; }

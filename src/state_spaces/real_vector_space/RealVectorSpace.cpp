@@ -25,14 +25,7 @@ base::RealVectorSpace::RealVectorSpace(int dimensions_, const std::shared_ptr<ro
 	env = env_;
 }
 
-base::RealVectorSpace::~RealVectorSpace()
-{
-}
-
-int base::RealVectorSpace::getDimensions()
-{
-	return dimensions;
-}
+base::RealVectorSpace::~RealVectorSpace() {}
 
 std::ostream &base::operator<<(std::ostream &os, const base::RealVectorSpace &space)
 {
@@ -46,9 +39,8 @@ std::shared_ptr<base::State> base::RealVectorSpace::randomState()
 	Eigen::VectorXf rand = Eigen::VectorXf::Random(dimensions);
 	std::vector<std::vector<float>> limits = robot->getLimits();
 	for (size_t i = 0; i < dimensions; ++i)
-	{
 		rand[i] = ((limits[i][1] - limits[i][0]) * rand[i] + limits[i][0] + limits[i][1]) / 2;
-	}
+	
 	//LOG(INFO) << "random coord: " << rand.transpose();
 	state->setCoord(rand);
 	return state;
@@ -66,7 +58,7 @@ std::shared_ptr<base::State> base::RealVectorSpace::newState(const Eigen::Vector
 	return q;
 }
 
-bool base::RealVectorSpace::equal(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
+bool base::RealVectorSpace::isEqual(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
 	float d = (q1->getCoord() - q2->getCoord()).norm();
 	if (d < RealVectorSpaceConfig::EQUALITY_THRESHOLD)

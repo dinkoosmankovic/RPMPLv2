@@ -6,9 +6,9 @@
 #include "Environment.h"
 #include "AbstractRobot.h"
 #include "RealVectorSpaceFCL.h"
+#include "RealVectorSpaceState.h"
 #include "xArm6.h"
 #include "Planar2DOF.h"
-#include "RealVectorSpaceState.h"
 
 #include <yaml-cpp/yaml.h>
 #include "yaml-cpp/parser.h"
@@ -87,19 +87,4 @@ scenario::Scenario::Scenario(std::string configuration_file)
     start = std::make_shared<base::RealVectorSpaceState>(start_vec);
     goal = std::make_shared<base::RealVectorSpaceState>(goal_vec);
 
-}
-
-const std::shared_ptr<robots::AbstractRobot> &scenario::Scenario::getRobot() const 
-{
-    return robot;
-}		
-
-const std::shared_ptr<env::Environment> &scenario::Scenario::getEnvironment() const
-{
-    return env;
-}
-
-const std::shared_ptr<base::StateSpace> &scenario::Scenario::getStateSpace() const
-{
-    return ss;
 }

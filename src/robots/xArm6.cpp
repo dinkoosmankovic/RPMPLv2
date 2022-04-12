@@ -19,15 +19,12 @@ robots::xARM6::~xARM6() {}
 robots::xARM6::xARM6(std::string robot_desc)
 {
     if (!kdl_parser::treeFromFile(robot_desc, robot_tree))
-	{
 		throw std::runtime_error("Failed to construct kdl tree");
-	}
 
 	urdf::Model model;
 	if (!model.initFile(robot_desc))
-	{
     	throw std::runtime_error("Failed to parse urdf file");
-	}
+	
 	const size_t last_slash_idx = robot_desc.rfind('/');
 	std::string urdf_root_path = robot_desc.substr(0, last_slash_idx) + "/";
 	LOG(INFO) << "Creating " << model.getName();
@@ -39,7 +36,7 @@ robots::xARM6::xARM6(std::string robot_desc)
 	{
 		float lower = model.getJoint("joint"+std::to_string(i+1))->limits->lower;
 		float upper = model.getJoint("joint"+std::to_string(i+1))->limits->upper;
-		limits_.emplace_back(std::vector<float>({lower, upper}));
+		limits.emplace_back(std::vector<float>({lower, upper}));
 	}
 
 	for (size_t i = 0; i < 6; ++i)
@@ -47,7 +44,6 @@ robots::xARM6::xARM6(std::string robot_desc)
 		//LOG(INFO) << links[i]->name << "\t" << links[i]->collision->geometry->type;
 
 		urdf::Pose pose = model.getJoint("joint"+std::to_string(i+1))->parent_to_joint_origin_transform;
-
 		KDL::Vector pos(pose.position.x, pose.position.y, pose.position.z);
 		double roll, pitch, yaw;
 		KDL::Frame link_frame;
@@ -59,13 +55,10 @@ robots::xARM6::xARM6(std::string robot_desc)
 			fcl::Vector3f p[3];
 			fcl::BVHModel<fcl::OBBRSS<float>>* model = new fcl::BVHModel<fcl::OBBRSS<float>>;
     		model->beginModel();
-
-			const auto mesh_ptr = dynamic_cast<const urdf::Mesh*>(links[i]->collision->geometry.get());
-			
+			const auto mesh_ptr = dynamic_cast<const urdf::Mesh*>(links[i]->collision->geometry.get());			
 			stl_reader::StlMesh <float, unsigned int> mesh (urdf_root_path + mesh_ptr->filename);
 			for (int j = 0; j < mesh.num_tris(); ++j)
 			{
-
 				for (size_t icorner = 0; icorner < 3; ++icorner) 
 				{
 					const float* c = mesh.vrt_coords (mesh.tri_corner_ind (j, icorner));
@@ -77,28 +70,12 @@ robots::xARM6::xARM6(std::string robot_desc)
 			}
 			model->endModel();
 			CollisionGeometryPtr fclBox(model);
-			parts_.emplace_back(new fcl::CollisionObject(
-				fclBox, fcl::Transform3f()
-			));
+			parts.emplace_back(new fcl::CollisionObject(fclBox, fcl::Transform3f()));
 			init_poses.emplace_back(link_frame);
-
 		}
 	}
 	//std::cout << "constructor----------------------\n";
-	Eigen::VectorXf vec(6);
-	vec << 0,0,0,0,0,0;
-	setState(std::make_shared<base::RealVectorSpaceState>(vec));
-
-}
-
-const KDL::Tree& robots::xARM6::getRobotTree() const 
-{
-    return robot_tree;
-}
-
-const std::vector<std::unique_ptr<fcl::CollisionObject<float>>> &robots::xARM6::getParts() const
-{
-	return parts_;
+	setState(std::make_shared<base::RealVectorSpaceState>(Eigen::VectorXf::Zero(6)));
 }
 
 std::shared_ptr<std::vector<KDL::Frame>> robots::xARM6::computeForwardKinematics(std::shared_ptr<base::State> q)
@@ -110,9 +87,7 @@ std::shared_ptr<std::vector<KDL::Frame>> robots::xARM6::computeForwardKinematics
 	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions() );
 
 	for (size_t i = 0; i < q->getDimensions(); ++i)
-	{
 		jointpositions(i) = q->getCoord()(i);
-	}
 
 	for (size_t i = 0; i < robot_chain.getNrOfJoints(); ++i)
 	{
@@ -165,16 +140,12 @@ float robots::xARM6::getEnclosingRadius(std::shared_ptr<Eigen::MatrixXf> XYZ, in
 	if (j_proj == -2)	// Special case when all frame origins starting from j_start are projected on {x,y} plane
 	{
 		for (int j = j_start; j < XYZ->cols(); j++)
-		{
 			r = std::max(r, XYZ->col(j).head(2).norm() + radii[j-1]);
-		}
 	}
 	else if (j_proj == -1) 	// No projection
 	{
 		for (int j = j_start; j < XYZ->cols(); j++)
-		{
 			r = std::max(r, (XYZ->col(j) - XYZ->col(j_start-1)).norm() + radii[j-1]);
-		}
 	}
 	else	// Projection of all frame origins starting from j_start to the link (j_proj, j_proj+1) is needed
 	{
@@ -199,34 +170,18 @@ void robots::xARM6::setState(std::shared_ptr<base::State> q_)
 
 	std::shared_ptr<std::vector<KDL::Frame>> framesFK = computeForwardKinematics(q);
 	//transform Collision geometries
-	//std::cout << parts_.size() << std::endl;
+	//std::cout << parts.size() << std::endl;
 	KDL::Frame tf;
-	for (size_t i = 0; i < parts_.size(); ++i)
+	for (size_t i = 0; i < parts.size(); ++i)
 	{
 		tf = framesFK->at(i) * init_poses[i];
 		//std::cout << tf.p << "\n" << tf.M << "\n++++++++++++++++++++++++\n";
-						
+
 		//std::cout << "fcl\n";
-		parts_[i]->setTransform(KDL2fcl(tf));
-		parts_[i]->computeAABB(); 
-		//std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
+		parts[i]->setTransform(KDL2fcl(tf));
+		parts[i]->computeAABB(); 
+		//std::cout << parts[i]->getAABB().min_ <<"\t;\t" << parts[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
 	}    
-}
-
-void robots::xARM6::test()
-{
-	CollisionGeometryPtr fclBox(new fcl::Box<float>(0.5, 1.0, 3.0));
-	fcl::Transform3f tf; tf.translation() = fcl::Vector3f(1, 1, 1.5);
-	std::unique_ptr<fcl::CollisionObject<float>> ob(new fcl::CollisionObject<float>(fclBox, tf));
-	for (size_t i = 0; i < parts_.size(); ++i)
-	{
-		fcl::DistanceRequest<float> request;
-		fcl::DistanceResult<float> result;
-		fcl::distance(parts_[i].get(), ob.get(), request, result);
-		std::cout << parts_[i]->getAABB().min_ <<"\t;\t" << parts_[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
-		std::cout << "distance from " << i+1 << ": " << result.min_distance << std::endl;
-	}
-
 }
 
 fcl::Transform3f robots::xARM6::KDL2fcl(const KDL::Frame &in)
@@ -254,17 +209,17 @@ KDL::Frame robots::xARM6::fcl2KDL(const fcl::Transform3f &in)
     return f;
 }
 
-const std::vector<std::vector<float>> &robots::xARM6::getLimits() const
+void robots::xARM6::test()
 {
-	return limits_;
-}
-
-const int robots::xARM6::getDimensions()
-{
-	return 3;
-}
-
-const float robots::xARM6::getRadius(int dim)
-{
-	return radii[dim];
+	CollisionGeometryPtr fclBox(new fcl::Box<float>(0.5, 1.0, 3.0));
+	fcl::Transform3f tf; tf.translation() = fcl::Vector3f(1, 1, 1.5);
+	std::unique_ptr<fcl::CollisionObject<float>> ob(new fcl::CollisionObject<float>(fclBox, tf));
+	for (size_t i = 0; i < parts.size(); ++i)
+	{
+		fcl::DistanceRequest<float> request;
+		fcl::DistanceResult<float> result;
+		fcl::distance(parts[i].get(), ob.get(), request, result);
+		std::cout << parts[i]->getAABB().min_ <<"\t;\t" << parts[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
+		std::cout << "distance from " << i+1 << ": " << result.min_distance << std::endl;
+	}
 }

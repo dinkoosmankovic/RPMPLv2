@@ -1,5 +1,6 @@
 //
-// Created by dinko on 7.3.21..
+// Created by dinko on 7.3.21.
+// Modified by nermin on 18.02.22.
 //
 
 #include "RealVectorSpaceState.h"
@@ -23,7 +24,7 @@ base::RealVectorSpaceState::RealVectorSpaceState(std::shared_ptr<base::State> st
 {
 	dimensions = state->getDimensions();
 	coord = state->getCoord();
-	treeIdx = state->getTreeIdx();
+	tree_idx = state->getTreeIdx();
 	idx = state->getIdx();
 	d_c = state->getDistance();
 	cost = state->getCost();

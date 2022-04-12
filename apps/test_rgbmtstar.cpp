@@ -16,9 +16,9 @@ int main(int argc, char **argv)
 
 	// std::string scenarioFilePath = "data/planar_2dof/scenario_easy.yaml";
 	// std::string scenarioFilePath = "data/planar_2dof/scenario1.yaml";
-	// std::string scenarioFilePath = "data/planar_2dof/scenario2.yaml";
+	std::string scenarioFilePath = "data/planar_2dof/scenario2.yaml";
 	// std::string scenarioFilePath = "data/xarm6/scenario_easy.yaml";
-	std::string scenarioFilePath = "data/xarm6/scenario1.yaml";
+	// std::string scenarioFilePath = "data/xarm6/scenario1.yaml";
 	// std::string scenarioFilePath = "data/xarm6/scenario2.yaml";
 
 	bool printHelp = false;
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 				
 		bool res = planner->solve();
 		LOG(INFO) << "RGBMT* planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
-		LOG(INFO) << "Number of nodes: " << planner->getPlannerInfo()->getNumStates();
+		LOG(INFO) << "Number of states: " << planner->getPlannerInfo()->getNumStates();
 		LOG(INFO) << "Planning time: " << planner->getPlannerInfo()->getPlanningTime() << " [ms]";
 		LOG(INFO) << "Path cost: " << planner->getPlannerInfo()->getCostConvergence().back();
 			
