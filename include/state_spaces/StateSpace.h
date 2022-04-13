@@ -13,10 +13,10 @@ namespace base
 		StateSpaceType state_space_type;
 		std::shared_ptr<robots::AbstractRobot> robot;
 		std::shared_ptr<env::Environment> env;
-		std::shared_ptr<fcl::BroadPhaseCollisionManagerf> collision_manager;
 
 		StateSpace(){};
 		virtual ~StateSpace() = 0;
+		
 		virtual int getDimensions() = 0;
 		virtual bool isValid(const std::shared_ptr<base::State> q) = 0;
 		virtual bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) = 0;

@@ -18,12 +18,8 @@ base::RealVectorSpaceFCL::RealVectorSpaceFCL(int dimensions_, const std::shared_
 											 const std::shared_ptr<env::Environment> env_) : RealVectorSpace(dimensions_, robot_, env_)
 {
 	setStateSpaceType(StateSpaceType::RealVectorSpaceFCL);
-	collision_manager = std::make_shared<fcl::DynamicAABBTreeCollisionManagerf>();
-
-	for (size_t i = 0; i < robot->getParts().size(); ++i)
-		collision_manager->registerObject(robot->getParts()[i].get());
-	
-	collision_manager->setup();
+	collision_manager_robot = std::make_shared<fcl::DynamicAABBTreeCollisionManagerf>();
+	collision_manager_env = std::make_shared<fcl::DynamicAABBTreeCollisionManagerf>();
 }
 
 std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
@@ -53,41 +49,21 @@ std::shared_ptr<base::State> base::RealVectorSpaceFCL::newState(const Eigen::Vec
 
 bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q)
 {
-	robot->setState(q);
-	for (size_t i = 0; i < robot->getParts().size(); ++i)
-	{	
-		for (size_t j = 0; j < env->getParts().size(); ++j)
-		{
-			// LOG(INFO) << "robot i: " << i;
-			// LOG(INFO) << "env j: " << j;
-			fcl::CollisionRequest<float> request;
-			fcl::CollisionResult<float> result;
-			fcl::collide(robot->getParts()[i].get(), env->getParts()[j].get(), request, result);
-			if (result.isCollision() )
-				return false;
-		}
-	}
-	return true;
+	prepareCollisionManager(q);
+	fcl::DefaultCollisionData<float> collision_data;
+	collision_manager_robot->collide(collision_manager_env.get(), &collision_data, fcl::DefaultCollisionFunction);
+
+	return !collision_data.result.isCollision();
 }
 
 float base::RealVectorSpaceFCL::getDistance(const std::shared_ptr<base::State> q)
 {
-	robot->setState(q);
-	float min_dist = INFINITY;
-	for (size_t i = 0; i < robot->getParts().size(); ++i)
-	{	
-		//LOG(INFO) << "part " << i <<"\t:" << robot->getParts()[i]->getAABB().min_ <<"\t;\t" << robot->getParts()[i]->getAABB().max_;
-		robot->getParts()[i]->computeAABB();
-		for (size_t j = 0; j < env->getParts().size(); ++j)
-		{
-			fcl::DistanceRequest<float> request;
-			fcl::DistanceResult<float> result;
-			fcl::distance(robot->getParts()[i].get(), env->getParts()[j].get(), request, result);
-			//LOG(INFO) << "part " << i <<"\t:" << robot->getParts()[i]->getAABB().min_ <<"\t;\t" << robot->getParts()[i]->getAABB().max_ << "\t" << result.min_distance;
-			min_dist = std::min(min_dist, (float) result.min_distance);
-		}
-	}
-	return min_dist;
+	prepareCollisionManager(q);
+	fcl::DefaultDistanceData<float> distance_data;
+	distance_data.result.clear();
+	collision_manager_robot->distance(collision_manager_env.get(), &distance_data, fcl::DefaultDistanceFunction);
+
+	return distance_data.result.min_distance;
 }
 
 std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVectorSpaceFCL::getDistanceAndPlanes
@@ -97,39 +73,47 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 	float min_dist = INFINITY;
 	std::shared_ptr<std::vector<Eigen::MatrixXf>> planes = std::make_shared<std::vector<Eigen::MatrixXf>>
 		(std::vector<Eigen::MatrixXf>(env->getParts().size(), Eigen::MatrixXf(6, robot->getParts().size())));
+	fcl::DefaultDistanceData<float> distance_data;
 	
 	for (size_t i = 0; i < robot->getParts().size(); ++i)
 	{	
-		//LOG(INFO) << "part " << i <<"\t:" << robot->getParts()[i]->getAABB().min_ <<"\t;\t" << robot->getParts()[i]->getAABB().max_;
-		robot->getParts()[i]->computeAABB();
 		for (size_t j = 0; j < env->getParts().size(); ++j)
 		{
-			fcl::DistanceRequest<float> request(true);
-			fcl::DistanceResult<float> result;
-			fcl::distance(robot->getParts()[i].get(), env->getParts()[j].get(), request, result);
-			//LOG(INFO) << "part " << i <<"\t:" << robot->getParts()[i]->getAABB().min_ <<"\t;\t" << robot->getParts()[i]->getAABB().max_ << "\t" << result.min_distance;
-			min_dist = std::min(min_dist, (float) result.min_distance);
+			collision_manager_robot->clear();
+			collision_manager_env->clear();			
+			collision_manager_robot->registerObject(robot->getParts()[i].get());
+			collision_manager_env->registerObject(env->getParts()[j].get());
+			collision_manager_robot->setup();
+			collision_manager_env->setup();
 
-			fcl::Vector3f link_point = result.nearest_points[0];
-			link_point = robot->getParts().at(i)->getTransform().rotation() * link_point;
-			link_point += robot->getParts().at(i)->getTransform().translation();
+			distance_data.request.enable_nearest_points = true;
+			distance_data.result.clear();
+			collision_manager_robot->distance(collision_manager_env.get(), &distance_data, fcl::DefaultDistanceFunction);
+			min_dist = std::min(min_dist, distance_data.result.min_distance);
+			planes->at(j).col(i) << distance_data.result.nearest_points[1],
+									distance_data.result.nearest_points[0] - distance_data.result.nearest_points[1];
 
-			fcl::Vector3f obs_point = result.nearest_points[1];
-			obs_point = env->getParts().at(j)->getTransform().rotation() * obs_point;
-			obs_point += env->getParts().at(j)->getTransform().translation();
-
-			// std::cout << "link: " << i << std::endl;
-			// std::cout << "link_point: " << link_point << std::endl;
-			// std::cout << "obs_point: " << obs_point << std::endl;
-			// std::cout << "----------------------------------" << std::endl;
-
-			planes->at(j).col(i) << obs_point[0], 
-									obs_point[1],
-									obs_point[2],
-									link_point[0] - obs_point[0],
-									link_point[1] - obs_point[1],
-									link_point[2] - obs_point[2];
+			// std::cout << "(i, j) = (" << i << ", " << j << ")" << std::endl;
+			// std::cout << "d_c = " << distance_data.result.min_distance << std::endl;
+			// std::cout << "NP robot: " << distance_data.result.nearest_points[0].transpose() << std::endl;
+			// std::cout << "NP env:   " << distance_data.result.nearest_points[1].transpose() << std::endl;
 		}
 	}
 	return {min_dist, planes};
+}
+
+void base::RealVectorSpaceFCL::prepareCollisionManager(const std::shared_ptr<base::State> q)
+{
+	collision_manager_robot->clear();
+	collision_manager_env->clear();
+	robot->setState(q);
+
+	for (size_t i = 0; i < robot->getParts().size(); i++)
+		collision_manager_robot->registerObject(robot->getParts()[i].get());
+	
+	for (size_t j = 0; j < env->getParts().size(); j++)
+		collision_manager_env->registerObject(env->getParts()[j].get());
+	
+	collision_manager_robot->setup();
+	collision_manager_env->setup();
 }

@@ -15,12 +15,12 @@ int main(int argc, char **argv)
 	FLAGS_logtostderr = true;
 	LOG(INFO) << "GLOG successfully initialized!";
 
-	std::string scenarioFilePath = "data/planar_2dof/scenario_easy.yaml";
-	bool printHelp = false;
+	std::string scenario_file_path = "data/planar_2dof/scenario_easy.yaml";
+	bool print_help = false;
 
 	CommandLine args("Test RRTConnect command line parser.");
-	args.addArgument({"-s", "--scenario"}, &scenarioFilePath, "Scenario .yaml description file path");
-	args.addArgument({"-h", "--help"},     &printHelp,
+	args.addArgument({"-s", "--scenario"}, &scenario_file_path, "Scenario .yaml description file path");
+	args.addArgument({"-h", "--help"},     &print_help,
       "Use --scenario scenario_yaml_file_path to "
       "run with different scenario");
 
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 	}
 
 	// When oPrintHelp was set to true, we print a help message and exit.
-	if (printHelp)
+	if (print_help)
 	{
 		args.printHelp();
 		return 0;
@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 
 	ConfigurationReader::initConfiguration();
 
-	scenario::Scenario scenario(scenarioFilePath);
+	scenario::Scenario scenario(scenario_file_path);
 
 	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
 	for (size_t i = 0; i < 10; ++i)

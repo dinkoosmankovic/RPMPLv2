@@ -17,8 +17,14 @@ namespace base
 	class RealVectorSpaceFCL : public base::RealVectorSpace
 	{
 	public:
+		std::shared_ptr<fcl::BroadPhaseCollisionManagerf> collision_manager_robot;
+		std::shared_ptr<fcl::BroadPhaseCollisionManagerf> collision_manager_env;
+
 		RealVectorSpaceFCL(int dimensions_, const std::shared_ptr<robots::AbstractRobot> robot_, const std::shared_ptr<env::Environment> env_);
 		~RealVectorSpaceFCL();
+
+		std::shared_ptr<fcl::BroadPhaseCollisionManagerf> getCollisionManagerRobot() { return collision_manager_robot; }
+		std::shared_ptr<fcl::BroadPhaseCollisionManagerf> getCollisionManagerEnv() { return collision_manager_env; }
 		
 		std::shared_ptr<base::State> randomState() override;
 		std::shared_ptr<base::State> newState(std::shared_ptr<base::State> q) override;
@@ -26,7 +32,7 @@ namespace base
 		bool isValid(const std::shared_ptr<base::State> q) override;
 		float getDistance(const std::shared_ptr<base::State> q) override;
 		std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> getDistanceAndPlanes(const std::shared_ptr<base::State> q) override;
-		std::shared_ptr<fcl::BroadPhaseCollisionManagerf> getCollisionManager() { return collision_manager; }
+		void prepareCollisionManager(const std::shared_ptr<base::State> q);
 	};
 }
 #endif //RPMPL_REALVECTORSPACE_H

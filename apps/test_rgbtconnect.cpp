@@ -14,17 +14,17 @@ int main(int argc, char **argv)
 	FLAGS_logtostderr = true;
 	LOG(INFO) << "GLOG successfully initialized!";
 
-	// std::string scenarioFilePath = "data/planar_2dof/scenario_easy.yaml";
-	// std::string scenarioFilePath = "data/planar_2dof/scenario1.yaml";
-	std::string scenarioFilePath = "data/planar_2dof/scenario2.yaml";
-	// std::string scenarioFilePath = "data/xarm6/scenario_easy.yaml";
-	// std::string scenarioFilePath = "data/xarm6/scenario1.yaml";
-	// std::string scenarioFilePath = "data/xarm6/scenario2.yaml";
+	// std::string scenario_file_path = "data/planar_2dof/scenario_easy.yaml";
+	// std::string scenario_file_path = "data/planar_2dof/scenario1.yaml";
+	std::string scenario_file_path = "data/planar_2dof/scenario2.yaml";
+	// std::string scenario_file_path = "data/xarm6/scenario_easy.yaml";
+	// std::string scenario_file_path = "data/xarm6/scenario1.yaml";
+	// std::string scenario_file_path = "data/xarm6/scenario2.yaml";
 
-	bool printHelp = false;
+	bool print_help = false;
 	CommandLine args("Test RGBTConnect command line parser.");
-	args.addArgument({"-s", "--scenario"}, &scenarioFilePath, "Scenario .yaml description file path");
-	args.addArgument({"-h", "--help"},     &printHelp,
+	args.addArgument({"-s", "--scenario"}, &scenario_file_path, "Scenario .yaml description file path");
+	args.addArgument({"-h", "--help"},     &print_help,
       "Use --scenario scenario_yaml_file_path to "
       "run with different scenario");
 
@@ -39,17 +39,17 @@ int main(int argc, char **argv)
 	}
 
 	// When oPrintHelp was set to true, we print a help message and exit.
-	if (printHelp)
+	if (print_help)
 	{
 		args.printHelp();
 		return 0;
 	}
 
 	ConfigurationReader::initConfiguration();
-	scenario::Scenario scenario(scenarioFilePath);
+	scenario::Scenario scenario(scenario_file_path);
 	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
 
-	LOG(INFO) << "Using scenario: " << scenarioFilePath;
+	LOG(INFO) << "Using scenario: " << scenario_file_path;
 	LOG(INFO) << "Environment parts: " << scenario.getEnvironment()->getParts().size();
 	LOG(INFO) << "Dimensions: " << ss->getDimensions();
 	LOG(INFO) << "State space type: " << ss->getStateSpaceType();

@@ -48,12 +48,11 @@ int main(int argc, char **argv)
 	distance_data.request.enable_nearest_points = true;
 	//distance_data.request.gjk_solver_type = fcl::GST_INDEP;
 	distance_data.result.clear();
-
 	manager1->distance(manager2.get(), &distance_data, fcl::DefaultDistanceFunction);
 
 	fcl::DefaultCollisionData<float> collision_data;
-	fcl::CollisionCallBack<float> callback;
-	manager1->collide(manager2.get(), &collision_data, callback);
+	collision_data.result.clear();
+	manager1->collide(manager2.get(), &collision_data, fcl::DefaultCollisionFunction);
 
 
 	LOG(INFO) << "distance query : " << distance_data.result.min_distance << " p1: " << distance_data.result.nearest_points[0].transpose().format(fmt)
