@@ -9,6 +9,8 @@
 
 namespace planning
 {
+	enum Status {Advanced, Trapped, Reached};
+
 	class AbstractPlanner
 	{
 	public:
@@ -20,11 +22,14 @@ namespace planning
 		virtual const std::vector<std::shared_ptr<base::State>> &getPath() const = 0;
 
 		virtual bool solve() = 0;
-		virtual void outputPlannerData(std::string filename, bool output_states_and_paths = true, bool append_output = false) const = 0;
 		virtual void clearPlanner() = 0;
+		virtual void outputPlannerData(std::string filename, bool output_states_and_paths = true, bool append_output = false) const = 0;
 
 	protected:
 		std::shared_ptr<base::StateSpace> ss;
+		std::shared_ptr<base::State> start;
+		std::shared_ptr<base::State> goal;
+		std::vector<std::shared_ptr<base::State>> path;
 		std::shared_ptr<PlannerInfo> planner_info;
 	};
 }

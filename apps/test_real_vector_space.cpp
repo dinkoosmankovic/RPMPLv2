@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 		{
 			// std::shared_ptr<base::State> q = ss->randomState();
 			Eigen::VectorXf Q(6); Q << 1.5708, 1.5708, -2.3562, 0, 0, 0;
-			std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(Q);
+			std::shared_ptr<base::State> q = scenario.getGoal(); //std::make_shared<base::RealVectorSpaceState>(Q);
 			std::cout << "Num: " << num << " Configuration: " << q << std::endl;
 			
 			// Test distance underestimation
@@ -66,8 +66,8 @@ int main(int argc, char **argv)
 			std::cout << "-------------------- WITH FCL -----------------------" << std::endl;
 			bool valid_FCL = ss_FCL->isValid(q);
 			std::cout << "Is valid: " << (valid_FCL ? "true" : "false") << std::endl;
-			// float d_c_FCL = ss_FCL->getDistance(q);
-			float d_c_FCL = std::get<0>(ss_FCL->getDistanceAndPlanes(q));
+			float d_c_FCL = ss_FCL->getDistance(q);
+			// float d_c_FCL = std::get<0>(ss_FCL->getDistanceAndPlanes(q));
 			std::cout << "Distance: " << d_c_FCL << std::endl;
 			
 			// if (valid != valid_FCL)

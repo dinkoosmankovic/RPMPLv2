@@ -14,7 +14,7 @@ planning::rrt::RRTConnect::RRTConnect(std::shared_ptr<base::StateSpace> ss_) : A
 }
 
 planning::rrt::RRTConnect::RRTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_,
-									  std::shared_ptr<base::State> goal_) : AbstractPlanner(ss_), ss(ss_)
+									  std::shared_ptr<base::State> goal_) : AbstractPlanner(ss_)
 {
 	start = start_;
 	goal = goal_;
@@ -48,7 +48,7 @@ bool planning::rrt::RRTConnect::solve()
 	auto time_start = std::chrono::steady_clock::now(); 	// Start the clock
 	int tree_idx = 0;  	// Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal
 	std::shared_ptr<base::State> q_rand, q_near, q_new;
-	planning::rrt::Status status;
+	base::StateSpace::Status status;
 	planner_info->setNumIterations(0);
     planner_info->setNumStates(2);
 
@@ -63,13 +63,13 @@ bool planning::rrt::RRTConnect::solve()
 		// LOG(INFO) << "Tree: " << trees[tree_idx]->getTreeName();
 		tie(status, q_new) = extend(q_near, q_rand);
 		// LOG(INFO) << "Status: " << status;
-		if (status != planning::rrt::Status::Trapped)
+		if (status != base::StateSpace::Status::Trapped)
 			trees[tree_idx]->upgradeTree(q_new, q_near);
 
 		tree_idx = 1 - tree_idx; 	// Swapping trees
 
 		/* Connect */
-		if (status != planning::rrt::Status::Trapped)
+		if (status != base::StateSpace::Status::Trapped)
 		{	
 			// LOG(INFO) << "Not Trapped";
 			// LOG(INFO) << "Trying to connect to: " << q_new->getCoord().transpose() << " from " << trees[tree_idx]->getTreeName();
@@ -84,7 +84,7 @@ bool planning::rrt::RRTConnect::solve()
 		if (checkStoppingCondition(status, time_start))
 		{
 			planner_info->setPlanningTime(getElapsedTime(time_start));
-			return status == planning::rrt::Status::Reached ? true : false;
+			return status == base::StateSpace::Status::Reached ? true : false;
 		}
 	}
 }
@@ -94,32 +94,30 @@ base::Tree planning::rrt::RRTConnect::getTree(int tree_idx) const
 	return *trees[tree_idx];
 }
 
-std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rrt::RRTConnect::extend
+std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> planning::rrt::RRTConnect::extend
 	(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
-	std::shared_ptr<base::State> q_new = ss->interpolate(q, q_e, RRTConnectConfig::EPS_STEP);
-	if (q_new != nullptr && ss->isValid(q, q_new))
-	{
-		if (ss->isEqual(q_new, q_e))
-			return {planning::rrt::Status::Reached, q_new};
-		else
-			return {planning::rrt::Status::Advanced, q_new};
-	}
-	return {planning::rrt::Status::Trapped, q};
+	base::StateSpace::Status status;
+	std::shared_ptr<base::State> q_new;
+	tie(status, q_new) = ss->interpolate(q, q_e, RRTConnectConfig::EPS_STEP);
+	if (status != base::StateSpace::Status::Trapped && ss->isValid(q, q_new))
+		return {status, q_new};
+	else
+		return {base::StateSpace::Status::Trapped, q};
 }
 
-planning::rrt::Status planning::rrt::RRTConnect::connect
+base::StateSpace::Status planning::rrt::RRTConnect::connect
 	(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
 	// LOG(INFO) << "Inside connect.";
 	std::shared_ptr<base::State> q_new = q;
-	planning::rrt::Status status = planning::rrt::Status::Advanced;
+	base::StateSpace::Status status = base::StateSpace::Status::Advanced;
 	int num_ext = 0;
-	while (status == planning::rrt::Status::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
+	while (status == base::StateSpace::Status::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
 	{
 		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
 		tie(status, q_new) = extend(q_temp, q_e);
-		if (status != planning::rrt::Status::Trapped)
+		if (status != base::StateSpace::Status::Trapped)
 			tree->upgradeTree(q_new, q_temp);
 	}
 	// LOG(INFO) << "extended.";
@@ -162,15 +160,16 @@ const std::vector<std::shared_ptr<base::State>> &planning::rrt::RRTConnect::getP
 	return path;
 }
 
+// Get elapsed time in milliseconds
 float planning::rrt::RRTConnect::getElapsedTime(std::chrono::steady_clock::time_point &time_start)
 {
 	auto end = std::chrono::steady_clock::now();
 	return std::chrono::duration_cast<std::chrono::milliseconds>(end - time_start).count();
 }
 
-bool planning::rrt::RRTConnect::checkStoppingCondition(planning::rrt::Status status, std::chrono::steady_clock::time_point &time_start)
+bool planning::rrt::RRTConnect::checkStoppingCondition(base::StateSpace::Status status, std::chrono::steady_clock::time_point &time_start)
 {
-	if (status == planning::rrt::Status::Reached)
+	if (status == base::StateSpace::Status::Reached)
 	{
 		planner_info->setSuccessState(true);
 		computePath();
@@ -178,7 +177,7 @@ bool planning::rrt::RRTConnect::checkStoppingCondition(planning::rrt::Status sta
 	}
 	else if (planner_info->getNumStates() >= RRTConnectConfig::MAX_NUM_STATES || 
 			 getElapsedTime(time_start) >= RRTConnectConfig::MAX_PLANNING_TIME ||
-			 planner_info->getNumIterations() >= RRTConnectConfig::MAX_ITER)
+			 planner_info->getNumIterations() >= RRTConnectConfig::MAX_NUM_ITER)
 	{
 		planner_info->setSuccessState(false);
 		return true;

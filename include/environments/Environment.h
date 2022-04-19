@@ -22,6 +22,7 @@ namespace env
 		Environment(std::vector<Obstacle> obs);
 		~Environment();
 		const std::vector<std::shared_ptr<fcl::CollisionObject<float>>> &getParts() const { return parts; }
+		void updateObstacles();
 
 	private:
 		std::vector<std::shared_ptr<fcl::CollisionObject<float>>> parts;

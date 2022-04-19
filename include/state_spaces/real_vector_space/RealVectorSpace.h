@@ -27,8 +27,8 @@ namespace base
 		virtual std::shared_ptr<base::State> newState(std::shared_ptr<base::State> q) override;
 		virtual std::shared_ptr<base::State> newState(const Eigen::VectorXf &state) override;
 		bool isEqual(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
-		std::shared_ptr<base::State> interpolate(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, 
-												 float step, float D) override;
+		std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> interpolate
+			(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, float step, float D) override;
 		bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
 		virtual bool isValid(const std::shared_ptr<base::State> q) override;
 		virtual float getDistance(const std::shared_ptr<base::State> q) override;

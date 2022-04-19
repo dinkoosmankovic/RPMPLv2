@@ -4,8 +4,8 @@
 
 class RealVectorSpaceConfig
 {
-    public:
-        static float EQUALITY_THRESHOLD;
-        static int NUM_INTERPOLATION_VALIDITY_CHECKS;
+public:
+    static float EQUALITY_THRESHOLD;
+    static int NUM_INTERPOLATION_VALIDITY_CHECKS;
 
 };

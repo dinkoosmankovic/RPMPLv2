@@ -23,10 +23,10 @@ namespace planning
 
 		protected:
             std::vector<size_t> num_states;              // Total number of states for each tree
-            float cost_opt;                              // The cost of the final path
+            float cost_opt;                              // Cost of the final path
             
 			void initPlanner();
-            std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> 
+            std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> 
                 connectGenSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
             float getCostToCome(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2);
             bool mainTreesReached(std::vector<int> &trees_reached);

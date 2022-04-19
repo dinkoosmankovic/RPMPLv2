@@ -73,3 +73,8 @@ env::Environment::Environment(std::vector<env::Obstacle> obs)
     }
 
 }
+
+void env::Environment::updateObstacles()
+{
+    
+}

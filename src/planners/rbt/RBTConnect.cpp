@@ -19,7 +19,7 @@ bool planning::rbt::RBTConnect::solve()
 	auto time_start = std::chrono::steady_clock::now(); 	// Start the clock
 	int tree_idx = 0;  	// Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal
 	std::shared_ptr<base::State> q_e, q_near, q_new;
-	planning::rrt::Status status;
+	base::StateSpace::Status status;
 	planner_info->setNumIterations(0);
     planner_info->setNumStates(2);
 
@@ -47,14 +47,14 @@ bool planning::rbt::RBTConnect::solve()
 		else	// Distance-to-obstacles is less than d_crit
 		{
 			tie(status, q_new) = extend(q_near, q_e);
-			if (status != planning::rrt::Status::Trapped)
+			if (status != base::StateSpace::Status::Trapped)
 				trees[tree_idx]->upgradeTree(q_new, q_near);
 		}
 
 		tree_idx = 1 - tree_idx;	// Swapping trees
 
 		/* Bur-Connect */
-		if (status != planning::rrt::Status::Trapped)
+		if (status != base::StateSpace::Status::Trapped)
 		{
 			q_near = trees[tree_idx]->getNearestState(q_new);
 			status = connectSpine(trees[tree_idx], q_near, q_new);
@@ -67,7 +67,7 @@ bool planning::rbt::RBTConnect::solve()
 		if (checkStoppingCondition(status, time_start))
 		{
 			planner_info->setPlanningTime(getElapsedTime(time_start));
-			return status == planning::rrt::Status::Reached ? true : false;
+			return status == base::StateSpace::Status::Reached ? true : false;
 		}
     }
 }
@@ -140,7 +140,7 @@ void planning::rbt::RBTConnect::pruneSpine(std::shared_ptr<base::State> q, std::
 // Spine is generated from 'q' towards 'q_e'
 // 'q_new' is the new reached state
 // If 'd_c_underest' is passed, the spine is extended using the underestimation of distance-to-obstacles for 'q'
-std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rbt::RBTConnect::extendSpine
+std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> planning::rbt::RBTConnect::extendSpine
 	(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float d_c_underest)
 {
 	float d_c = (d_c_underest > 0) ? d_c_underest : getDistance(q);
@@ -158,13 +158,13 @@ std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rbt::R
 		if (step > 1)
 		{
 			q_new->setCoord(q_e->getCoord());
-			return {planning::rrt::Reached, q_new};
+			return {base::StateSpace::Status::Reached, q_new};
 		}
 		else
 			q_new->setCoord(q_new->getCoord() + step * (q_e->getCoord() - q_new->getCoord()));
 		
 		if (k == K_max)
-			return {planning::rrt::Advanced, q_new};
+			return {base::StateSpace::Status::Advanced, q_new};
 
 		rho = 0;
 		XYZ_new = ss->robot->computeXYZ(q_new);
@@ -174,14 +174,14 @@ std::tuple<planning::rrt::Status, std::shared_ptr<base::State>> planning::rbt::R
 	}
 }
 
-planning::rrt::Status planning::rbt::RBTConnect::connectSpine
+base::StateSpace::Status planning::rbt::RBTConnect::connectSpine
 	(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
 	float d_c = getDistance(q);
 	std::shared_ptr<base::State> q_new = q;
-	planning::rrt::Status status = planning::rrt::Advanced;
+	base::StateSpace::Status status = base::StateSpace::Status::Advanced;
 	int num_ext = 0;
-	while (status == planning::rrt::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
+	while (status == base::StateSpace::Status::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
 	{
 		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
 		if (d_c > RBTConnectConfig::D_CRIT)
@@ -193,7 +193,7 @@ planning::rrt::Status planning::rbt::RBTConnect::connectSpine
 		else
 		{
 			tie(status, q_new) = extend(q_temp, q_e);
-			if (status != planning::rrt::Trapped)
+			if (status != base::StateSpace::Status::Trapped)
 				tree->upgradeTree(q_new, q_temp);
 		}
 	}
