@@ -33,31 +33,39 @@ std::ostream &base::operator<<(std::ostream &os, const base::RealVectorSpace &sp
 	return os;
 }
 
-std::shared_ptr<base::State> base::RealVectorSpace::randomState()
+// Get a random state with uniform distribution, which is centered around 'q_center' and limited with robot joint limits
+std::shared_ptr<base::State> base::RealVectorSpace::randomState(std::shared_ptr<base::State> q_center)
 {
 	std::shared_ptr<base::State> state = std::make_shared<base::RealVectorSpaceState>(dimensions);
 	Eigen::VectorXf rand = Eigen::VectorXf::Random(dimensions);
 	std::vector<std::vector<float>> limits = robot->getLimits();
 	for (size_t i = 0; i < dimensions; ++i)
 		rand[i] = ((limits[i][1] - limits[i][0]) * rand[i] + limits[i][0] + limits[i][1]) / 2;
-	
-	//LOG(INFO) << "random coord: " << rand.transpose();
-	state->setCoord(rand);
+
+	if (q_center == nullptr)
+		state->setCoord(rand);
+	else
+		state->setCoord(rand + q_center->getCoord());
+
+	//LOG(INFO) << "Random coord: " << state->getCoord().transpose();
 	return state;
 }
 
+// Make a copy of 'state'
 std::shared_ptr<base::State> base::RealVectorSpace::newState(std::shared_ptr<base::State> state)
 {
 	std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(state);
 	return q;
 }
 
+// Make completely a new state with same coordinates as 'state'
 std::shared_ptr<base::State> base::RealVectorSpace::newState(const Eigen::VectorXf &state)
 {
 	std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(state);
 	return q;
 }
 
+// Check if two states are equal
 bool base::RealVectorSpace::isEqual(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
 	float d = (q1->getCoord() - q2->getCoord()).norm();

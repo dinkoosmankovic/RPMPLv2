@@ -19,7 +19,7 @@ base::RealVectorSpaceState::RealVectorSpaceState(int dimensions_)
 	setStateSpaceType(StateSpaceType::RealVectorSpace);
 }
 
-// Make copy of 'state'
+// Make a copy of 'state'
 base::RealVectorSpaceState::RealVectorSpaceState(std::shared_ptr<base::State> state)
 {
 	dimensions = state->getDimensions();

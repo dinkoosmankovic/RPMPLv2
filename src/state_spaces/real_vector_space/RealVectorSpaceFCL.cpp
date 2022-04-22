@@ -22,31 +22,6 @@ base::RealVectorSpaceFCL::RealVectorSpaceFCL(int dimensions_, const std::shared_
 	collision_manager_env = std::make_shared<fcl::DynamicAABBTreeCollisionManagerf>();
 }
 
-std::shared_ptr<base::State> base::RealVectorSpaceFCL::randomState()
-{
-	std::shared_ptr<base::State> state = std::make_shared<base::RealVectorSpaceState>(dimensions);
-	Eigen::VectorXf rand = Eigen::VectorXf::Random(dimensions);
-	std::vector<std::vector<float>> limits = robot->getLimits();
-	for (size_t i = 0; i < dimensions; ++i)
-		rand[i] = ((limits[i][1] - limits[i][0]) * rand[i] + limits[i][0] + limits[i][1]) / 2;
-	
-	//LOG(INFO) << "random coord: " << rand.transpose();
-	state->setCoord(rand);
-	return state;
-}
-
-std::shared_ptr<base::State> base::RealVectorSpaceFCL::newState(std::shared_ptr<base::State> state)
-{
-	std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(state);
-	return q;
-}
-
-std::shared_ptr<base::State> base::RealVectorSpaceFCL::newState(const Eigen::VectorXf &state)
-{
-	std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(state);
-	return q;
-}
-
 bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q)
 {
 	prepareCollisionManager(q);

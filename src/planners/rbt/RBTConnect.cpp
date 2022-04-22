@@ -86,7 +86,7 @@ float planning::rbt::RBTConnect::getDistance(std::shared_ptr<base::State> q)
 	return d_c;
 }
 
-// Saturate spine in a way that its distance is equal to RBTConnectConfig::DELTA
+// Saturate spine from 'q' to 'q_e', such that its distance becomes equal to RBTConnectConfig::DELTA
 void planning::rbt::RBTConnect::saturateSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
 	float d = (q_e->getCoord() - q->getCoord()).norm();
