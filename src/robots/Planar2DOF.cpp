@@ -114,12 +114,12 @@ void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
 	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions());
 	std::shared_ptr<std::vector<KDL::Frame>> framesFK = computeForwardKinematics(q);
 	
-	//transform Collision geometries
-	//std::cout << parts.size() << std::endl;
+	// transform Collision geometries
+	// std::cout << parts.size() << std::endl;
 	KDL::Frame tf;
 	for (size_t i = 0; i < parts.size(); ++i)
 	{
-		tf = framesFK->at(i) * init_poses[i];
+		tf = framesFK->at(i);
 		//std::cout << tf.p << "\n" << tf.M << "\n++++++++++++++++++++++++\n";
 						
 		//std::cout << "fcl\n";

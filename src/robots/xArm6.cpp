@@ -84,7 +84,7 @@ std::shared_ptr<std::vector<KDL::Frame>> robots::xARM6::computeForwardKinematics
 	KDL::TreeFkSolverPos_recursive treefksolver = KDL::TreeFkSolverPos_recursive(robot_tree);
 	std::shared_ptr<std::vector<KDL::Frame>> framesFK = std::make_shared<std::vector<KDL::Frame>>();
 	robot_tree.getChain("link_base", "link_eef", robot_chain);
-	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions() );
+	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions());
 
 	for (size_t i = 0; i < q->getDimensions(); ++i)
 		jointpositions(i) = q->getCoord()(i);
@@ -167,21 +167,25 @@ void robots::xARM6::setState(std::shared_ptr<base::State> q_)
 {
 	q = q_;
 	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions());
-
 	std::shared_ptr<std::vector<KDL::Frame>> framesFK = computeForwardKinematics(q);
-	//transform Collision geometries
-	//std::cout << parts.size() << std::endl;
+
+	// transform Collision geometries
+	// std::cout << parts.size() << std::endl;
 	KDL::Frame tf;
 	for (size_t i = 0; i < parts.size(); ++i)
 	{
-		tf = framesFK->at(i) * init_poses[i];
-		//std::cout << tf.p << "\n" << tf.M << "\n++++++++++++++++++++++++\n";
-
-		//std::cout << "fcl\n";
+		tf = framesFK->at(i);
+		// std::cout << "kdl\n" << tf.p << "\n" << tf.M << "\n++++++++++++++++++++++++\n";
+		// fcl::Transform3f tf_fcl = KDL2fcl(tf);
+		// std::cout << "fcl\n" << tf_fcl.translation().transpose() << "\t;\n" << tf_fcl.linear() << "\n..................................\n";
+		
 		parts[i]->setTransform(KDL2fcl(tf));
 		parts[i]->computeAABB(); 
-		//std::cout << parts[i]->getAABB().min_ <<"\t;\t" << parts[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
-	}    
+		// std::cout << parts[i]->getAABB().min_ <<"\t;" << std::endl;
+		// std::cout << parts[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
+		// std::cout << (parts[i]->getAABB().max_ - parts[i]->getAABB().min_).transpose() <<"\t;" << std::endl;
+		// std::cout << ((parts[i]->getAABB().min_ + parts[i]->getAABB().max_) / 2).transpose() << std::endl << "*******************" << std::endl;
+	}
 }
 
 fcl::Transform3f robots::xARM6::KDL2fcl(const KDL::Frame &in)
@@ -205,7 +209,6 @@ KDL::Frame robots::xARM6::fcl2KDL(const fcl::Transform3f &in)
     KDL::Frame f;
     f.p = KDL::Vector(t[0],t[1],t[2]);
     f.M = KDL::Rotation::Quaternion(q.x(), q.y(), q.z(), q.w());
-
     return f;
 }
 
