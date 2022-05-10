@@ -33,12 +33,15 @@ int main(int argc, char **argv)
 		float d_c;
 		std::shared_ptr<std::vector<Eigen::MatrixXf>> planes;
 		int num = 0;
-		while (num++ < 10)
+		while (num++ < 1)
 		{
 			// std::shared_ptr<base::State> q = ss->randomState();
-			Eigen::VectorXf Q(6); Q << 1.5708, 1.5708, -2.3562, 0, 0, 0;
-			std::shared_ptr<base::State> q = scenario.getGoal(); //std::make_shared<base::RealVectorSpaceState>(Q);
+			// Eigen::VectorXf Q(6); Q << 1.5708, 1.5708, -2.3562, 0, 0, 0;
+			// std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(Q);
+			std::shared_ptr<base::State> q = scenario.getStart();
 			std::cout << "Num: " << num << " Configuration: " << q << std::endl;
+			std::cout << *ss->robot->computeXYZ(q) << std::endl;
+			ss->robot->setState(q);
 			
 			// Test distance underestimation
 			// if (ss->isValid(q))
@@ -57,18 +60,18 @@ int main(int argc, char **argv)
 			// 	std::cout << "invalid " << std::endl;
 			
 
-			std::cout << "-------------------- WITHOUT FCL --------------------" << std::endl;
-			bool valid = ss->isValid(q);
-			std::cout << "Is valid: " << (valid ? "true" : "false") << std::endl;
-			float d_c = ss->getDistance(q); if (d_c == 0) d_c = -1;
-			std::cout << "Distance: " << d_c << std::endl;
+			// std::cout << "-------------------- WITHOUT FCL --------------------" << std::endl;
+			// bool valid = ss->isValid(q);
+			// std::cout << "Is valid: " << (valid ? "true" : "false") << std::endl;
+			// float d_c = ss->getDistance(q); if (d_c == 0) d_c = -1;
+			// std::cout << "Distance: " << d_c << std::endl;
 
-			std::cout << "-------------------- WITH FCL -----------------------" << std::endl;
-			bool valid_FCL = ss_FCL->isValid(q);
-			std::cout << "Is valid: " << (valid_FCL ? "true" : "false") << std::endl;
-			float d_c_FCL = ss_FCL->getDistance(q);
-			// float d_c_FCL = std::get<0>(ss_FCL->getDistanceAndPlanes(q));
-			std::cout << "Distance: " << d_c_FCL << std::endl;
+			// std::cout << "-------------------- WITH FCL -----------------------" << std::endl;
+			// bool valid_FCL = ss_FCL->isValid(q);
+			// std::cout << "Is valid: " << (valid_FCL ? "true" : "false") << std::endl;
+			// float d_c_FCL = ss_FCL->getDistance(q);
+			// // float d_c_FCL = std::get<0>(ss_FCL->getDistanceAndPlanes(q));
+			// std::cout << "Distance: " << d_c_FCL << std::endl;
 			
 			// if (valid != valid_FCL)
 			// 	throw std::domain_error("DIFFERENT ISVALID");

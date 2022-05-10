@@ -90,8 +90,8 @@ std::tuple<base::StateSpace::Status, std::shared_ptr<std::vector<std::shared_ptr
         std::shared_ptr<base::State> q_temp = ss->newState(q_new);
         tie(status, q_new) = extendSpine(q_temp, q_e, d_c);
 		q_new_list->emplace_back(q_new);
-        // d_c = getDistanceUnderestimation(q_new, q->getPlanes());
-		d_c = getDistance(q_new); 	// If you want to use real distance
+        d_c = getDistanceUnderestimation(q_new, q->getPlanes());
+		// d_c = getDistance(q_new); 	// If you want to use real distance
         if (d_c < RBTConnectConfig::D_CRIT || status == base::StateSpace::Status::Reached)
             break;
     }

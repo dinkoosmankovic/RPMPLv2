@@ -131,7 +131,7 @@ class Xarm6(RealVectorSpace):
 
     def show(self, q=None, obstacles=None, use_collision=False):
         cfg = self.get_config(q)
-        #print(cfg)
+        # print(cfg)
         if use_collision:
             fk = self.robot.collision_trimesh_fk(cfg=cfg)
         else:
@@ -141,6 +141,8 @@ class Xarm6(RealVectorSpace):
         # adding robot to the scene
         for tm in fk:
             pose = fk[tm]
+            # print(pose)
+            # print(" ")
             mesh = pyrender.Mesh.from_trimesh(tm, smooth=False)
             scene.add(mesh, pose=pose)
 

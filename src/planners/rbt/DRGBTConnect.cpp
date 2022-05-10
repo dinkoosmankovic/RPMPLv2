@@ -54,13 +54,13 @@ bool planning::rbt::DRGBTConnect::solve()
         {
             idx = predefined_path->size();
             if (predefined_path->empty())   // If the initial path was not found, random states are added
-                addRandomSpines(Horizon::size);
+                addRandomStates(Horizon::size);
             else                            // At least 'goal' remains in the horizon
                 Horizon::states.emplace_back(predefined_path->back());
         }
 
-        Horizon::states_good = Horizon::states;
-        Horizon::states_bad = {};
+        // Horizon::states_good = Horizon::states;
+        // Horizon::states_bad = {};
         Horizon::q_next = Horizon::states[0];
         updateHorizon();
         Horizon::q_next = getNextState();
@@ -120,14 +120,12 @@ bool planning::rbt::DRGBTConnect::solve()
                 {
                     LOG(INFO) << "New path is not found. ";
                     replanning = true;
-                    Horizon::states_good.clear();
-                    Horizon::states_bad.clear();
                     for (int i = 0; i < Horizon::size; i++)
                     {
                         if (Horizon::weights[i] == 0)   // It is a bad state
-                            Horizon::states_bad.emplace_back(Horizon::states[i]);
+                            Horizon::status[i] = Horizon::Status::bad;
                         else
-                            Horizon::states_good.emplace_back(Horizon::states[i]);
+                            Horizon::status[i] = Horizon::Status::good;
                     }
                 }
             }
@@ -152,41 +150,77 @@ bool planning::rbt::DRGBTConnect::solve()
 void planning::rbt::DRGBTConnect::updateHorizon()
 {
     float d_c = getDistance(Horizon::q_current);
+    int num_lateral_spines = 2 * ss->getDimensions() - 2;
     Horizon::size = std::min((int) std::floor(DRGBTConnectConfig::INIT_HORIZON_SIZE * (1 + RBTConnectConfig::D_CRIT / d_c)),
-                             5 * ss->getDimensions() * DRGBTConnectConfig::INIT_HORIZON_SIZE);
+                             5 * ss->getDimensions() * DRGBTConnectConfig::INIT_HORIZON_SIZE) + num_lateral_spines;
     
-    Horizon::states_not_in_path.clear();
-    Horizon::states = Horizon::states_good;
-    if (Horizon::states_good.size() > Horizon::size)    // Surplus states are deleted. Best states holds priority.
-        Horizon::states.resize(Horizon::size);
-    else if (Horizon::states_good.size() + Horizon::states_bad.size() > Horizon::size)
-        Horizon::states_bad.resize(Horizon::size - Horizon::states_good.size());
+    int num_good_states = 0;
+    int num_bad_states = 0;
+    for (int i = 0; i < Horizon::size; i++)
+        (Horizon::status[i] == Horizon::Status::good) ? num_good_states++ : num_bad_states++;
+        
+    if (num_good_states + num_bad_states > Horizon::size)
+        Horizon::shorten();
     else    // If 'Horizon::size' has increased, or little states exist, then random/lateral states are added
-        addRandomSpines(Horizon::size - Horizon::states_good.size() - Horizon::states_bad.size());
+        addRandomStates(Horizon::size - num_good_states - num_bad_states);
 
     // Bad states are modified
-    if (Horizon::states_bad.size() > 0)
-        addWeightedSpines(Horizon::states_bad.size(), Horizon::states_bad, true);
+    // if (num_bad_states > 0)
+    //     addWeightedStates(Horizon::states_bad, true);
 
     // Lateral spines are added
-    float num_lateral_spines = 2 * ss->getDimensions() - 2;
-    Horizon::size += num_lateral_spines;
-    addLateralSpines(num_lateral_spines);
+    addLateralStates(num_lateral_spines);
 
-    int num = -1;    // Number of added spines
-    while (++num < Horizon::size)
+    int idx = -1;
+    while (++idx < Horizon::size)
     {
+        base::StateSpace::Status status;
+        std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list;
+        tie(status, q_new_list) = extendGenSpine(Horizon::q_current, Horizon::states[idx]);
         
+        // Critical state is modified
+        if (getDistance(q_new_list->back()) < RBTConnectConfig::D_CRIT && !ss->isEqual(q_new_list->back(), goal))
+        {
+            addWeightedStates({q_new_list->back()}, false, idx);
+            tie(status, q_new_list) = extendGenSpine(Horizon::q_current, Horizon::states[idx]);
+        }
+
+        Horizon::states_reached.emplace_back(q_new_list->back());
     }
 
 
-    Horizon::states_good.clear();
-    Horizon::states_bad.clear();
+    // Horizon::states_good.clear();
+    // Horizon::states_bad.clear();
 
     
 }
 
-void planning::rbt::DRGBTConnect::addRandomSpines(int num)
+void planning::rbt::DRGBTConnect::Horizon::replace(std::shared_ptr<base::State> q, int idx)
+{
+
+}
+
+// Shorten the horizon to the size of 'Horizon::size'. Surplus states are deleted, and best states holds priority
+void planning::rbt::DRGBTConnect::Horizon::shorten()
+{
+    for (int i = size - 1; i >= 0; i--)
+    {
+        if (status[i] == Status::bad)
+        {
+            states.erase(states.begin() + i);
+            states_reached.erase(states_reached.begin() + i);
+            status.erase(status.begin() + i);
+            in_path.erase(in_path.begin() + i);
+            d_c.erase(d_c.begin() + i);
+            d_c_previous.erase(d_c_previous.begin() + i);
+            weights.erase(weights.begin() + i);
+        }
+        if (states.size() == size)
+            break;
+    }
+}
+
+void planning::rbt::DRGBTConnect::addRandomStates(int num)
 {
     std::shared_ptr<base::State> q_rand;
     for (int i = 0; i < num; i++)
@@ -195,11 +229,10 @@ void planning::rbt::DRGBTConnect::addRandomSpines(int num)
         saturateSpine(Horizon::q_current, q_rand);
         pruneSpine(Horizon::q_current, q_rand);
         Horizon::states.emplace_back(q_rand);
-        Horizon::states_not_in_path.emplace_back(q_rand);
     }
 }
 
-void planning::rbt::DRGBTConnect::addLateralSpines(int num)
+void planning::rbt::DRGBTConnect::addLateralStates(int num)
 {
     if (ss->getDimensions() == 2)   // In 2D C-space only two possible lateral spines exist
     {
@@ -213,30 +246,28 @@ void planning::rbt::DRGBTConnect::addLateralSpines(int num)
             saturateSpine(Horizon::q_current, q_new);
             pruneSpine(Horizon::q_current, q_new);
             Horizon::states.emplace_back(q_new);
-            Horizon::states_not_in_path.emplace_back(q_new);
         }
         if (num > 2)    // If more than two spines are required, add ('num' - 2) random spines
-            addRandomSpines(num - 2); 
+            addRandomStates(num - 2); 
     }
     else
     {
-        for (int idx = 0; idx < ss->getDimensions(); idx++)
+        for (int k = 0; k < ss->getDimensions(); k++)
         {
-            if (Horizon::q_next->getCoord(idx) != Horizon::q_current->getCoord(idx))
+            if (Horizon::q_next->getCoord(k) != Horizon::q_current->getCoord(k))
             {
                 std::shared_ptr<base::State> q_new;
                 float coord;
                 for (int i = 0; i < num; i++)
                 {
                     q_new = ss->randomState(Horizon::q_current);
-                    coord = Horizon::q_current->getCoord(idx) + q_new->getCoord(idx) -
+                    coord = Horizon::q_current->getCoord(k) + q_new->getCoord(k) -
                             (Horizon::q_next->getCoord() - Horizon::q_current->getCoord()).dot(q_new->getCoord()) /
-                            (Horizon::q_next->getCoord(idx) - Horizon::q_current->getCoord(idx));
-                    q_new->setCoord(coord, idx);
+                            (Horizon::q_next->getCoord(k) - Horizon::q_current->getCoord(k));
+                    q_new->setCoord(coord, k);
                     saturateSpine(Horizon::q_current, q_new);
                     pruneSpine(Horizon::q_current, q_new);
                     Horizon::states.emplace_back(q_new);
-                    Horizon::states_not_in_path.emplace_back(q_new);
                 }
                 break;
             }                
@@ -245,27 +276,29 @@ void planning::rbt::DRGBTConnect::addLateralSpines(int num)
     
 }
 
-// Add 'num' random states with oriented weight around states 'Q' ('orientation' = true) or around '-Q' ('orientation' = false)
-void planning::rbt::DRGBTConnect::addWeightedSpines(int num, std::vector<std::shared_ptr<base::State>> &Q, bool orientation)
+// Add random states with oriented weight around 'states' ('orientation' = true) or around '-states' ('orientation' = false)
+void planning::rbt::DRGBTConnect::addWeightedStates(const std::vector<std::shared_ptr<base::State>> &states, bool orientation, int idx)
 {
     float a_norm;
     Eigen::VectorXf vec;
     std::shared_ptr<base::State> q_new;
-    for (int i = 0; i < num; i++)
+    for (int i = 0; i < states.size(); i++)
     {
-        a_norm = (Q[i]->getCoord() - Horizon::q_current->getCoord()).norm();
+        a_norm = (states[i]->getCoord() - Horizon::q_current->getCoord()).norm();
         vec = Eigen::VectorXf::Random(ss->getDimensions()) * a_norm / std::sqrt(ss->getDimensions() - 1);
         vec(0) = (vec(0) > 0) ? 1 : -1;
         vec(0) *= std::sqrt(a_norm * a_norm - vec.tail(ss->getDimensions() - 1).squaredNorm());
         if (orientation)
-            q_new = ss->newState(Q[i]->getCoord() + vec);
+            q_new = ss->newState(states[i]->getCoord() + vec);
         else
-            q_new = ss->newState(2 * Horizon::q_current->getCoord() - Q[i]->getCoord() + vec);
+            q_new = ss->newState(2 * Horizon::q_current->getCoord() - states[i]->getCoord() + vec);
         
         saturateSpine(Horizon::q_current, q_new);
         pruneSpine(Horizon::q_current, q_new);
-        Horizon::states.emplace_back(q_new);
-        Horizon::states_not_in_path.emplace_back(q_new);
+        if (idx == -1)
+            Horizon::states.emplace_back(q_new);
+        else
+            Horizon::states[idx + i] = q_new;
     }
 }
 
