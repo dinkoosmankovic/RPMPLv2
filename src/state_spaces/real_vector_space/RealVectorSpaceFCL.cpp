@@ -55,7 +55,7 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 		for (size_t j = 0; j < env->getParts().size(); ++j)
 		{
 			collision_manager_robot->clear();
-			collision_manager_env->clear();			
+			collision_manager_env->clear();
 			collision_manager_robot->registerObject(robot->getParts()[i].get());
 			collision_manager_env->registerObject(env->getParts()[j].get());
 			collision_manager_robot->setup();

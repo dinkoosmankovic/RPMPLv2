@@ -48,6 +48,7 @@ bool planning::rbt::RGBMTStar::solve()
     float cost;
     planner_info->setNumIterations(0);
     planner_info->setNumStates(2);
+    planner_info->addCostConvergence({INFINITY, INFINITY});
 
     while (true)
     {
