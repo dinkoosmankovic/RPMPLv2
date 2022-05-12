@@ -11,6 +11,12 @@ void PlannerInfo::addIterationTime(float time)
 	iterations_times.emplace_back(time);
 }
 
+void PlannerInfo::addStateTimes(const std::vector<float> &state_times)
+{
+	for (int i = 0; i < state_times.size(); i++)
+		PlannerInfo::state_times.emplace_back(state_times[i]);
+}
+
 void PlannerInfo::addCostConvergence(const std::vector<float> &cost_convergence)
 {
 	for (int i = 0; i < cost_convergence.size(); i++)

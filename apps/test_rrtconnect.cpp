@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 	}
 	catch (std::runtime_error const &e)
 	{
-		std::cout << e.what() << std::endl;
+		LOG(INFO) << e.what() << std::endl;
 		return -1;
 	}
 
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 		{
 			std::vector<std::shared_ptr<base::State>> path = planner->getPath();
 			for (int i = 0; i < path.size(); i++)
-				std::cout << path.at(i)->getCoord().transpose() << std::endl;
+				LOG(INFO) << path.at(i)->getCoord().transpose() << std::endl;
 		}
 		planner->outputPlannerData("/tmp/plannerData.log", true);
 		

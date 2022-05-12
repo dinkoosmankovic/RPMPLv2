@@ -11,16 +11,18 @@ class PlannerInfo
 {
 protected:
 	std::vector<float> iterations_times;
+	std::vector<float> state_times;
 	float planning_time;
 	size_t num_collision_queries;
 	size_t num_distance_queries;
 	size_t num_states;
 	size_t num_iterations;
-	std::vector<float> cost_convergence;		// Cost convergence rate (cost-state curve)
+	std::vector<float> cost_convergence;		// Cost vs state convergence rate (cost-state curve)
 	bool success_state = false;					// Did planner succeed to find a solution?
 
 public:
 	void setIterationsTimes(const std::vector<float> &iterations_times_) { iterations_times = iterations_times_; }
+	void setStateTimes(const std::vector<float> &state_times_) { state_times = state_times_; }
 	void setPlanningTime(float planning_time_) { planning_time = planning_time_; }
 	void setNumCollisionQueries(size_t num_collision_queries_) { num_collision_queries = num_collision_queries_; }
 	void setNumDistanceQueries(size_t num_distance_queries_) { num_distance_queries = num_distance_queries_; }
@@ -28,7 +30,8 @@ public:
 	void setNumIterations(size_t num_iterations_) { num_iterations = num_iterations_; }
 	void setSuccessState(bool success_state_) { success_state = success_state_; }
 
-	const std::vector<float> &getIterationsTimesOfExecution() const { return iterations_times; }
+	const std::vector<float> &getIterationsTimes() const { return iterations_times; }
+	const std::vector<float> &getStateTimes() const { return state_times; }
 	float getPlanningTime() const { return planning_time; }
 	size_t getNumCollisionQueries() const { return num_collision_queries; }
 	size_t getNumDistanceQueries() const { return num_distance_queries; }
@@ -38,6 +41,7 @@ public:
 	bool getSuccessState() const { return success_state; }
 
 	void addIterationTime(float time);
+	void addStateTimes(const std::vector<float> &state_times);
 	void addCostConvergence(const std::vector<float> &cost_convergence);
 	void clearPlannerInfo();
 

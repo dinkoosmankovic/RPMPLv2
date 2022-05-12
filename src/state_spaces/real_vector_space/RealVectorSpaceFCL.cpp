@@ -68,10 +68,10 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 			planes->at(j).col(i) << distance_data.result.nearest_points[1],
 									distance_data.result.nearest_points[0] - distance_data.result.nearest_points[1];
 
-			// std::cout << "(i, j) = (" << i << ", " << j << ")" << std::endl;
-			// std::cout << "d_c = " << distance_data.result.min_distance << std::endl;
-			// std::cout << "NP robot: " << distance_data.result.nearest_points[0].transpose() << std::endl;
-			// std::cout << "NP env:   " << distance_data.result.nearest_points[1].transpose() << std::endl;
+			// LOG(INFO) << "(i, j) = (" << i << ", " << j << ")" << std::endl;
+			// LOG(INFO) << "d_c = " << distance_data.result.min_distance << std::endl;
+			// LOG(INFO) << "NP robot: " << distance_data.result.nearest_points[0].transpose() << std::endl;
+			// LOG(INFO) << "NP env:   " << distance_data.result.nearest_points[1].transpose() << std::endl;
 		}
 	}
 	return {min_dist, planes};

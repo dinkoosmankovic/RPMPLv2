@@ -24,7 +24,7 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 	if (!model.initFile(robot_desc))
     	throw std::runtime_error("Failed to parse urdf file");
 	
-	std::cout << model.getName() << std::endl;
+	LOG(INFO) << model.getName() << std::endl;
 	std::vector<urdf::LinkSharedPtr > links;
 	model.getLinks(links);
 
@@ -46,14 +46,14 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 							   links[i]->visual->origin.position.z);
 			
 			CollisionGeometryPtr fclBox(new fcl::Boxf(box->dim.x, box->dim.y, box->dim.z));
-			//std::cout << "origin: " << origin << std::endl;
+			//LOG(INFO) << "origin: " << origin << std::endl;
 			
 			init_poses.emplace_back(KDL::Frame(origin));
 			parts.emplace_back(new fcl::CollisionObjectf(fclBox, fcl::Transform3f()));
 			radii.emplace_back(box->dim.y / 2);
 		}
 	}
-	//std::cout << "constructor----------------------\n";
+	//LOG(INFO) << "constructor----------------------\n";
 	robot_tree.getChain("base_link", "tool", robot_chain);
 	Eigen::Vector2f state; state << 0.0, 0.0;
 	setState(std::make_shared<base::RealVectorSpaceState>(state));
@@ -117,12 +117,12 @@ void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
 	for (size_t i = 0; i < parts.size(); ++i)
 	{
 		tf = framesFK->at(i);
-		//std::cout << tf.p << "\n" << tf.M << "\n++++++++++++++++++++++++\n";
+		//LOG(INFO) << tf.p << "\n" << tf.M << "\n++++++++++++++++++++++++\n";
 						
-		//std::cout << "fcl\n";
+		//LOG(INFO) << "fcl\n";
 		parts[i]->setTransform(KDL2fcl(tf));
 		parts[i]->computeAABB(); 
-		//std::cout << parts[i]->getAABB().min_ <<"\t;\t" << parts[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
+		//LOG(INFO) << parts[i]->getAABB().min_ <<"\t;\t" << parts[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
 	}
 }
 

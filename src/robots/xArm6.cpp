@@ -74,7 +74,7 @@ robots::xARM6::xARM6(std::string robot_desc)
 			init_poses.emplace_back(link_frame);
 		}
 	}
-	//std::cout << "constructor----------------------\n";
+	//LOG(INFO) << "constructor----------------------\n";
 	setState(std::make_shared<base::RealVectorSpaceState>(Eigen::VectorXf::Zero(6)));
 }
 
@@ -172,16 +172,16 @@ void robots::xARM6::setState(std::shared_ptr<base::State> q_)
 	for (size_t i = 0; i < parts.size(); ++i)
 	{
 		tf = framesFK->at(i);
-		// std::cout << "kdl\n" << tf.p << "\n" << tf.M << "\n++++++++++++++++++++++++\n";
+		// LOG(INFO) << "kdl\n" << tf.p << "\n" << tf.M << "\n++++++++++++++++++++++++\n";
 		// fcl::Transform3f tf_fcl = KDL2fcl(tf);
-		// std::cout << "fcl\n" << tf_fcl.translation().transpose() << "\t;\n" << tf_fcl.linear() << "\n..................................\n";
+		// LOG(INFO) << "fcl\n" << tf_fcl.translation().transpose() << "\t;\n" << tf_fcl.linear() << "\n..................................\n";
 		
 		parts[i]->setTransform(KDL2fcl(tf));
 		parts[i]->computeAABB(); 
-		// std::cout << parts[i]->getAABB().min_ <<"\t;" << std::endl;
-		// std::cout << parts[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
-		// std::cout << (parts[i]->getAABB().max_ - parts[i]->getAABB().min_).transpose() <<"\t;" << std::endl;
-		// std::cout << ((parts[i]->getAABB().min_ + parts[i]->getAABB().max_) / 2).transpose() << std::endl << "*******************" << std::endl;
+		// LOG(INFO) << parts[i]->getAABB().min_ <<"\t;" << std::endl;
+		// LOG(INFO) << parts[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
+		// LOG(INFO) << (parts[i]->getAABB().max_ - parts[i]->getAABB().min_).transpose() <<"\t;" << std::endl;
+		// LOG(INFO) << ((parts[i]->getAABB().min_ + parts[i]->getAABB().max_) / 2).transpose() << std::endl << "*******************" << std::endl;
 	}
 }
 
@@ -219,7 +219,7 @@ void robots::xARM6::test()
 		fcl::DistanceRequest<float> request;
 		fcl::DistanceResult<float> result;
 		fcl::distance(parts[i].get(), ob.get(), request, result);
-		std::cout << parts[i]->getAABB().min_ <<"\t;\t" << parts[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
-		std::cout << "distance from " << i+1 << ": " << result.min_distance << std::endl;
+		LOG(INFO) << parts[i]->getAABB().min_ <<"\t;\t" << parts[i]->getAABB().max_ << std::endl << "*******************" << std::endl;
+		LOG(INFO) << "distance from " << i+1 << ": " << result.min_distance << std::endl;
 	}
 }

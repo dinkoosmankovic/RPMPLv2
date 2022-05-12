@@ -49,18 +49,19 @@ bool planning::rbt::RGBMTStar::solve()
     planner_info->setNumIterations(0);
     planner_info->setNumStates(2);
     planner_info->addCostConvergence({INFINITY, INFINITY});
+    planner_info->addStateTimes({0, 0});
 
     while (true)
     {
 		// LOG(INFO) << "Iteration: " << planner_info->getNumIterations();
-		LOG(INFO) << "Num. states: " << planner_info->getNumStates();
-        // std::cout << "Num. main: " << num_states[0] + num_states[1] << "\t "
+		// LOG(INFO) << "Num. states: " << planner_info->getNumStates();
+        // LOG(INFO) << "Num. main: " << num_states[0] + num_states[1] << "\t "
         //           << "Num. local: " << planner_info->getNumStates() - num_states[0] - num_states[1] << std::endl;
         
 		q_rand = getRandomState();
         if (planner_info->getNumStates() > 2 * (num_states[0] + num_states[1]))     // If local trees contain more states than main trees
         {
-            // std::cout << "Standard RGBT extension ............ " << std::endl;
+            // LOG(INFO) << "Standard RGBT extension ............ " << std::endl;
             tree_idx = (num_states[0] < num_states[1]) ? 0 : 1;
             q_near = trees[tree_idx]->getNearestState(q_rand);
             // q_near = trees[tree_idx]->getNearestStateV2(q_rand);
@@ -71,7 +72,7 @@ bool planning::rbt::RGBMTStar::solve()
         else
         {
             // Adding a new local tree rooted in 'q_rand'
-            // std::cout << "Adding a new local tree" << std::endl;
+            // LOG(INFO) << "Adding a new local tree" << std::endl;
             trees.emplace_back(std::make_shared<base::Tree>(base::Tree("local", tree_new_idx)));
             trees[tree_new_idx]->setKdTree(std::make_shared<base::KdTree>(ss->getDimensions(), *trees[tree_new_idx], 
                                                                           nanoflann::KDTreeSingleIndexAdaptorParams(10)));
@@ -189,6 +190,7 @@ bool planning::rbt::RGBMTStar::solve()
 		    numStatesTotal += num_states[idx];
         }
         planner_info->addCostConvergence(std::vector<float>(numStatesTotal - planner_info->getNumStates(), cost_opt));
+        planner_info->addStateTimes(std::vector<float>(numStatesTotal - planner_info->getNumStates(), planner_info->getIterationsTimes().back()));
         planner_info->setNumStates(numStatesTotal);
 		if (checkStoppingCondition(q_con0, q_con1, time_start))
 		{
@@ -417,9 +419,10 @@ void planning::rbt::RGBMTStar::outputPlannerData(std::string filename, bool outp
             for (int i = 0; i < trees.size(); i++)
                 output_file << *trees[i];
 
-            output_file << "Cost convergence: " << std::endl;
+            output_file << "Cost convergence: \n" 
+                        << "Num. states\tCost [rad]\t\tTime [ms]" << std::endl;
             for (int i = 0; i < planner_info->getNumStates(); i++)
-                output_file << i << "\t" << planner_info->getCostConvergence()[i] << std::endl;
+                output_file << i+1 << "\t\t" << planner_info->getCostConvergence()[i] << "\t\t" << planner_info->getStateTimes()[i] << std::endl;
 
 			if (path.size() > 0)
 			{

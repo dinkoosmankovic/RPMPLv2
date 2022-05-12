@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 	}
 	catch (std::runtime_error const &e)
 	{
-		std::cout << e.what() << std::endl;
+		LOG(INFO) << e.what() << std::endl;
 		return -1;
 	}
 

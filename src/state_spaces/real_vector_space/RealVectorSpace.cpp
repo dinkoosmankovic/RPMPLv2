@@ -128,10 +128,10 @@ bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q)
 		{
             if (env->getParts()[j]->getNodeType() == fcl::NODE_TYPE::GEOM_BOX)
 			{
-				// std::cout << "(i,j) = (" <<i<<","<<j<<")" << std::endl;
-				// std::cout << "r(i): " << robot->getRadius(i) << std::endl;
-				// std::cout << "XYZ(i):   " << XYZ->col(i).transpose() << std::endl;
-				// std::cout << "XYZ(i+1): " << XYZ->col(i+1).transpose() << std::endl;
+				// LOG(INFO) << "(i,j) = (" <<i<<","<<j<<")" << std::endl;
+				// LOG(INFO) << "r(i): " << robot->getRadius(i) << std::endl;
+				// LOG(INFO) << "XYZ(i):   " << XYZ->col(i).transpose() << std::endl;
+				// LOG(INFO) << "XYZ(i+1): " << XYZ->col(i+1).transpose() << std::endl;
 				fcl::AABB AABB = env->getParts()[j]->getAABB();
 				Eigen::VectorXf obs(6);
 				obs << AABB.min_[0], AABB.min_[1], AABB.min_[2], AABB.max_[0], AABB.max_[1], AABB.max_[2];
@@ -366,25 +366,25 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 				obs << AABB.min_[0], AABB.min_[1], AABB.min_[2], AABB.max_[0], AABB.max_[1], AABB.max_[2];
                 tie(distances(i, j), nearest_pts) = distanceCapsuleToBox(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
 
-				// std::cout << "(i, j) = (" <<i<<", "<<j<<"). " << std::endl;
-				// std::cout << "Distance:    " << distances(i, j) << std::endl;
+				// LOG(INFO) << "(i, j) = (" <<i<<", "<<j<<"). " << std::endl;
+				// LOG(INFO) << "Distance:    " << distances(i, j) << std::endl;
 				// // float dQP;
 				// // std::shared_ptr<Eigen::MatrixXf> nearest_ptsQP;
                 // // tie(dQP, nearest_ptsQP) = distanceCapsuleToBoxQP(XYZ->col(i), XYZ->col(i+1), robot->getRadius(i), obs);
-				// // std::cout << "Distance QP: " << dQP << std::endl;
+				// // LOG(INFO) << "Distance QP: " << dQP << std::endl;
 				// // if (std::abs(distances(i, j) - dQP) > 1e-3)
-				// // 	std::cout << "****************************** DIFFERENT *************************************" << std::endl;
+				// // 	LOG(INFO) << "****************************** DIFFERENT *************************************" << std::endl;
 				// if (nearest_pts != nullptr)
 				// {
-				// 	std::cout << "Nearest point link:    " << nearest_pts->col(0).transpose() << std::endl;
-				// 	// std::cout << "Nearest point link QP: " << nearest_ptsQP->col(0).transpose() << std::endl;
-				// 	std::cout << "Nearest point obs:     " << nearest_pts->col(1).transpose() << std::endl;
-				// 	// std::cout << "Nearest point obs QP:  " << nearest_ptsQP->col(1).transpose() << std::endl;
+				// 	LOG(INFO) << "Nearest point link:    " << nearest_pts->col(0).transpose() << std::endl;
+				// 	// LOG(INFO) << "Nearest point link QP: " << nearest_ptsQP->col(0).transpose() << std::endl;
+				// 	LOG(INFO) << "Nearest point obs:     " << nearest_pts->col(1).transpose() << std::endl;
+				// 	// LOG(INFO) << "Nearest point obs QP:  " << nearest_ptsQP->col(1).transpose() << std::endl;
 				// }
-				// std::cout << "r(i): " << robot->getRadius(i) << std::endl;
-				// std::cout << "XYZ(i):   " << XYZ->col(i).transpose() << std::endl;
-				// std::cout << "XYZ(i+1): " << XYZ->col(i+1).transpose() << std::endl;
-				// std::cout << "-------------------------------------------------------------" << std::endl;
+				// LOG(INFO) << "r(i): " << robot->getRadius(i) << std::endl;
+				// LOG(INFO) << "XYZ(i):   " << XYZ->col(i).transpose() << std::endl;
+				// LOG(INFO) << "XYZ(i+1): " << XYZ->col(i+1).transpose() << std::endl;
+				// LOG(INFO) << "-------------------------------------------------------------" << std::endl;
             }
 			// else if (env->getParts()[j]->getNodeType() == fcl::NODE_TYPE::GEOM_SPHERE)
 			// {
