@@ -155,7 +155,7 @@ bool planning::rbt::RGBMTStar::solve()
                         if (cost < cost_opt)    // The optimal connection between main trees is stored
                         {
                             cost_opt = cost;      
-                            LOG(INFO) << "Cost after " << planner_info->getNumStates() << " states is: " << cost_opt;
+                            // LOG(INFO) << "Cost after " << planner_info->getNumStates() << " states is: " << cost_opt;
                             if (tree_idx == 0)
                             {
                                 q_con0 = q_new;
