@@ -1,16 +1,11 @@
 //
-// Created by dinko on 16.3.21..
+// Created by dinko on 16.3.21.
+// Modified by nermin on 18.02.22.
 //
 
 #include "RRTConnect.h"
-#include <glog/log_severity.h>
-#include <glog/logging.h>
-#include <nanoflann.hpp>
-#include <chrono>
-#include <fstream>
-#include "RealVectorSpaceState.h"
 #include "ConfigurationReader.h"
-
+#include <glog/log_severity.h>
 #include <glog/logging.h>
 
 planning::rrt::RRTConnect::RRTConnect(std::shared_ptr<base::StateSpace> ss_) : AbstractPlanner(ss_)
@@ -19,7 +14,7 @@ planning::rrt::RRTConnect::RRTConnect(std::shared_ptr<base::StateSpace> ss_) : A
 }
 
 planning::rrt::RRTConnect::RRTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_,
-									  std::shared_ptr<base::State> goal_) : AbstractPlanner(ss_), ss(ss_)
+									  std::shared_ptr<base::State> goal_) : AbstractPlanner(ss_)
 {
 	start = start_;
 	goal = goal_;
@@ -30,197 +25,133 @@ planning::rrt::RRTConnect::RRTConnect(std::shared_ptr<base::StateSpace> ss_, std
 
 planning::rrt::RRTConnect::~RRTConnect()
 {
-	startTree.emptyTree();
-	goalTree.emptyTree();
-	path.empty();
+	trees[0]->clearTree();
+	trees[1]->clearTree();
+	path.clear();
 }
 
 void planning::rrt::RRTConnect::initPlanner()
 {
 	LOG(INFO) << "Initializing planner...";
-	plannerInfo = std::make_shared<PlannerInfo>();
-	step = RRTConnectConfig::EPS_STEP;
-	startTree.setTreeName("start");
-	goalTree.setTreeName("goal");
-	startTree.emptyTree();
-	goalTree.emptyTree();
-	startTree.getStates()->emplace_back(start);
-	goalTree.getStates()->emplace_back(goal);
-	prepareKdTrees();
-
-	//std::shared_ptr<base::State> test = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({M_PI/2,0}));
-
-	//LOG(INFO) << "Min distance start: " << ss->getDistance(start);
-	//LOG(INFO) << "Min distance goal: " << ss->getDistance(goal);
-	//LOG(INFO) << "Min distance test: " << ss->getDistance(test);
+	planner_info = std::make_shared<PlannerInfo>();
+	trees = {std::make_shared<base::Tree>("start", 0),
+			 std::make_shared<base::Tree>("goal", 1)};
+	trees[0]->setKdTree(std::make_shared<base::KdTree>(ss->getDimensions(), *trees[0], nanoflann::KDTreeSingleIndexAdaptorParams(10)));
+	trees[1]->setKdTree(std::make_shared<base::KdTree>(ss->getDimensions(), *trees[1], nanoflann::KDTreeSingleIndexAdaptorParams(10)));
+	trees[0]->upgradeTree(start, nullptr);
+	trees[1]->upgradeTree(goal, nullptr);
 	LOG(INFO) << "Planner initialized!";
 }
 
 bool planning::rrt::RRTConnect::solve()
 {
-	// start the clock
-	auto start = std::chrono::steady_clock::now();
-	// T_start and T_goal are initialized
-	std::shared_ptr<base::Tree> Ta = std::make_shared<base::Tree>(startTree);
-	std::shared_ptr<base::Tree> Tb = std::make_shared<base::Tree>(goalTree);
-	int MAX_ITER = RRTConnectConfig::MAX_ITER;
-	for (size_t i = 0; i < MAX_ITER; ++i)
+	auto time_start = std::chrono::steady_clock::now(); 	// Start the clock
+	int tree_idx = 0;  	// Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal
+	std::shared_ptr<base::State> q_rand, q_near, q_new;
+	base::StateSpace::Status status;
+	planner_info->setNumIterations(0);
+    planner_info->setNumStates(2);
+
+	while (true)
 	{
-		std::shared_ptr<base::State> q_rand = getSs()->randomState();
-		//LOG(INFO) << "Iteration: " << i;
-		//LOG(INFO) << "Tree: " << Ta->getTreeName();
-		if (extend(Ta, q_rand) != Trapped)
-		{
-			//LOG(INFO) << "Not Trapped";
-			std::shared_ptr<base::State> q_new = Ta->getStates()->back();
-			//LOG(INFO) << "Trying to connect to: " << q_new->getCoord().transpose() << " from " << Tb->getTreeName();
-			if (connect(Tb, q_new) == Reached)
-			{
-				LOG(INFO) << "Connected after " << i + 1 << " iterations!";
-				plannerInfo->setNumIterations(i + 1);
-				plannerInfo->setSuccessState(true);
-				computePath();
-				auto end = std::chrono::steady_clock::now();
-				double elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-				plannerInfo->setPlanningTime(elapsed);
-				return true;
-			}
+		/* Extend */
+		// LOG(INFO) << "Iteration: " << planner_info->getNumIterations();
+		LOG(INFO) << "Num. states: " << planner_info->getNumStates();
+		q_rand = getSS()->randomState();
+		// LOG(INFO) << q_rand->getCoord().transpose();
+		q_near = trees[tree_idx]->getNearestState(q_rand);
+		// LOG(INFO) << "Tree: " << trees[tree_idx]->getTreeName();
+		tie(status, q_new) = extend(q_near, q_rand);
+		// LOG(INFO) << "Status: " << status;
+		if (status != base::StateSpace::Status::Trapped)
+			trees[tree_idx]->upgradeTree(q_new, q_near);
+
+		tree_idx = 1 - tree_idx; 	// Swapping trees
+
+		/* Connect */
+		if (status != base::StateSpace::Status::Trapped)
+		{	
+			// LOG(INFO) << "Not Trapped";
+			// LOG(INFO) << "Trying to connect to: " << q_new->getCoord().transpose() << " from " << trees[tree_idx]->getTreeName();
+			q_near = trees[tree_idx]->getNearestState(q_new);
+			status = connect(trees[tree_idx], q_near, q_new);
 		}
-		/*if (i % 2 == 0)
+		
+		/* Planner info */
+        planner_info->setNumIterations(planner_info->getNumIterations() + 1);
+		planner_info->addIterationTime(getElapsedTime(time_start));
+		planner_info->setNumStates(trees[0]->getNumStates() + trees[1]->getNumStates());
+		if (checkStoppingCondition(status, time_start))
 		{
-			Ta = std::make_shared<base::Tree>(startTree);
-			Tb = std::make_shared<base::Tree>(goalTree);
-			Kd_Ta = startKdTree;
-			Kd_Tb = goalKdTree;
-		}
-		else
-		{
-			Tb = std::make_shared<base::Tree>(startTree);
-			Ta = std::make_shared<base::Tree>(goalTree);
-			Kd_Ta = goalKdTree;
-			Kd_Tb = startKdTree;
-		}*/
-		std::swap(Ta, Tb);
-		//LOG(INFO) << "Trees swapped!";
-		auto end = std::chrono::steady_clock::now();
-		double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-		plannerInfo->addIterationTime(elapsed);
-		plannerInfo->setNumNodes(Ta->getStates()->size() + Tb->getStates()->size());
-	}
-	plannerInfo->setSuccessState(false);
-	return false;
-}
-
-base::Tree planning::rrt::RRTConnect::getStartTree() const
-{
-	return startTree;
-}
-
-base::Tree planning::rrt::RRTConnect::getGoalTree() const
-{
-	return goalTree;
-}
-
-void planning::rrt::RRTConnect::addNode(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q)
-{
-	int K = tree->getStates()->size();
-	tree->getStates()->emplace_back(q);
-	tree->getKdTree()->addPoints(K, K);
-}
-
-planning::rrt::Status planning::rrt::RRTConnect::extend(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q_rand)
-{
-	std::shared_ptr<base::State> q_near = get_q_near(tree, q_rand);
-	std::shared_ptr<base::State> q_new = ss->interpolate(q_near, q_rand, step);
-	//LOG(INFO) << q_near->getCoord().transpose();
-	if (q_new != nullptr && ss->isValid(q_near, q_new))
-	{
-		q_new->setParent(q_near);
-		addNode(tree, q_new);
-		if (ss->equal(q_new, q_rand))
-		{
-			//LOG(INFO) << "Reached";
-			return planning::rrt::Reached;
-		}
-		else
-		{
-			//LOG(INFO) << "Advanced.";
-			return planning::rrt::Advanced;
+			planner_info->setPlanningTime(getElapsedTime(time_start));
+			return status == base::StateSpace::Status::Reached ? true : false;
 		}
 	}
-	return planning::rrt::Trapped;
 }
 
-planning::rrt::Status planning::rrt::RRTConnect::connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q)
+base::Tree planning::rrt::RRTConnect::getTree(int tree_idx) const
 {
-	//LOG(INFO) << "Inside connect.";
-	Status s = planning::rrt::Advanced;
-	int num_ext = 0; 
-	int MAX_EXTENSION_STEPS = RRTConnectConfig::MAX_EXTENSION_STEPS;
-	while (s == planning::rrt::Advanced && num_ext++ < MAX_EXTENSION_STEPS)
+	return *trees[tree_idx];
+}
+
+std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> planning::rrt::RRTConnect::extend
+	(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
+{
+	base::StateSpace::Status status;
+	std::shared_ptr<base::State> q_new;
+	tie(status, q_new) = ss->interpolate(q, q_e, RRTConnectConfig::EPS_STEP);
+	if (status != base::StateSpace::Status::Trapped && ss->isValid(q, q_new))
+		return {status, q_new};
+	else
+		return {base::StateSpace::Status::Trapped, q};
+}
+
+base::StateSpace::Status planning::rrt::RRTConnect::connect
+	(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
+{
+	// LOG(INFO) << "Inside connect.";
+	std::shared_ptr<base::State> q_new = q;
+	base::StateSpace::Status status = base::StateSpace::Status::Advanced;
+	int num_ext = 0;
+	while (status == base::StateSpace::Status::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
 	{
-		s = extend(tree, q);
+		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
+		tie(status, q_new) = extend(q_temp, q_e);
+		if (status != base::StateSpace::Status::Trapped)
+			tree->upgradeTree(q_new, q_temp);
 	}
-	//LOG(INFO) << "extended.";
-	return s;
+	// LOG(INFO) << "extended.";
+	return status;
 }
 
-std::shared_ptr<base::State> planning::rrt::RRTConnect::get_q_near(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q)
+void planning::rrt::RRTConnect::computePath(std::shared_ptr<base::State> q_con0, std::shared_ptr<base::State> q_con1)
 {
-	const size_t num_results = 1;
-	size_t ret_index;
-	double out_dist_sqr;
-	nanoflann::KNNResultSet<double> resultSet(num_results);
-	resultSet.init(&ret_index, &out_dist_sqr);
-	std::vector<double> vec(q->getCoord().data(),
-							q->getCoord().data() + q->getCoord().rows() *
-												   q->getCoord().cols());
-	double *vec_c = &vec[0];
-	tree->getKdTree()->findNeighbors(resultSet, vec_c, nanoflann::SearchParams(10));
-	vec_c = nullptr;
-	return tree->getStates()->at(ret_index);
-}
-
-void planning::rrt::RRTConnect::prepareKdTrees()
-{
-	int dim = ss->getDimensions();
-	//startKdTree = std::make_shared<base::KdTree>( dim, startTree, nanoflann::KDTreeSingleIndexAdaptorParams(10) );
-	//goalKdTree = std::make_shared<base::KdTree>( dim, goalTree, nanoflann::KDTreeSingleIndexAdaptorParams(10) );
-	//startKdTree->addPoints(0, 0);
-	//goalKdTree->addPoints(0, 0);
-
-	startTree.setKdTree(std::make_shared<base::KdTree>( dim, startTree, nanoflann::KDTreeSingleIndexAdaptorParams(10) ));
-	goalTree.setKdTree(std::make_shared<base::KdTree>( dim, goalTree, nanoflann::KDTreeSingleIndexAdaptorParams(10) ));
-
-	startTree.getKdTree()->addPoints(0,0);
-	goalTree.getKdTree()->addPoints(0,0);
+	path.clear();
+	if (q_con0 == nullptr)
+		q_con0 = trees[0]->getStates()->back();
 	
-}
-
-void planning::rrt::RRTConnect::computePath()
-{
-	path.empty();
-	std::shared_ptr<base::State> current = startTree.getStates()->back();
-	while (current->getParent() != nullptr)
+	while (q_con0->getParent() != nullptr)
 	{
-		path.emplace_back(current);
-		current = current->getParent();
+		path.emplace_back(q_con0->getParent());
+		q_con0 = q_con0->getParent();
 	}
-	path.emplace_back(current);
 	std::reverse(path.begin(), path.end());
-	current = goalTree.getStates()->back();
-	while (current != nullptr)
+
+	if (q_con1 == nullptr)
+		q_con1 = trees[1]->getStates()->back();
+	
+	while (q_con1 != nullptr)
 	{
-		path.emplace_back(current);
-		current = current->getParent();
+		path.emplace_back(q_con1);
+		q_con1 = q_con1->getParent();
 	}
 }
 
 void planning::rrt::RRTConnect::clearPlanner()
 {
-	startTree.emptyTree();
-	goalTree.emptyTree();
-	path.empty();
+	for (int i = 0; i < trees.size(); i++)
+		trees[i]->clearTree();
+	path.clear();
 	initPlanner();
 }
 
@@ -229,51 +160,63 @@ const std::vector<std::shared_ptr<base::State>> &planning::rrt::RRTConnect::getP
 	return path;
 }
 
-bool planning::rrt::RRTConnect::isTerminationConditionSatisfied() const
+// Get elapsed time in milliseconds
+float planning::rrt::RRTConnect::getElapsedTime(std::chrono::steady_clock::time_point &time_start)
 {
-	false;
+	auto end = std::chrono::steady_clock::now();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(end - time_start).count();
 }
 
-void planning::rrt::RRTConnect::outputPlannerData(std::string filename, bool outputStatesAndPaths, bool appendOutput) const
+bool planning::rrt::RRTConnect::checkStoppingCondition(base::StateSpace::Status status, std::chrono::steady_clock::time_point &time_start)
 {
-	std::ofstream outputFile;
-	std::ios_base::openmode mode = std::ofstream::out;
+	if (status == base::StateSpace::Status::Reached)
+	{
+		planner_info->setSuccessState(true);
+		computePath();
+		return true;
+	}
+	else if (planner_info->getNumStates() >= RRTConnectConfig::MAX_NUM_STATES || 
+			 getElapsedTime(time_start) >= RRTConnectConfig::MAX_PLANNING_TIME ||
+			 planner_info->getNumIterations() >= RRTConnectConfig::MAX_NUM_ITER)
+	{
+		planner_info->setSuccessState(false);
+		return true;
+	}
+	return false;
+}
 
-	if (appendOutput)
+void planning::rrt::RRTConnect::outputPlannerData(std::string filename, bool output_states_and_paths, bool append_output) const
+{
+	std::ofstream output_file;
+	std::ios_base::openmode mode = std::ofstream::out;
+	if (append_output)
 		mode = std::ofstream::app;
 
-	outputFile.open(filename, mode);
-	if (outputFile.is_open())
+	output_file.open(filename, mode);
+	if (output_file.is_open())
 	{
-		outputFile << "Space Type: " << ss->getStateSpaceType() << std::endl;
-		outputFile << "Space dimension: " << ss->getDimensions() << std::endl;
-		outputFile << "Planner type:\t" << "RRTConnect" << std::endl;
-		outputFile << "Planner info: \n";
-		outputFile << "\t\t Succesfull:\t" << plannerInfo->getSuccessState() << std::endl;
-		outputFile << "\t\t Number of iterations:\t" << plannerInfo->getNumIterations() << std::endl;
-		outputFile << "\t\t Number of nodes:\t" << plannerInfo->getNumNodes() << std::endl;
-		outputFile << "\t\t Planning time(us):\t" << plannerInfo->getPlanningTime() << std::endl;
-		if (outputStatesAndPaths)
+		output_file << "Space Type:      " << ss->getStateSpaceType() << std::endl;
+		output_file << "Space dimension: " << ss->getDimensions() << std::endl;
+		output_file << "Planner type:    " << "RRTConnect" << std::endl;
+		output_file << "Planner info:\n";
+		output_file << "\t Succesfull:           " << (planner_info->getSuccessState() ? "yes" : "no") << std::endl;
+		output_file << "\t Number of iterations: " << planner_info->getNumIterations() << std::endl;
+		output_file << "\t Number of states:     " << planner_info->getNumStates() << std::endl;
+		output_file << "\t Planning time [ms]:   " << planner_info->getPlanningTime() << std::endl;
+		if (output_states_and_paths)
 		{
-			outputFile << startTree;
-			outputFile << goalTree;
+			output_file << *trees[0];
+			output_file << *trees[1];
 			if (path.size() > 0)
 			{
-				outputFile << "Path:" << std::endl;
+				output_file << "Path:" << std::endl;
 				for (int i = 0; i < path.size(); i++)
-				{
-					outputFile << path.at(i) << std::endl;
-				}
+					output_file << path.at(i) << std::endl;
 			}
 		}
-		outputFile << std::string(25, '-') << std::endl;
-		outputFile.close();
+		output_file << std::string(25, '-') << std::endl;		
+		output_file.close();
 	}
 	else
-	{
 		throw "Cannot open file"; // std::something exception perhaps?
-	}
 }
-
-
-

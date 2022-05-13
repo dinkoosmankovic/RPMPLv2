@@ -6,9 +6,11 @@
 #include <iostream>
 #include <string>
 
-std::ostream& operator<<(std::ostream &os, const StateSpaceType& v) {
+std::ostream &operator<<(std::ostream &os, const StateSpaceType &v) 
+{
 	std::string strss;
-	switch(v) {
+	switch(v) 
+	{
 		case StateSpaceType::Abstract:
 			strss = "Abstract Type"; break;
 		case StateSpaceType::RealVectorSpace:
@@ -16,9 +18,9 @@ std::ostream& operator<<(std::ostream &os, const StateSpaceType& v) {
 		case StateSpaceType::RealVectorSpaceFCL:
 			strss = "RealVectorSpaceFCL Type"; break;
 		case StateSpaceType::SO2:
-			strss =  "SO2 Type"; break;
+			strss = "SO2 Type"; break;
 		case StateSpaceType::SO3:
-			strss =  "SO3 Type"; break;
+			strss = "SO3 Type"; break;
 	}
 	return os << strss;
 }

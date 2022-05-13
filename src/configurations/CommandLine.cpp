@@ -3,13 +3,10 @@
 #include <algorithm>
 #include <iomanip>
 
-CommandLine::CommandLine(std::string description)
-    : mDescription(std::move(description))
-{
-}
 
-void CommandLine::addArgument(std::vector<std::string> const &flags,
-                              Value const &value, std::string const &help)
+CommandLine::CommandLine(std::string description) : mDescription(std::move(description)) {}
+
+void CommandLine::addArgument(std::vector<std::string> const &flags, Value const &value, std::string const &help)
 {
     mArguments.emplace_back(Argument{flags, value, help});
 }

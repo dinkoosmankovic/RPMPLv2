@@ -1,53 +1,35 @@
 //
-// Created by dinko on 7.3.21..
+// Created by dinko on 7.3.21.
+// Modified by nermin on 18.02.22.
 //
 
 #include "RealVectorSpaceState.h"
 
-#include <glog/logging.h>
-
 base::RealVectorSpaceState::RealVectorSpaceState(Eigen::VectorXf state_)
-{	
+{
 	dimensions = state_.size();
 	coord = state_;
-	stateSpaceType = StateSpaceType::RealVectorSpace;
-	setParent(nullptr);
-}
-
-base::RealVectorSpaceState::~RealVectorSpaceState()
-{
+	setStateSpaceType(StateSpaceType::RealVectorSpace);
 }
 
 base::RealVectorSpaceState::RealVectorSpaceState(int dimensions_)
 {
 	dimensions = dimensions_;
 	coord = Eigen::VectorXf::Random(dimensions);
-	stateSpaceType = StateSpaceType::RealVectorSpace;
+	setStateSpaceType(StateSpaceType::RealVectorSpace);
 }
 
-base::RealVectorSpaceState::RealVectorSpaceState(base::RealVectorSpaceState* state)
+// Make a copy of 'state'
+base::RealVectorSpaceState::RealVectorSpaceState(std::shared_ptr<base::State> state)
 {
-	dimensions = state->dimensions;
-	coord = state->coord;
-	stateSpaceType = StateSpaceType::RealVectorSpace;
-}
-
-void base::RealVectorSpaceState::setDimensions(int dimensions)
-{
-	RealVectorSpaceState::dimensions = dimensions;
-}
-
-const Eigen::VectorXf &base::RealVectorSpaceState::getCoord() const
-{
-	return coord;
-}
-
-void base::RealVectorSpaceState::setCoord(const Eigen::VectorXf &coord)
-{
-	RealVectorSpaceState::coord = coord;
-}
-
-int base::RealVectorSpaceState::getDimension() const
-{
-	return dimensions;
+	dimensions = state->getDimensions();
+	coord = state->getCoord();
+	tree_idx = state->getTreeIdx();
+	idx = state->getIdx();
+	d_c = state->getDistance();
+	cost = state->getCost();
+	planes = state->getPlanes();
+	setStateSpaceType(StateSpaceType::RealVectorSpace);
+	setParent(state->getParent());
+	setChildren(state->getChildren());
 }

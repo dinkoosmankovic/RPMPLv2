@@ -1,3 +1,4 @@
+import math
 from urdfpy import URDF
 import pyrender
 from state_spaces.real_vector_space import RealVectorSpace
@@ -80,6 +81,23 @@ class Planar2DOF(RealVectorSpace):
 
         # print("obs:", self.env_cm._objs["obstacle_0"]["obj"].getTransform())
         return self.robot_cm.in_collision_other(self.env_cm)
+
+    def distance_to_obstacles(self, q):
+        cfg = self.get_config(q)
+        fk = self.robot.link_fk(cfg=cfg)
+        # adding robot to the scene
+        for i, tm in enumerate(fk):
+            if i == 3:
+                break
+            pose = fk[tm]
+            init_pose = self.init_poses[i]
+            self.robot_cm.set_transform(tm.name, np.matmul(pose, init_pose))
+            print(tm.name)
+            print(np.matmul(pose, init_pose))
+
+        # print("obs:", self.env_cm._objs["obstacle_0"]["obj"].getTransform())
+        min_dist, names, data = self.robot_cm.min_distance_other(self.env_cm, return_names=True, return_data=True)
+        return (min_dist, names, data.point(names[0]), data.point(names[1]))
 
     def distance(self, q):
         cfg = self.get_config(q)
@@ -176,7 +194,20 @@ class Planar2DOF(RealVectorSpace):
 
     def animate(self, q_traj=None, obstacles=None, fps=10.0, image_file=None):
         import time
-        cfgs = [self.get_config(q) for q in q_traj]
+        # cfgs = [self.get_config(q) for q in q_traj]
+        cfgs = []
+        idx = 0
+        eps = 0.1
+        while idx < len(q_traj) - 1:
+            q1 = np.array(q_traj[idx])
+            q2 = np.array(q_traj[idx + 1])
+            D = np.linalg.norm(q2 - q1)
+            cfgs.append(self.get_config(q1))
+            for i in range(0, math.floor(D / eps)):
+                q1 += eps * (q2 - q1) / np.linalg.norm(q2 - q1)
+                cfgs.append(self.get_config(q1))
+            idx += 1
+        cfgs.append(self.get_config(q2))
 
         # Create the scene
         fk = self.robot.link_fk(cfg=cfgs[0])

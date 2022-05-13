@@ -8,23 +8,24 @@
 #include <vector> 
 #include <memory>
 
-#include <fcl/collision.h>
-#include <fcl/broadphase/broadphase.h>
+#include "fcl/fcl.h"
 
 namespace env
 {
-	typedef std::pair<fcl::Box, fcl::Transform3f> Obstacle;
+	typedef std::pair<fcl::Box<float>, fcl::Transform3<float>> Obstacle;
+	
 	class Environment
 	{
 	public:
-		Environment(const std::string& filename); // filename with description
-        Environment(const fcl::Box& box, const fcl::Transform3f& tf);
+		Environment(const std::string &filename); // filename with description
+        Environment(const fcl::Box<float> &box, const fcl::Transform3<float> &tf);
 		Environment(std::vector<Obstacle> obs);
 		~Environment();
-		//virtual void computeForwardKinematics(std::shared_ptr<base::State> q) = 0;
-		const std::vector<std::shared_ptr<fcl::CollisionObject> >& getParts() const;
+		const std::vector<std::shared_ptr<fcl::CollisionObject<float>>> &getParts() const { return parts; }
+		void updateObstacles();
+
 	private:
-		std::vector<std::shared_ptr<fcl::CollisionObject> > parts_;
+		std::vector<std::shared_ptr<fcl::CollisionObject<float>>> parts;
 	};
 }
 #endif //RPMPL_ABSTRACTPLANNER_H

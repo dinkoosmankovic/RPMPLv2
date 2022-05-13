@@ -36,28 +36,29 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   endif()
 endif()
 
-find_package(fcl 0.5 REQUIRED)
-
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(kdl_parser REQUIRED)
-
 find_package(orocos_kdl REQUIRED)
 include_directories(${OROCOS_KDL_INCLUDE_DIR})
 
 find_package(yaml-cpp REQUIRED)
 
+find_package(fcl 0.7 REQUIRED)
+
 add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
 add_subdirectory(external/googletest)
+#add_subdirectory(external/fcl)
+add_subdirectory(external/QuadProgpp)
 
-set(PROJECT_LIBRARIES gtest glog::glog nanoflann kdl_parser orocos-kdl fcl yaml-cpp)
+set(PROJECT_LIBRARIES gtest glog::glog nanoflann kdl_parser orocos-kdl fcl ccd yaml-cpp quadprog)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data/
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
 
-     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/visualizer/
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/visualizer/
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/visualizer)
 
 # The compiled library code is here

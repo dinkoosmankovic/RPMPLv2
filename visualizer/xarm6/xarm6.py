@@ -1,3 +1,4 @@
+import math
 from urdfpy import URDF
 import pyrender
 from trimesh.creation import box, cylinder
@@ -130,7 +131,7 @@ class Xarm6(RealVectorSpace):
 
     def show(self, q=None, obstacles=None, use_collision=False):
         cfg = self.get_config(q)
-        #print(cfg)
+        # print(cfg)
         if use_collision:
             fk = self.robot.collision_trimesh_fk(cfg=cfg)
         else:
@@ -140,6 +141,8 @@ class Xarm6(RealVectorSpace):
         # adding robot to the scene
         for tm in fk:
             pose = fk[tm]
+            # print(pose)
+            # print(" ")
             mesh = pyrender.Mesh.from_trimesh(tm, smooth=False)
             scene.add(mesh, pose=pose)
 
@@ -159,7 +162,20 @@ class Xarm6(RealVectorSpace):
 
     def animate(self, q_traj=None, obstacles=None, fps=10.0, image_file=None):
         import time
-        cfgs = [self.get_config(q) for q in q_traj]
+        # cfgs = [self.get_config(q) for q in q_traj]
+        cfgs = []
+        idx = 0
+        eps = 0.1
+        while idx < len(q_traj) - 1:
+            q1 = np.array(q_traj[idx])
+            q2 = np.array(q_traj[idx + 1])
+            D = np.linalg.norm(q2 - q1)
+            cfgs.append(self.get_config(q1))
+            for i in range(0, math.floor(D / eps)):
+                q1 += eps * (q2 - q1) / np.linalg.norm(q2 - q1)
+                cfgs.append(self.get_config(q1))
+            idx += 1
+        cfgs.append(self.get_config(q2))            
 
         # Create the scene
         fk = self.robot.visual_trimesh_fk(cfg=cfgs[0])
@@ -180,14 +196,18 @@ class Xarm6(RealVectorSpace):
         scene.add(pyrender.Mesh.from_trimesh(table))
 
         cam = pyrender.PerspectiveCamera(yfov=np.pi / 3.0, aspectRatio=1.414)
-        init_cam_pose = np.array([[ 0.86595061,  0.28855402, -0.81698498, -0.76317579],\
-                                  [-0.49829176,  0.567737,   -1.3105419,  -1.27955438],\
-                                  [ 0.04283523,  0.77098072,  1.27083259,  1.64027461],\
-                                   [ 0.,          0.,          0.,          1.        ] ]
+        # init_cam_pose = np.array([[ 0.86595061,  0.28855402, -0.81698498, -0.76317579],\
+        #                           [-0.49829176,  0.567737,   -1.3105419,  -1.27955438],\
+        #                           [ 0.04283523,  0.77098072,  1.27083259,  1.64027461],\
+        #                           [ 0.,          0.,          0.,          1.        ]])
 
-        )
-        #init_cam_pose[2, 3] = 2.0
-        #init_cam_pose[2, 2] = 2.0
+        init_cam_pose = np.array([[1, 0, 0, 0],\
+                                  [0, 1, 0, 0],\
+                                  [0, 0, 1, 2],\
+                                  [0, 0, 0, 1]])
+
+        # init_cam_pose[2, 3] = 2.0
+        # init_cam_pose[2, 2] = 2.0
         scene.add(cam, pose=init_cam_pose)
 
         # adding obstacles to the scene

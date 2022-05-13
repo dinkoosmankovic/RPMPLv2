@@ -1,7 +1,21 @@
 obstacles:
   - box:
-      dim: [0.5, 0.5, 0.5]
+      dim: [0.5, 0.5, 1]
       trans: [0.55, 0.55, 0.5]
+      rot: [0, 0, 0, 0]
+  - box:
+      dim: [0.5, 0.5, 1]
+      trans: [-0.55, 0.55, 0.5]
+      rot: [0, 0, 0, 0]
+  - box:
+      dim: [0.5, 0.5, 1]
+      trans: [0.55, -0.55, 0.5]
+      rot: [0, 0, 0, 0]
+  - box:
+      dim: [0.5, 0.5, 1]
+      trans: [-0.55, -0.55, 0.5]
+      rot: [0, 0, 0, 0]
+
 robot:
   type: "xARM6"
   urdf: "data/xarm6/xarm6.urdf"

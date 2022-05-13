@@ -4,7 +4,8 @@
 
 #include "RRTConnectConfig.h"
 
-int RRTConnectConfig::MAX_ITER = 1000;
-int RRTConnectConfig::MAX_EXTENSION_STEPS = 20;
-float RRTConnectConfig::EPS_STEP = 0.2;
-float RRTConnectConfig::MAX_EXECUTION_TIME = 10.0;
+unsigned long RRTConnectConfig::MAX_NUM_ITER        = 1e9;
+int RRTConnectConfig::MAX_EXTENSION_STEPS           = 15;
+float RRTConnectConfig::EPS_STEP                    = 0.1;
+unsigned long RRTConnectConfig::MAX_NUM_STATES      = 5000;
+float RRTConnectConfig::MAX_PLANNING_TIME           = 600000;

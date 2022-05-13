@@ -10,8 +10,9 @@ if __name__ == "__main__":
     #    print(p)
     #print(path)
     #visualize(path[0], "test.png")
-    with open('../data/xarm6/scenario4.yaml', 'r') as file:
-        obstacles = yaml.safe_load(file)     
-    
-    visualize(path, obstacles=obstacles, image_file="easy_xarm6.gif", is_trajectory=True, fps=10.0)
+    with open('../data/xarm6/scenario2.yaml', 'r') as file:
+        obstacles = yaml.safe_load(file)
+    visualize(path, obstacles=obstacles, image_file=None, is_trajectory=True, fps=10.0)
+    # path = [1.5708, 1.5708, -2.3562, 0, 0, 0]
+    # visualize(path, obstacles=obstacles, image_file=None, is_trajectory=False, fps=10.0)
     

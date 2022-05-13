@@ -2,13 +2,9 @@
 #include "State.h"
 #include "RRTConnect.h"
 
-benchmark::Benchmark::Benchmark(/* args */)
-{
-}
+benchmark::Benchmark::Benchmark(/* args */) {}
 
-benchmark::Benchmark::~Benchmark()
-{
-}
+benchmark::Benchmark::~Benchmark() {}
 
 void benchmark::Benchmark::addBenchmarkContext(benchmark::BenchmarkContext context)
 {
@@ -22,14 +18,15 @@ void benchmark::Benchmark::runContext(BenchmarkContext context)
     if (context.second == "RRTConnect")
     {
         planning::rrt::RRTConnect planner(ss, scenario.getStart(), scenario.getGoal());
-        for (size_t i = 0; i < numberOfRuns; ++i)
+        for (size_t i = 0; i < number_of_runs; ++i)
         {
             bool res = planner.solve();
-            planner.outputPlannerData(benchmarkFile, false, true);
+            planner.outputPlannerData(benchmark_file, false, true);
         }
         planner.clearPlanner();
     }
 }
+
 void benchmark::Benchmark::runBenchmark()
 {
     for (size_t i = 0; i < contexts.size(); ++i)

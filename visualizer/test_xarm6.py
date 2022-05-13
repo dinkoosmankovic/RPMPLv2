@@ -20,7 +20,7 @@ fk = robot.link_fk()
 print(fk[robot.links[0]])
 
 print(type(obstacles[0]))
-xarm6.show(obstacles=obstacles, q=[-pi/2, 0, 0, 0, 0, 0] ,use_collision=False)
+xarm6.show(obstacles=obstacles, q=[-pi/2, 0, 0, 0, 0, 0], use_collision=False)
 
 ret = xarm6.is_valid(q=[-pi/2, 0, 0, 0, 0, 0])
 print(ret)

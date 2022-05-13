@@ -1,9 +1,10 @@
+#include <AbstractPlanner.h>
 #include <RRTConnect.h>
 #include <iostream>
-#include <RealVectorSpace.h>
+#include <Scenario.h>
 #include <ConfigurationReader.h>
+#include <CommandLine.h>
 #include <glog/logging.h>
-
 
 
 int main(int argc, char **argv)
@@ -13,31 +14,67 @@ int main(int argc, char **argv)
 	FLAGS_logtostderr = true;
 	LOG(INFO) << "GLOG successfully initialized!";
 
-	ConfigurationReader::initConfiguration();
-	
-	std::shared_ptr<base::StateSpace> ss = std::make_shared<base::RealVectorSpace>(2);
-	LOG(INFO) << "Dimensions: " << ss->getDimensions();
-	LOG(INFO) << "StateSpace Type: " << ss->getStateSpaceType();
-	std::shared_ptr<base::State> start = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({0,0}));
-	std::shared_ptr<base::State> goal = std::make_shared<base::RealVectorSpaceState>(Eigen::Vector2f({100,100}));
+	// std::string scenario_file_path = "data/planar_2dof/scenario_easy.yaml";
+	// std::string scenario_file_path = "data/planar_2dof/scenario1.yaml";
+	// std::string scenario_file_path = "data/planar_2dof/scenario2.yaml";
+	// std::string scenario_file_path = "data/xarm6/scenario_easy.yaml";
+	// std::string scenario_file_path = "data/xarm6/scenario1.yaml";
+	std::string scenario_file_path = "data/xarm6/scenario2.yaml";
+
+	bool print_help = false;
+	CommandLine args("Test RRTConnect command line parser.");
+	args.addArgument({"-s", "--scenario"}, &scenario_file_path, "Scenario .yaml description file path");
+	args.addArgument({"-h", "--help"},     &print_help,
+      "Use --scenario scenario_yaml_file_path to "
+      "run with different scenario");
+
 	try
 	{
-		std::unique_ptr<planning::rrt::RRTConnect> planner = std::make_unique<planning::rrt::RRTConnect>(ss, start, goal);
+		args.parse(argc, argv);
+	}
+	catch (std::runtime_error const &e)
+	{
+		LOG(INFO) << e.what() << std::endl;
+		return -1;
+	}
+
+	// When oPrintHelp was set to true, we print a help message and exit.
+	if (print_help)
+	{
+		args.printHelp();
+		return 0;
+	}
+
+	ConfigurationReader::initConfiguration();
+	scenario::Scenario scenario(scenario_file_path);
+	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
+
+	LOG(INFO) << "Using scenario: " << scenario_file_path;
+	LOG(INFO) << "Environment parts: " << scenario.getEnvironment()->getParts().size();
+	LOG(INFO) << "Dimensions: " << ss->getDimensions();
+	LOG(INFO) << "State space type: " << ss->getStateSpaceType();
+	LOG(INFO) << "Start: " << scenario.getStart();
+	LOG(INFO) << "Goal: " << scenario.getGoal();
+	
+	try
+	{
+		std::unique_ptr<planning::AbstractPlanner> planner = std::make_unique<planning::rrt::RRTConnect>(ss, scenario.getStart(), scenario.getGoal());
 		bool res = planner->solve();
-		LOG(INFO) << "RRTConnect planning finished.";
+		LOG(INFO) << "RRTConnect planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
+		LOG(INFO) << "Number of states: " << planner->getPlannerInfo()->getNumStates();
+		LOG(INFO) << "Number of iterations: " << planner->getPlannerInfo()->getNumIterations();
+		LOG(INFO) << "Planning time: " << planner->getPlannerInfo()->getPlanningTime() << " [ms]";
+			
 		if (res)
 		{
 			std::vector<std::shared_ptr<base::State>> path = planner->getPath();
-			/*for (int i = 0; i < path.size(); i++)
-			{
-				std::cout << path.at(i) << std::endl;
-			}*/
-			// TODO: read from configuration yaml
-			planner->outputPlannerData("/tmp/plannerData.log", true);
+			for (int i = 0; i < path.size(); i++)
+				LOG(INFO) << path.at(i)->getCoord().transpose() << std::endl;
 		}
-
+		planner->outputPlannerData("/tmp/plannerData.log", true);
+		
 	}
-	catch (std::domain_error& e)
+	catch (std::domain_error &e)
 	{
 		LOG(ERROR) << e.what();
 	}

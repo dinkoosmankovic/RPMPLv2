@@ -1,0 +1,4 @@
+RBTConnectConfig:
+  D_CRIT: 0.01
+  DELTA: 3.14159
+  NUM_SPINES: 7
