@@ -56,7 +56,7 @@ bool planning::rrt::RRTConnect::solve()
 	{
 		/* Extend */
 		// LOG(INFO) << "Iteration: " << planner_info->getNumIterations();
-		LOG(INFO) << "Num. states: " << planner_info->getNumStates();
+		// LOG(INFO) << "Num. states: " << planner_info->getNumStates();
 		q_rand = getSS()->randomState();
 		// LOG(INFO) << q_rand->getCoord().transpose();
 		q_near = trees[tree_idx]->getNearestState(q_rand);

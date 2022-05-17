@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 		std::unique_ptr<planning::rrt::RRTConnect> planner = std::make_unique<planning::rrt::RRTConnect>(ss, scenario.getStart(), scenario.getGoal());
 		bool res = planner->solve();
 		LOG(INFO) << "RRTConnect planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
-		LOG(INFO) << "number of nodes: " << planner->getPlannerInfo()->getNumNodes();
+		LOG(INFO) << "number of states: " << planner->getPlannerInfo()->getNumStates();
 			
 		if (res)
 		{

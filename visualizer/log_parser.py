@@ -43,7 +43,10 @@ class LogParser:
         return path_string
 
     def _parse_configuration(self, p):
+        p = p.replace("\t", "")
         line = p.split("; ")
+        # print(p)
+        # print(line)
         p1 = line[0]
         p2 = line[1]
         p1 = p1.replace("(", "")
