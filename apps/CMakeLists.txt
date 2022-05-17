@@ -49,3 +49,7 @@ target_link_libraries(test_rrtconnect_benchmark PUBLIC rpmpl_library ${PROJECT_L
 add_executable(test_fcl_distance test_fcl_distance.cpp)
 target_compile_features(test_fcl_distance PRIVATE cxx_std_17)
 target_link_libraries(test_fcl_distance PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
+
+add_executable(test_ompl_integration test_ompl_integration.cpp)
+target_compile_features(test_ompl_integration PRIVATE cxx_std_17)
+target_link_libraries(test_ompl_integration PUBLIC rpmpl_library ${PROJECT_LIBRARIES} ompl)
