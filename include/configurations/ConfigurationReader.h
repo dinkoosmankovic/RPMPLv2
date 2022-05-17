@@ -11,7 +11,6 @@
 #include "RBTConnectConfig.h"
 #include "RGBTConnectConfig.h"
 #include "RGBMTStarConfig.h"
-#include "DRGBTConnectConfig.h"
 #include "RealVectorSpaceConfig.h"
 
 #include <glog/logging.h>
@@ -26,8 +25,7 @@ public:
         YAML::Node RBTConnectConfigRoot         = YAML::LoadFile("data/configurations/configuration_rbtconnect.yaml");
         YAML::Node RGBTConnectConfigRoot        = YAML::LoadFile("data/configurations/configuration_rgbtconnect.yaml");
         YAML::Node RGBMTStarConfigRoot          = YAML::LoadFile("data/configurations/configuration_rgbmtstar.yaml");
-        YAML::Node DRGBTConnectConfigRoot       = YAML::LoadFile("data/configurations/configuration_drgbtconnect.yaml");
-
+        
         if (RealVectorSpaceConfigRoot["NUM_INTERPOLATION_VALIDITY_CHECKS"].IsDefined())
             RealVectorSpaceConfig::NUM_INTERPOLATION_VALIDITY_CHECKS = RealVectorSpaceConfigRoot["NUM_INTERPOLATION_VALIDITY_CHECKS"].as<int>();
         if (RealVectorSpaceConfigRoot["EQUALITY_THRESHOLD"].IsDefined())
@@ -56,13 +54,6 @@ public:
             
         if (RGBMTStarConfigRoot["RETURN_WHEN_PATH_IS_FOUND"].IsDefined())
             RGBMTStarConfig::RETURN_WHEN_PATH_IS_FOUND = RGBMTStarConfigRoot["RETURN_WHEN_PATH_IS_FOUND"].as<bool>();
-
-        if (DRGBTConnectConfigRoot["INIT_HORIZON_SIZE"].IsDefined())
-            DRGBTConnectConfig::INIT_HORIZON_SIZE = DRGBTConnectConfigRoot["INIT_HORIZON_SIZE"].as<int>();
-        if (DRGBTConnectConfigRoot["WEIGHT_MIN"].IsDefined())
-            DRGBTConnectConfig::WEIGHT_MIN = DRGBTConnectConfigRoot["WEIGHT_MIN"].as<float>();
-        if (DRGBTConnectConfigRoot["WEIGHT_MEAN_MIN"].IsDefined())
-            DRGBTConnectConfig::WEIGHT_MEAN_MIN = DRGBTConnectConfigRoot["WEIGHT_MEAN_MIN"].as<float>();
 
         LOG(INFO) << "Configuration parameters read successfully!";
         

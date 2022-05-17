@@ -1,6 +1,6 @@
 add_executable(test_state_spaces test_state_spaces.cpp)
 target_compile_features(test_state_spaces PRIVATE cxx_std_17)
-target_link_libraries(test_state_spaces PUBLIC rpmpl_library)
+target_link_libraries(test_state_spaces PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
 
 add_executable(test_nanoflann test_nanoflann.cpp)
 target_compile_features(test_nanoflann PRIVATE cxx_std_17)

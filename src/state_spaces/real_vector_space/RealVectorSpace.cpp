@@ -7,7 +7,7 @@
 #include <ostream>
 #include <Eigen/Dense>
 #include "ConfigurationReader.h"
-#include <QuadProg++.hh>
+
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 
@@ -944,55 +944,4 @@ void base::RealVectorSpace::Capsule_Box::checkOtherCases()
 			}      
 		}
 	}
-}
-// -----------------------------------------------------------------------------------------------------------------------------//
-
-// Get distance (and nearest points) between capsule (determined with line segment AB and 'radius') 
-// and box (determined with 'obs = (x_min, y_min, z_min, x_max, y_max, z_max)') using QuadProgPP
-std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> base::RealVectorSpace::distanceCapsuleToBoxQP
-	(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs)
-{
-    std::shared_ptr<Eigen::MatrixXf> nearest_pts = std::make_shared<Eigen::MatrixXf>(3, 2);
-    Eigen::Vector3f AB = B - A;
-    Eigen::Matrix4f G_temp(4, 4); 	G_temp << 	2,       	0,   		0,   		-2*AB(0),
-									 			0,       	2,   		0,  		-2*AB(1),
-									 			0,       	0,  		2,   		-2*AB(2),
-									 			-2*AB(0), 	-2*AB(1), 	-2*AB(2), 	2*AB.squaredNorm();
-    Eigen::Vector4f g0_temp; 		g0_temp << -2 * A, 2 * A.dot(AB);
-	Eigen::MatrixXf CI_temp(8, 4); 	CI_temp << Eigen::MatrixXf::Identity(4, 4), -1 * Eigen::MatrixXf::Identity(4, 4);
-	Eigen::VectorXf ci0_temp(8); 	ci0_temp << -1 * obs.head(3), 0, obs.tail(3), 1;
-	Eigen::Vector4f sol_temp; 		sol_temp << (obs.head(3) + obs.tail(3)) / 2, 0.5;
-
-	quadprogpp::Matrix<double> G(4, 4), CE(4, 0), CI(4, 8);
-  	quadprogpp::Vector<double> g0(4), ce0(0), ci0(8), sol(4);
-	for (int i = 0; i < 4; i++)
-		for (int j = 0; j < 4; j++)
-			G[i][j] = G_temp(i, j);
-
-	for (int i = 0; i < 8; i++)
-		for (int j = 0; j < 4; j++)
-			CI[j][i] = CI_temp(i, j);
-
-	for (int i = 0; i < 4; i++)
-		g0[i] = g0_temp(i);
-
-	for (int i = 0; i < 8; i++)
-		ci0[i] = ci0_temp(i);
-
-	for (int i = 0; i < 4; i++)
-		sol[i] = sol_temp(i);
-
-	// 	minimizes 1/2 x^T G x + x^T g0
-	//  s.t.
-	//  CE^T * x + ce0 =  0
-	//  CI^T * x + ci0 >= 0
-	double sol_val = quadprogpp::solve_quadprog(G, g0, CE, ce0, CI, ci0, sol);
-
-    float d_c = sqrt(sol_val + A.squaredNorm());
-    if (d_c < RealVectorSpaceConfig::EQUALITY_THRESHOLD)
-		return {0, nullptr};
-	
-	nearest_pts->col(0) = A + AB * sol[3];
-	nearest_pts->col(1) << sol[0], sol[1], sol[2];
-	return {d_c - radius, nearest_pts};
 }
