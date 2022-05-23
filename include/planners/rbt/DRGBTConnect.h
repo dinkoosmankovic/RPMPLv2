@@ -20,35 +20,61 @@ namespace planning
 			void outputPlannerData(std::string filename, bool output_states_and_paths = true, bool append_output = false) const override;
 
 		protected:
-            class Horizon
+            class HorizonState
             {
             public:
-                enum Status {good, bad};
+                enum Status {good, bad, critical, goal};
 
-                inline static int size = 0;                                                         // Horizon size that may change during the algorithm execution
-                inline static std::vector<std::shared_ptr<base::State>> states = {};                // All states from the horizon
-                inline static std::vector<std::shared_ptr<base::State>> states_reached = {};        // Reached states from the horizon
-                inline static std::vector<Horizon::Status> status = {};                             // State status: good or bad
-                inline static std::vector<bool> in_path = {};                                       // Whether 'states_reached' are in the predefined path
-                inline static std::vector<float> d_c = {};                                          // Underestimation of distances-to-obstacles for each state from 'states_reached'
-                inline static std::vector<float> d_c_previous = {};                                 // 'd_c' from previous iteration
-                inline static std::vector<float> weights = {};                                      // State weights
-                inline static std::shared_ptr<base::State> q_current = nullptr;                     // Current robot configuration
-                inline static std::shared_ptr<base::State> q_next = nullptr;                        // Next robot configuration
-                inline static float d_max_mean = -1;                                                // Averaged maximal distance-to-obstacles through iterations
-                inline static int idx_next = -1;                                                    // Index of next node from the horizon
-                inline static int idx_previous = -1;                                                // Index of previous node from the horizon
+            private:
+                std::shared_ptr<base::State> state;
+                std::shared_ptr<base::State> state_reached = nullptr;       // Reached state when generating spine from 'q_current' towards 'state'
+                HorizonState::Status status = HorizonState::Status::good;   // Status of 'state_reached': 'good', 'bad', 'critical' or 'goal'
+                int idx_path;                                               // Index of 'state' in the predefined path. It is -1, if 'state' does not belong to the path
+                float d_c = -1;                                             // Underestimation of distance-to-obstacles for 'state_reached'
+                float d_c_previous = -1;                                    // 'd_c' from previous iteration
+                float weight = -1;                                          // Weight in range [0, 1] for 'state_reached'
             
-                static void replace(std::shared_ptr<base::State> q, int idx);
-                static void shorten();
+            public:
+                HorizonState(std::shared_ptr<base::State> state_, bool idx_path_)
+                {
+                    state = state_;
+                    idx_path = idx_path_;
+                }
+                HorizonState() {}
+                ~HorizonState() {}
+
+                inline std::shared_ptr<base::State> getState() const { return state; }
+                inline std::shared_ptr<base::State> getStateReached() const { return state_reached; }
+                inline HorizonState::Status getStatus() const { return status; }
+                inline int getIndexInPath() const { return idx_path; }
+                inline float getDistance() const { return d_c; }
+                inline float getDistancePrevious() const { return d_c_previous; }
+                inline float getWeight() const { return weight; }
+		        inline const Eigen::VectorXf &getCoord() const { return state->getCoord(); }
+		        inline float getCoord(int idx) const { return state->getCoord(idx); }
+
+                inline void setStateReached(std::shared_ptr<base::State> state_reached_) { state_reached = state_reached_; }
+                inline void setStatus(HorizonState::Status status_) { status = status_; }
+                inline void setIndexInPath(int idx_path_) { idx_path = idx_path_; }
+                inline void setDistance(float d_c_) { d_c = d_c_; }
+                inline void setDistancePrevious(float d_c_previous_) { d_c_previous = d_c_previous_; }
+                inline void setWeight(float weight_) { weight = weight_; }
 
             };
-            
-            void updateHorizon();
+
+            std::vector<std::shared_ptr<HorizonState>> horizon;
+            std::shared_ptr<base::State> q_current;                 // Current robot configuration
+            std::shared_ptr<HorizonState> q_next;                   // Next robot configuration
+            std::shared_ptr<HorizonState> q_next_previous;          // Next robot configuration from the previous iteration
+            float d_max_mean = 0;                                   // Averaged maximal distance-to-obstacles through iterations
+                
+            void computeHorizon();
+            void shortenHorizon(int num);
             void addRandomStates(int num);
             void addLateralStates(int num);
-            void addWeightedStates(const std::vector<std::shared_ptr<base::State>> &states, bool orientation, int idx = -1);
-            std::shared_ptr<base::State> getNextState(int idx_previous = -1);
+            void modifyState(std::shared_ptr<HorizonState> &q);
+            void computeReachedState(std::shared_ptr<base::State> q_current, std::shared_ptr<HorizonState> q);
+            void computeNextState();
             bool whetherToReplan();
 
         };
