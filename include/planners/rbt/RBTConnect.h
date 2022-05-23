@@ -23,9 +23,9 @@ namespace planning
 			virtual float getDistance(std::shared_ptr<base::State> q);
 			void saturateSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			void pruneSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
-			std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> extendSpine
+			std::tuple<base::State::Status, std::shared_ptr<base::State>> extendSpine
 				(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float d_c_underest = -1);
-			base::StateSpace::Status connectSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
+			base::State::Status connectSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 		};
 	}
 }

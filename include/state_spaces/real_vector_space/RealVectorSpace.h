@@ -27,7 +27,7 @@ namespace base
 		std::shared_ptr<base::State> newState(std::shared_ptr<base::State> q) override;
 		std::shared_ptr<base::State> newState(const Eigen::VectorXf &state) override;
 		bool isEqual(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
-		std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> interpolate
+		std::tuple<base::State::Status, std::shared_ptr<base::State>> interpolate
 			(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, float step, float D) override;
 		bool isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2) override;
 		virtual bool isValid(const std::shared_ptr<base::State> q) override;

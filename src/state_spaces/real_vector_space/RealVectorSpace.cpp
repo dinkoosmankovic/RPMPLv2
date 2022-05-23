@@ -77,12 +77,12 @@ bool base::RealVectorSpace::isEqual(const std::shared_ptr<base::State> q1, const
 // Interpolate from 'q1' to 'q2' for step 'step'
 // 'D' (optional parameter) is the distance between q1 and q2
 // Return status of interpolation (Advanced, Trapped or Reached) and new state
-std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> base::RealVectorSpace::interpolate
+std::tuple<base::State::Status, std::shared_ptr<base::State>> base::RealVectorSpace::interpolate
 	(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, float step, float D)
 {
 	std::shared_ptr<base::State> q_new = std::make_shared<base::RealVectorSpaceState>(dimensions);
 	Eigen::VectorXf eig;
-	base::StateSpace::Status status;
+	base::State::Status status;
 
 	if (D < 0) 	// D = -1 is the default value
 		D = (q2->getCoord() - q1->getCoord()).norm();
@@ -91,19 +91,19 @@ std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> base::RealVec
 	{
 		eig = (q2->getCoord() - q1->getCoord()) / D;
 		q_new->setCoord(q1->getCoord() + step * eig);
-		status = base::StateSpace::Status::Advanced;
+		status = base::State::Status::Advanced;
 	}
 	else
 	{
 		q_new->setCoord(q2->getCoord());
-		status = base::StateSpace::Status::Reached;
+		status = base::State::Status::Reached;
 	}
 	
 	// Here we check the validity of the motion 'q1' -> 'q_new'
 	if (isValid(q_new))
 		return {status, q_new};
 	else
-		return {base::StateSpace::Status::Trapped, nullptr};
+		return {base::State::Status::Trapped, nullptr};
 }
 
 bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
@@ -112,7 +112,7 @@ bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q1, const
 	float D = (q2->getCoord() - q1->getCoord()).norm();
 	for (float t = 1./numChecks; t <= 1; t += 1./numChecks)
 	{
-		if (std::get<0>(interpolate(q1, q2, t, D)) == base::StateSpace::Status::Trapped)
+		if (std::get<0>(interpolate(q1, q2, t, D)) == base::State::Status::Trapped)
 			return false;
 	}
 	return true;

@@ -7,29 +7,29 @@
 
 base::RealVectorSpaceState::RealVectorSpaceState(Eigen::VectorXf state_)
 {
-	dimensions = state_.size();
-	coord = state_;
 	setStateSpaceType(StateSpaceType::RealVectorSpace);
+	setDimensions(state_.size());
+	setCoord(state_);
 }
 
 base::RealVectorSpaceState::RealVectorSpaceState(int dimensions_)
 {
-	dimensions = dimensions_;
-	coord = Eigen::VectorXf::Random(dimensions);
 	setStateSpaceType(StateSpaceType::RealVectorSpace);
+	setDimensions(dimensions_);
+	setCoord(Eigen::VectorXf::Random(dimensions_));
 }
 
 // Make a copy of 'state'
 base::RealVectorSpaceState::RealVectorSpaceState(std::shared_ptr<base::State> state)
 {
-	dimensions = state->getDimensions();
-	coord = state->getCoord();
-	tree_idx = state->getTreeIdx();
-	idx = state->getIdx();
-	d_c = state->getDistance();
-	cost = state->getCost();
-	planes = state->getPlanes();
 	setStateSpaceType(StateSpaceType::RealVectorSpace);
+	setDimensions(state->getDimensions());
+	setCoord(state->getCoord());
+	setTreeIdx(state->getTreeIdx());
+	setIdx(state->getIdx());
+	setDistance(state->getDistance());
+	setCost(state->getCost());
+	setPlanes(state->getPlanes());
 	setParent(state->getParent());
 	setChildren(state->getChildren());
 }

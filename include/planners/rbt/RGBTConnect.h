@@ -20,9 +20,11 @@ namespace planning
 			virtual void outputPlannerData(std::string filename, bool output_states_and_paths = true, bool append_output = false) const override;
 
 		protected:
-            std::tuple<base::StateSpace::Status, std::shared_ptr<std::vector<std::shared_ptr<base::State>>>> extendGenSpine
+            std::tuple<base::State::Status, std::shared_ptr<std::vector<std::shared_ptr<base::State>>>> extendGenSpine
         		(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
-            base::StateSpace::Status connectGenSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
+			std::tuple<base::State::Status, std::shared_ptr<base::State>> extendGenSpineV2
+				(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
+            base::State::Status connectGenSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
             float getDistance(std::shared_ptr<base::State> q) override;
             float getDistanceUnderestimation(std::shared_ptr<base::State> q, std::shared_ptr<std::vector<Eigen::MatrixXf>> planes);
         };

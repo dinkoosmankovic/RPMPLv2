@@ -19,7 +19,7 @@ bool planning::rbt::RBTConnect::solve()
 	auto time_start = std::chrono::steady_clock::now(); 	// Start the clock
 	int tree_idx = 0;  	// Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal
 	std::shared_ptr<base::State> q_e, q_near, q_new;
-	base::StateSpace::Status status;
+	base::State::Status status;
 	planner_info->setNumIterations(0);
     planner_info->setNumStates(2);
 
@@ -47,14 +47,14 @@ bool planning::rbt::RBTConnect::solve()
 		else	// Distance-to-obstacles is less than d_crit
 		{
 			tie(status, q_new) = extend(q_near, q_e);
-			if (status != base::StateSpace::Status::Trapped)
+			if (status != base::State::Status::Trapped)
 				trees[tree_idx]->upgradeTree(q_new, q_near);
 		}
 
 		tree_idx = 1 - tree_idx;	// Swapping trees
 
 		/* Bur-Connect */
-		if (status != base::StateSpace::Status::Trapped)
+		if (status != base::State::Status::Trapped)
 		{
 			q_near = trees[tree_idx]->getNearestState(q_new);
 			status = connectSpine(trees[tree_idx], q_near, q_new);
@@ -67,7 +67,7 @@ bool planning::rbt::RBTConnect::solve()
 		if (checkStoppingCondition(status, time_start))
 		{
 			planner_info->setPlanningTime(getElapsedTime(time_start));
-			return status == base::StateSpace::Status::Reached ? true : false;
+			return status == base::State::Status::Reached ? true : false;
 		}
     }
 }
@@ -140,13 +140,13 @@ void planning::rbt::RBTConnect::pruneSpine(std::shared_ptr<base::State> q, std::
 // Spine is generated from 'q' towards 'q_e'
 // 'q_new' is the new reached state
 // If 'd_c_underest' is passed, the spine is extended using the underestimation of distance-to-obstacles for 'q'
-std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> planning::rbt::RBTConnect::extendSpine
+std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rbt::RBTConnect::extendSpine
 	(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float d_c_underest)
 {
 	float d_c = (d_c_underest > 0) ? d_c_underest : getDistance(q);
 	float step;
 	float rho = 0;             	// The path length in W-space
-	int k = 1;
+	int counter = 0;
 	int K_max = 5;              // The number of iterations for computing q*
 	std::shared_ptr<base::State> q_new = ss->newState(q->getCoord());
 	std::shared_ptr<Eigen::MatrixXf> XYZ = ss->robot->computeXYZ(q);
@@ -158,30 +158,29 @@ std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> planning::rbt
 		if (step > 1)
 		{
 			q_new->setCoord(q_e->getCoord());
-			return {base::StateSpace::Status::Reached, q_new};
+			return {base::State::Status::Reached, q_new};
 		}
 		else
 			q_new->setCoord(q_new->getCoord() + step * (q_e->getCoord() - q_new->getCoord()));
 		
-		if (k == K_max)
-			return {base::StateSpace::Status::Advanced, q_new};
+		if (++counter == K_max)
+			return {base::State::Status::Advanced, q_new};
 
 		rho = 0;
 		XYZ_new = ss->robot->computeXYZ(q_new);
 		for (int k = 1; k <= ss->robot->getParts().size(); k++)
 			rho = std::max(rho, (XYZ->col(k) - XYZ_new->col(k)).norm());
-		k += 1;
 	}
 }
 
-base::StateSpace::Status planning::rbt::RBTConnect::connectSpine
+base::State::Status planning::rbt::RBTConnect::connectSpine
 	(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
 	float d_c = getDistance(q);
 	std::shared_ptr<base::State> q_new = q;
-	base::StateSpace::Status status = base::StateSpace::Status::Advanced;
+	base::State::Status status = base::State::Status::Advanced;
 	int num_ext = 0;
-	while (status == base::StateSpace::Status::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
+	while (status == base::State::Status::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
 	{
 		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
 		if (d_c > RBTConnectConfig::D_CRIT)
@@ -193,7 +192,7 @@ base::StateSpace::Status planning::rbt::RBTConnect::connectSpine
 		else
 		{
 			tie(status, q_new) = extend(q_temp, q_e);
-			if (status != base::StateSpace::Status::Trapped)
+			if (status != base::State::Status::Trapped)
 				tree->upgradeTree(q_new, q_temp);
 		}
 	}

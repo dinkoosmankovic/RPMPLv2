@@ -26,8 +26,8 @@ namespace planning
             float cost_opt;                              // Cost of the final path
             
 			void initPlanner();
-            std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> 
-                connectGenSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
+            std::tuple<base::State::Status, std::shared_ptr<base::State>> connectGenSpine
+                (std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
             float getCostToCome(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2);
             bool mainTreesReached(std::vector<int> &trees_reached);
             std::shared_ptr<base::State> optimize(std::shared_ptr<base::State> q, std::shared_ptr<base::Tree> tree, 
