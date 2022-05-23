@@ -68,7 +68,7 @@ bool planning::rbt::RGBTConnect::solve()
 	 	planner_info->setNumIterations(planner_info->getNumIterations() + 1);
 		planner_info->addIterationTime(getElapsedTime(time_start));
 		planner_info->setNumStates(trees[0]->getNumStates() + trees[1]->getNumStates());
-		if (checkStoppingCondition(status, time_start))
+		if (checkTerminatingCondition(status, time_start))
 		{
 			planner_info->setPlanningTime(getElapsedTime(time_start));
 			return status == base::State::Status::Reached ? true : false;

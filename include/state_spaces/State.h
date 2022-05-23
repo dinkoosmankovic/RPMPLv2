@@ -37,7 +37,6 @@ namespace base
 		inline StateSpaceType getStateSpaceType() const { return state_space_type; }
 		inline int getDimensions() const { return dimensions; }
 		inline Eigen::VectorXf getCoord() const { return coord; }		// 'coord' is not returned by reference intentionally
-		// inline const Eigen::VectorXf &getCoord() { return coord; }
 		inline float getCoord(int idx) const { return coord(idx); }
 		inline uint getTreeIdx() const { return tree_idx; }
 		inline size_t getIdx() const { return idx; }

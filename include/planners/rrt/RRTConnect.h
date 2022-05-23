@@ -24,7 +24,7 @@ namespace planning
 			virtual bool solve() override;
 			base::Tree getTree(int tree_idx) const;
 			const std::vector<std::shared_ptr<base::State>> &getPath() const override;
-			bool checkStoppingCondition(base::State::Status status, std::chrono::steady_clock::time_point &time_start);
+			bool checkTerminatingCondition(base::State::Status status, std::chrono::steady_clock::time_point &time_start);
 			virtual void outputPlannerData(std::string filename, bool output_states_and_paths = true, bool append_output = false) const override;
 			void clearPlanner();
 

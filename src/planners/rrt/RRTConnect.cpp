@@ -81,7 +81,7 @@ bool planning::rrt::RRTConnect::solve()
         planner_info->setNumIterations(planner_info->getNumIterations() + 1);
 		planner_info->addIterationTime(getElapsedTime(time_start));
 		planner_info->setNumStates(trees[0]->getNumStates() + trees[1]->getNumStates());
-		if (checkStoppingCondition(status, time_start))
+		if (checkTerminatingCondition(status, time_start))
 		{
 			planner_info->setPlanningTime(getElapsedTime(time_start));
 			return status == base::State::Status::Reached ? true : false;
@@ -167,7 +167,7 @@ float planning::rrt::RRTConnect::getElapsedTime(std::chrono::steady_clock::time_
 	return std::chrono::duration_cast<std::chrono::milliseconds>(end - time_start).count();
 }
 
-bool planning::rrt::RRTConnect::checkStoppingCondition(base::State::Status status, std::chrono::steady_clock::time_point &time_start)
+bool planning::rrt::RRTConnect::checkTerminatingCondition(base::State::Status status, std::chrono::steady_clock::time_point &time_start)
 {
 	if (status == base::State::Status::Reached)
 	{

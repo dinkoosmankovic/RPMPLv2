@@ -127,7 +127,7 @@ bool planning::rbt::DRGBTConnect::solve()
         horizon_size = horizon.size();
         if (status == base::State::Status::Reached && q_next->getIndexInPath() != -1)
         {
-            // Only states from predefined path that come after q_next are remained in the horizon
+            // Only states from predefined path that come after 'q_next' are remained in the horizon
             for (int i = horizon_size; i >= 0; i--)
                 if (horizon[i]->getIndexInPath() == -1 || horizon[i]->getIndexInPath() <= q_next->getIndexInPath())
                     horizon.erase(horizon.begin() + i);

@@ -192,7 +192,7 @@ bool planning::rbt::RGBMTStar::solve()
         planner_info->addCostConvergence(std::vector<float>(numStatesTotal - planner_info->getNumStates(), cost_opt));
         planner_info->addStateTimes(std::vector<float>(numStatesTotal - planner_info->getNumStates(), planner_info->getIterationsTimes().back()));
         planner_info->setNumStates(numStatesTotal);
-		if (checkStoppingCondition(q_con0, q_con1, time_start))
+		if (checkTerminatingCondition(q_con0, q_con1, time_start))
 		{
 			planner_info->setPlanningTime(getElapsedTime(time_start));
 			return (cost_opt < INFINITY) ? true : false;
@@ -370,7 +370,7 @@ void planning::rbt::RGBMTStar::deleteTrees(std::vector<int> &trees_connected)
         trees.erase(trees.begin() + trees_connected[i]);
 }
 
-bool planning::rbt::RGBMTStar::checkStoppingCondition(std::shared_ptr<base::State> q_con0, std::shared_ptr<base::State> q_con1, 
+bool planning::rbt::RGBMTStar::checkTerminatingCondition(std::shared_ptr<base::State> q_con0, std::shared_ptr<base::State> q_con1, 
                                                       std::chrono::steady_clock::time_point &time_start)
 {
     if (RGBMTStarConfig::RETURN_WHEN_PATH_IS_FOUND && cost_opt < INFINITY || 
