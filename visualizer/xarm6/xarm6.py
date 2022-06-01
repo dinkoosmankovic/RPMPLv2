@@ -129,7 +129,7 @@ class Xarm6(RealVectorSpace):
             return init_pose, mesh
 
 
-    def show(self, q=None, obstacles=None, use_collision=False):
+    def show(self, q=None, obstacles=None, use_collision=False, show_trajectory_as_transparent=False):
         cfg = self.get_config(q)
         # print(cfg)
         if use_collision:

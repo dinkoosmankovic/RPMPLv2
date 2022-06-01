@@ -1,6 +1,5 @@
 #include <ompl/base/SpaceInformation.h>
 #include <ompl/base/spaces/SE3StateSpace.h>
-#include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/tools/benchmark/Benchmark.h>
 #include <CommandLine.h>
@@ -17,6 +16,20 @@
 #include <RealVectorSpaceState.h>
 #include <Eigen/Dense>
 
+// OMPL Planners includes ---------------------------------
+#include <ompl/geometric/planners/rrt/RRTConnect.h>
+#include <ompl/geometric/planners/rrt/RRTstar.h>
+#include <ompl/geometric/planners/rrt/RRTXstatic.h>
+#include <ompl/geometric/planners/rrt/RRTsharp.h>
+#include <ompl/geometric/planners/rrt/LBTRRT.h>
+#include <ompl/geometric/planners/rrt/InformedRRTstar.h>
+
+#include <ompl/geometric/planners/fmt/FMT.h>
+#include <ompl/geometric/planners/bitstar/BITstar.h>
+
+
+// --------------------------------------------------------
+
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
@@ -30,7 +43,7 @@ bool isStateValid(const ob::State *state)
     return true;
 }
 
-void plan(std::shared_ptr<scenario::Scenario> scenario)
+void plan(std::shared_ptr<scenario::Scenario> scenario, std::string scenario_file_path)
 {
     // construct the state space we are planning in
     auto space(std::make_shared<ob::RealVectorStateSpace>(scenario->getStateSpace()->getDimensions()));
@@ -72,11 +85,19 @@ void plan(std::shared_ptr<scenario::Scenario> scenario)
     ss.setStartAndGoalStates(start, goal);
     ss.getSpaceInformation()->setStateValidityCheckingResolution(0.001);
 
-    double runtime_limit = 60, memory_limit = 1024;
-    int run_count = 20;
+    double runtime_limit = 20, memory_limit = 1024;
+    int run_count = 30;
     ompl::tools::Benchmark::Request request(runtime_limit, memory_limit, run_count, 0.5);
-    ompl::tools::Benchmark b(ss, "scenario_easy_2dof" );
-    b.addPlanner(std::make_shared<ompl::geometric::RRTConnect>(ss.getSpaceInformation()));
+    ompl::tools::Benchmark b(ss, scenario_file_path);
+
+    b.addPlanner(std::make_shared<ompl::geometric::RRTstar>(ss.getSpaceInformation()));
+    b.addPlanner(std::make_shared<ompl::geometric::RRTXstatic>(ss.getSpaceInformation()));
+    b.addPlanner(std::make_shared<ompl::geometric::RRTsharp>(ss.getSpaceInformation()));
+    b.addPlanner(std::make_shared<ompl::geometric::LBTRRT>(ss.getSpaceInformation()));
+    b.addPlanner(std::make_shared<ompl::geometric::InformedRRTstar>(ss.getSpaceInformation()));
+    b.addPlanner(std::make_shared<ompl::geometric::FMT>(ss.getSpaceInformation()));
+    b.addPlanner(std::make_shared<ompl::geometric::BITstar>(ss.getSpaceInformation()));
+
     b.benchmark(request);
     b.saveResultsToFile("/tmp/omplBenchmark.log");
 }
@@ -131,7 +152,7 @@ int main(int argc, char **argv)
 
         LOG(INFO) << "Space state size: " << scenario->getStateSpace()->getDimensions();
 
-        plan(scenario); 
+        plan(scenario, scenario_file_path); 
 
 	}
 	catch (std::domain_error &e)
