@@ -38,6 +38,10 @@ add_executable(test_rgbtconnect test_rgbtconnect.cpp)
 target_compile_features(test_rgbtconnect PRIVATE cxx_std_17)
 target_link_libraries(test_rgbtconnect PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
 
+add_executable(test_drgbtconnect test_drgbtconnect.cpp)
+target_compile_features(test_drgbtconnect PRIVATE cxx_std_17)
+target_link_libraries(test_drgbtconnect PUBLIC rpmpl_library ${PROJECT_LIBRARIES})
+
 add_executable(test_rgbmtstar test_rgbmtstar.cpp)
 target_compile_features(test_rgbmtstar PRIVATE cxx_std_17)
 target_link_libraries(test_rgbmtstar PUBLIC rpmpl_library ${PROJECT_LIBRARIES})

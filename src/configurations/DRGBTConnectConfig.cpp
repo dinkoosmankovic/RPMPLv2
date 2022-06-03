@@ -4,7 +4,9 @@
 
 #include "DRGBTConnectConfig.h"
 
-int DRGBTConnectConfig::INIT_HORIZON_SIZE   = 10;
-float DRGBTConnectConfig::WEIGHT_MIN        = 0.5;
-float DRGBTConnectConfig::WEIGHT_MEAN_MIN   = 0.5;
-float DRGBTConnectConfig::MAX_ITER_TIME     = 0.1;
+unsigned long DRGBTConnectConfig::MAX_NUM_ITER  = 50;
+float DRGBTConnectConfig::MAX_ITER_TIME         = 100;
+float DRGBTConnectConfig::MAX_PLANNING_TIME     = 10e3;
+int DRGBTConnectConfig::INIT_HORIZON_SIZE       = 10;
+float DRGBTConnectConfig::WEIGHT_MIN            = 0.5;
+float DRGBTConnectConfig::WEIGHT_MEAN_MIN       = 0.5;

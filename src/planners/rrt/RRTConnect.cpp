@@ -46,6 +46,7 @@ void planning::rrt::RRTConnect::initPlanner()
 bool planning::rrt::RRTConnect::solve()
 {
 	auto time_start = std::chrono::steady_clock::now(); 	// Start the clock
+	auto time_current = time_start;
 	int tree_idx = 0;  	// Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal
 	std::shared_ptr<base::State> q_rand, q_near, q_new;
 	base::State::Status status;
@@ -77,14 +78,15 @@ bool planning::rrt::RRTConnect::solve()
 			status = connect(trees[tree_idx], q_near, q_new);
 		}
 		
-		/* Planner info */
+		/* Planner info and terminating condition */
+		time_current = std::chrono::steady_clock::now();
         planner_info->setNumIterations(planner_info->getNumIterations() + 1);
-		planner_info->addIterationTime(getElapsedTime(time_start));
+		planner_info->addIterationTime(getElapsedTime(time_start, time_current));
 		planner_info->setNumStates(trees[0]->getNumStates() + trees[1]->getNumStates());
-		if (checkTerminatingCondition(status, time_start))
+		if (checkTerminatingCondition(status))
 		{
-			planner_info->setPlanningTime(getElapsedTime(time_start));
-			return status == base::State::Status::Reached ? true : false;
+			planner_info->setPlanningTime(planner_info->getIterationsTimes().back());
+			return planner_info->getSuccessState();
 		}
 	}
 }
@@ -160,14 +162,14 @@ const std::vector<std::shared_ptr<base::State>> &planning::rrt::RRTConnect::getP
 	return path;
 }
 
-// Get elapsed time in milliseconds
-float planning::rrt::RRTConnect::getElapsedTime(std::chrono::steady_clock::time_point &time_start)
+// Get elapsed time in milliseconds from 'time_start' to 'time_current'
+float planning::rrt::RRTConnect::getElapsedTime(std::chrono::steady_clock::time_point &time_start,
+												std::chrono::steady_clock::time_point &time_current)
 {
-	auto end = std::chrono::steady_clock::now();
-	return std::chrono::duration_cast<std::chrono::milliseconds>(end - time_start).count();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(time_current - time_start).count();
 }
 
-bool planning::rrt::RRTConnect::checkTerminatingCondition(base::State::Status status, std::chrono::steady_clock::time_point &time_start)
+bool planning::rrt::RRTConnect::checkTerminatingCondition(base::State::Status status)
 {
 	if (status == base::State::Status::Reached)
 	{
@@ -176,7 +178,7 @@ bool planning::rrt::RRTConnect::checkTerminatingCondition(base::State::Status st
 		return true;
 	}
 	else if (planner_info->getNumStates() >= RRTConnectConfig::MAX_NUM_STATES || 
-			 getElapsedTime(time_start) >= RRTConnectConfig::MAX_PLANNING_TIME ||
+			 planner_info->getIterationsTimes().back() >= RRTConnectConfig::MAX_PLANNING_TIME ||
 			 planner_info->getNumIterations() >= RRTConnectConfig::MAX_NUM_ITER)
 	{
 		planner_info->setSuccessState(false);

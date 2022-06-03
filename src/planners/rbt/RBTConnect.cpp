@@ -17,6 +17,7 @@ planning::rbt::RBTConnect::~RBTConnect() {}
 bool planning::rbt::RBTConnect::solve()
 {
 	auto time_start = std::chrono::steady_clock::now(); 	// Start the clock
+	auto time_current = time_start;
 	int tree_idx = 0;  	// Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal
 	std::shared_ptr<base::State> q_e, q_near, q_new;
 	base::State::Status status;
@@ -60,14 +61,15 @@ bool planning::rbt::RBTConnect::solve()
 			status = connectSpine(trees[tree_idx], q_near, q_new);
 		}
 
-		/* Planner info */
+		/* Planner info and terminating condition */
+		time_current = std::chrono::steady_clock::now();
         planner_info->setNumIterations(planner_info->getNumIterations() + 1);
-		planner_info->addIterationTime(getElapsedTime(time_start));
+		planner_info->addIterationTime(getElapsedTime(time_start, time_current));
 		planner_info->setNumStates(trees[0]->getNumStates() + trees[1]->getNumStates());
-		if (checkTerminatingCondition(status, time_start))
+		if (checkTerminatingCondition(status))
 		{
-			planner_info->setPlanningTime(getElapsedTime(time_start));
-			return status == base::State::Status::Reached ? true : false;
+			planner_info->setPlanningTime(planner_info->getIterationsTimes().back());
+			return planner_info->getSuccessState();
 		}
     }
 }
