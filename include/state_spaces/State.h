@@ -36,7 +36,7 @@ namespace base
 
 		inline StateSpaceType getStateSpaceType() const { return state_space_type; }
 		inline int getDimensions() const { return dimensions; }
-		inline Eigen::VectorXf getCoord() const { return coord; }		// 'coord' is not returned by reference intentionally
+		inline const Eigen::VectorXf &getCoord() const { return coord; }
 		inline float getCoord(int idx) const { return coord(idx); }
 		inline uint getTreeIdx() const { return tree_idx; }
 		inline size_t getIdx() const { return idx; }
@@ -48,7 +48,7 @@ namespace base
 
 		inline void setStateSpaceType(StateSpaceType state_space_type_) { state_space_type = state_space_type_; }
 		inline void setDimensions(int dimensions_) { dimensions = dimensions_; }
-		inline void setCoord(Eigen::VectorXf coord_) { coord = coord_; } 	// 'coord_' is not sent by reference intentionally
+		inline void setCoord(const Eigen::VectorXf &coord_) { coord = coord_; }
 		inline void setCoord(const float coord_, int idx) { coord(idx) = coord_; }
 		inline void setTreeIdx(uint treeIdx_) { tree_idx = treeIdx_; }
 		inline void setIdx(size_t idx_) { idx = idx_; }
