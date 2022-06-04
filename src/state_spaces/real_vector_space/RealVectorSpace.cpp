@@ -81,7 +81,6 @@ std::tuple<base::State::Status, std::shared_ptr<base::State>> base::RealVectorSp
 	(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2, float step, float D)
 {
 	std::shared_ptr<base::State> q_new = std::make_shared<base::RealVectorSpaceState>(dimensions);
-	Eigen::VectorXf eig;
 	base::State::Status status;
 
 	if (D < 0) 	// D = -1 is the default value
@@ -89,8 +88,7 @@ std::tuple<base::State::Status, std::shared_ptr<base::State>> base::RealVectorSp
 	
 	if (step < D)
 	{
-		eig = (q2->getCoord() - q1->getCoord()) / D;
-		q_new->setCoord(q1->getCoord() + step * eig);
+		q_new->setCoord(q1->getCoord() + step * (q2->getCoord() - q1->getCoord()) / D);
 		status = base::State::Status::Advanced;
 	}
 	else
@@ -99,7 +97,6 @@ std::tuple<base::State::Status, std::shared_ptr<base::State>> base::RealVectorSp
 		status = base::State::Status::Reached;
 	}
 	
-	// Here we check the validity of the motion 'q1' -> 'q_new'
 	if (isValid(q_new))
 		return {status, q_new};
 	else
@@ -108,11 +105,11 @@ std::tuple<base::State::Status, std::shared_ptr<base::State>> base::RealVectorSp
 
 bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
-	int numChecks = RealVectorSpaceConfig::NUM_INTERPOLATION_VALIDITY_CHECKS;
+	int num_checks = RealVectorSpaceConfig::NUM_INTERPOLATION_VALIDITY_CHECKS;
 	float D = (q2->getCoord() - q1->getCoord()).norm();
-	for (float t = 1./numChecks; t <= 1; t += 1./numChecks)
+	for (float i = 1; i <= num_checks; i++)
 	{
-		if (std::get<0>(interpolate(q1, q2, t, D)) == base::State::Status::Trapped)
+		if (std::get<0>(interpolate(q1, q2, i / num_checks * D, D)) == base::State::Status::Trapped)
 			return false;
 	}
 	return true;
