@@ -108,11 +108,11 @@ std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> base::RealVec
 
 bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q1, const std::shared_ptr<base::State> q2)
 {
-	int numChecks = RealVectorSpaceConfig::NUM_INTERPOLATION_VALIDITY_CHECKS;
+	int num_checks = RealVectorSpaceConfig::NUM_INTERPOLATION_VALIDITY_CHECKS;
 	float D = (q2->getCoord() - q1->getCoord()).norm();
-	for (float t = 1./numChecks; t <= 1; t += 1./numChecks)
+	for (float i = 1; i <= num_checks; i++)
 	{
-		if (std::get<0>(interpolate(q1, q2, t, D)) == base::StateSpace::Status::Trapped)
+		if (std::get<0>(interpolate(q1, q2, i / num_checks * D, D)) == base::StateSpace::Status::Trapped)
 			return false;
 	}
 	return true;
