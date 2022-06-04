@@ -71,7 +71,6 @@ int main(int argc, char **argv)
 				LOG(INFO) << path.at(i)->getCoord().transpose() << std::endl;
 		}
 		planner->outputPlannerData("/tmp/plannerData.log");
-
 	}
 	catch (std::domain_error &e)
 	{
