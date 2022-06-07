@@ -1,5 +1,5 @@
 #include <AbstractPlanner.h>
-#include <RRTConnect.h>
+#include <DRGBTConnect.h>
 #include <iostream>
 #include <Scenario.h>
 #include <ConfigurationReader.h>
@@ -15,14 +15,14 @@ int main(int argc, char **argv)
 	LOG(INFO) << "GLOG successfully initialized!";
 
 	// std::string scenario_file_path = "data/planar_2dof/scenario_easy.yaml";
-	// std::string scenario_file_path = "data/planar_2dof/scenario1.yaml";
-	std::string scenario_file_path = "data/planar_2dof/scenario2.yaml";
+	std::string scenario_file_path = "data/planar_2dof/scenario1.yaml";
+	// std::string scenario_file_path = "data/planar_2dof/scenario2.yaml";
 	// std::string scenario_file_path = "data/xarm6/scenario_easy.yaml";
 	// std::string scenario_file_path = "data/xarm6/scenario1.yaml";
 	// std::string scenario_file_path = "data/xarm6/scenario2.yaml";
 
 	bool print_help = false;
-	CommandLine args("Test RRTConnect command line parser.");
+	CommandLine args("Test RGBTConnect command line parser.");
 	args.addArgument({"-s", "--scenario"}, &scenario_file_path, "Scenario .yaml description file path");
 	args.addArgument({"-h", "--help"},     &print_help,
       "Use --scenario scenario_yaml_file_path to "
@@ -55,13 +55,12 @@ int main(int argc, char **argv)
 	LOG(INFO) << "State space type: " << ss->getStateSpaceType();
 	LOG(INFO) << "Start: " << scenario.getStart();
 	LOG(INFO) << "Goal: " << scenario.getGoal();
-	
+
 	try
 	{
-		std::unique_ptr<planning::AbstractPlanner> planner = std::make_unique<planning::rrt::RRTConnect>(ss, scenario.getStart(), scenario.getGoal());
+		std::unique_ptr<planning::AbstractPlanner> planner = std::make_unique<planning::rbt::DRGBTConnect>(ss, scenario.getStart(), scenario.getGoal());
 		bool res = planner->solve();
-		LOG(INFO) << "RRTConnect planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
-		LOG(INFO) << "Number of states: " << planner->getPlannerInfo()->getNumStates();
+		LOG(INFO) << "DRGBTConnect planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
 		LOG(INFO) << "Number of iterations: " << planner->getPlannerInfo()->getNumIterations();
 		LOG(INFO) << "Planning time: " << planner->getPlannerInfo()->getPlanningTime() << " [ms]";
 			
@@ -71,8 +70,7 @@ int main(int argc, char **argv)
 			for (int i = 0; i < path.size(); i++)
 				LOG(INFO) << path.at(i)->getCoord().transpose() << std::endl;
 		}
-		planner->outputPlannerData("/tmp/plannerData.log", true);
-		
+		planner->outputPlannerData("/tmp/plannerData.log");
 	}
 	catch (std::domain_error &e)
 	{

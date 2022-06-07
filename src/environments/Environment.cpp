@@ -59,6 +59,7 @@ env::Environment::Environment(const fcl::Box<float> &box, const fcl::Transform3<
 	std::shared_ptr<fcl::CollisionObject<float>> ob(new fcl::CollisionObject(fclBox, tf));
     ob->computeAABB();
     parts.emplace_back(ob);
+    LOG(INFO) << "Obstacle range: (" << ob->getAABB().min_.transpose() << ")\t(" << ob->getAABB().max_.transpose() << ")";
 }
 
 env::Environment::Environment(std::vector<env::Obstacle> obs)
@@ -68,13 +69,21 @@ env::Environment::Environment(std::vector<env::Obstacle> obs)
         CollisionGeometryPtr fclBox(new fcl::Box<float>(obs[i].first.side[0], obs[i].first.side[1], obs[i].first.side[2]));
         std::shared_ptr<fcl::CollisionObject<float>> ob(new fcl::CollisionObject(fclBox, obs[i].second));
         ob->computeAABB();
-        LOG(INFO) << "Obstacle range: " << ob->getAABB().min_.transpose() << "\t" << ob->getAABB().max_.transpose();
         parts.emplace_back(ob);
+        LOG(INFO) << "Obstacle range: (" << ob->getAABB().min_.transpose() << ")\t(" << ob->getAABB().max_.transpose() << ")";
     }
 
 }
 
 void env::Environment::updateObstacles()
 {
-    
+    fcl::Vector3f trans;
+    for (int i = 0; i < parts.size(); i++)
+    {
+        trans = parts[i]->getTranslation();
+        trans(0) -= 0.01;    // Move along x axis
+        parts[i]->setTranslation(trans);
+        parts[i]->computeAABB();
+        LOG(INFO) << "Obstacle range: (" << parts[i]->getAABB().min_.transpose() << ")\t(" << parts[i]->getAABB().max_.transpose() << ")";
+    }
 }

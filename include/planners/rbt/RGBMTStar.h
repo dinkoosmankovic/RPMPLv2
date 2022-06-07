@@ -17,8 +17,7 @@ namespace planning
 			RGBMTStar(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> goal_);
 			~RGBMTStar();
 			bool solve() override;
-            bool checkStoppingCondition(std::shared_ptr<base::State> q_con0, std::shared_ptr<base::State> q_con1, 
-                                        std::chrono::steady_clock::time_point &time_start);
+            bool checkTerminatingCondition(std::shared_ptr<base::State> q_con0, std::shared_ptr<base::State> q_con1);
 			void outputPlannerData(std::string filename, bool output_states_and_paths = true, bool append_output = false) const override;
 
 		protected:
@@ -26,8 +25,8 @@ namespace planning
             float cost_opt;                              // Cost of the final path
             
 			void initPlanner();
-            std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> 
-                connectGenSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
+            std::tuple<base::State::Status, std::shared_ptr<base::State>> connectGenSpine
+                (std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
             float getCostToCome(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2);
             bool mainTreesReached(std::vector<int> &trees_reached);
             std::shared_ptr<base::State> optimize(std::shared_ptr<base::State> q, std::shared_ptr<base::Tree> tree, 

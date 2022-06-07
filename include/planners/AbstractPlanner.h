@@ -9,8 +9,6 @@
 
 namespace planning
 {
-	enum Status {Advanced, Trapped, Reached};
-
 	class AbstractPlanner
 	{
 	public:

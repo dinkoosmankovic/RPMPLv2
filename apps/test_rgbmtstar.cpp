@@ -18,11 +18,11 @@ int main(int argc, char **argv)
 	LOG(INFO) << "GLOG successfully initialized!";
 
 	// std::string scenario_file_path = "data/planar_2dof/scenario_easy.yaml";
-	std::string scenario_file_path = "data/planar_2dof/scenario1.yaml";
+	// std::string scenario_file_path = "data/planar_2dof/scenario1.yaml";
 	// std::string scenario_file_path = "data/planar_2dof/scenario2.yaml";
 	// std::string scenario_file_path = "data/planar_2dof/scenario3.yaml";
 	// std::string scenario_file_path = "data/xarm6/scenario_easy.yaml";
-	// std::string scenario_file_path = "data/xarm6/scenario1.yaml";
+	std::string scenario_file_path = "data/xarm6/scenario1.yaml";
 	// std::string scenario_file_path = "data/xarm6/scenario2.yaml";
 
 	bool print_help = false;
@@ -102,8 +102,7 @@ int main(int argc, char **argv)
 					LOG(INFO) << path.at(i)->getCoord().transpose() << std::endl;			
 			}
 			LOG(INFO) << "\n--------------------------------------------------------------------\n\n";
-			planner->outputPlannerData("/tmp/planner_data" + scenario_file_path.substr(4, scenario_file_path.size()-9) + 
-									   "/test" + std::to_string(num_test) + ".log");
+			planner->outputPlannerData(scenario_file_path.substr(0, scenario_file_path.size()-5) + "_tests/RGBMTStar/test" + std::to_string(num_test) + ".log");
 		}
 		catch (std::domain_error &e)
 		{
@@ -113,7 +112,7 @@ int main(int argc, char **argv)
 
 	std::ofstream output_file;
 	std::ios_base::openmode mode = std::ofstream::out;
-	output_file.open("/tmp/planner_data" + scenario_file_path.substr(4, scenario_file_path.size()-9) + "/results.log", mode);
+	output_file.open(scenario_file_path.substr(0, scenario_file_path.size()-5) + "_tests/RGBMTStar/results.log", mode);
 
 	if (output_file.is_open())
 	{
