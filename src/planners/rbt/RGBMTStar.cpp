@@ -38,8 +38,7 @@ bool planning::rbt::RGBMTStar::solve()
     auto time_current = time_start;
 	int tree_idx;                           // Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal; >1: local trees
     int tree_new_idx = 2;                   // Index of the new tree
-    std::shared_ptr<base::State> q_con0;    // State that is connecting the start tree with the goal tree
-    std::shared_ptr<base::State> q_con1;    // State that is connecting the goal tree with the start tree
+    std::shared_ptr<base::State> q_con;     // State (takes start or goal conf.) from which the optimal path is constructed
 	std::shared_ptr<base::State> q_rand, q_near, q_new;
 	base::State::Status status;
     std::vector<int> trees_exist;                               // List of trees for which a new tree is extended to
@@ -101,7 +100,7 @@ bool planning::rbt::RGBMTStar::solve()
                 }
 
                 // Whether currently considering tree ('tree_new_idx'-th tree) is reached
-                cost = getCostToCome(q_rand, q_new);
+                cost = computeCostToCome(q_rand, q_new);
                 if (status == base::State::Status::Reached)
                 {
                     // If 'idx-th' tree is reached
@@ -122,7 +121,8 @@ bool planning::rbt::RGBMTStar::solve()
             {
                 // The connection of 'q_rand' with both main trees exists
                 tree_idx = trees_reached[0];      // Considering the first reached tree
-                if (mainTreesReached(trees_reached))
+                bool main_trees_reached = (trees_reached.size() > 1 && trees_reached[0] == 0 && trees_reached[1] == 1) ? true : false;
+                if (main_trees_reached)
                 {
                     std::random_device rd;
                     std::mt19937 generator(rd());
@@ -140,34 +140,30 @@ bool planning::rbt::RGBMTStar::solve()
                     if (idx == tree_idx)  // It was considered previously, so just skip now
                         continue;
 
-                    // Unification of tree 'idx' with 'tree_idx'. Main trees are never unified mutually
                     q_new = optimize(trees[tree_new_idx]->getState(k), trees[tree_idx], q_rand);   // From 'k'-th reached state to tree 'tree_idx'
-                    
-                    if (idx > 1 && std::find(trees_reached.begin(), trees_reached.end(), idx) != trees_reached.end())
+                                        
+                    // The connection of 'q_rand' with both main trees exists
+                    if (idx < 2 && main_trees_reached)
+                    {
+                        std::shared_ptr q_par = states_reached[idx]->getParent();
+                        while (q_par != nullptr)
+                        {
+                            q_new = optimize(q_par, trees[tree_idx], q_new);
+                            q_par = q_par->getParent();
+                        }
+                        cost = q_new->getCost();
+                        if (cost < cost_opt)    // The optimal connection between main trees is stored
+                        {
+                            // LOG(INFO) << "Cost after " << planner_info->getNumStates() << " states is: " << cost_opt;
+                            cost_opt = cost;
+                            q_con = q_new;
+                        }
+                    }
+                    // Unification of tree 'idx' with 'tree_idx'. Main trees are never unified mutually
+                    else if (idx > 1 && std::find(trees_reached.begin(), trees_reached.end(), idx) != trees_reached.end())
                     {
                         unifyTrees(trees[idx], trees[tree_idx], states_reached[idx], q_new);
                         trees_connected.emplace_back(idx);
-                    }
-
-                    // The connection of 'q_rand' with both main trees exists
-                    else if (idx < 2 && mainTreesReached(trees_reached))
-                    {
-                        cost = q_new->getCost() + states_reached[idx]->getCost();
-                        if (cost < cost_opt)    // The optimal connection between main trees is stored
-                        {
-                            cost_opt = cost;      
-                            // LOG(INFO) << "Cost after " << planner_info->getNumStates() << " states is: " << cost_opt;
-                            if (tree_idx == 0)
-                            {
-                                q_con0 = q_new;
-                                q_con1 = states_reached[idx];
-                            }
-                            else
-                            {
-                                q_con0 = states_reached[idx];
-                                q_con1 = q_new;
-                            }
-                        }
                     }
                 }
 
@@ -194,7 +190,7 @@ bool planning::rbt::RGBMTStar::solve()
         planner_info->addCostConvergence(std::vector<float>(numStatesTotal - planner_info->getNumStates(), cost_opt));
         planner_info->addStateTimes(std::vector<float>(numStatesTotal - planner_info->getNumStates(), planner_info->getIterationsTimes().back()));
         planner_info->setNumStates(numStatesTotal);
-		if (checkTerminatingCondition(q_con0, q_con1))
+		if (checkTerminatingCondition(q_con))
 		{
 			planner_info->setPlanningTime(planner_info->getIterationsTimes().back());
 			return planner_info->getSuccessState();
@@ -217,7 +213,7 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::getRandomState(){
 std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rbt::RGBMTStar::connectGenSpine
     (std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
-	float d_c = getDistance(q);
+	float d_c = computeDistance(q);
 	std::shared_ptr<base::State> q_new = q;
 	base::State::Status status = base::State::Status::Advanced;
 	int num_ext = 0;
@@ -227,14 +223,14 @@ std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rbt::RGB
 		if (d_c > RBTConnectConfig::D_CRIT)
 		{
 			tie(status, q_new) = extendGenSpineV2(q_temp, q_e);
-            d_c = getDistance(q_new);
+            d_c = computeDistance(q_new);
 		}
 		else
 		{
 			tie(status, q_new) = extend(q_temp, q_e);
             if (++num_ext > 10)
             {
-                d_c = getDistance(q_new);   
+                d_c = computeDistance(q_new);   
                 num_ext = 0;
             }
 		}            
@@ -243,15 +239,9 @@ std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rbt::RGB
 }
 
 // Returns cost-to-come from 'q1' to 'q2'
-inline float planning::rbt::RGBMTStar::getCostToCome(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2)
+inline float planning::rbt::RGBMTStar::computeCostToCome(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2)
 {
     return (q1->getCoord() - q2->getCoord()).norm();
-}
-
-// Whether both main trees are reached
-inline bool planning::rbt::RGBMTStar::mainTreesReached(std::vector<int> &trees_reached)
-{
-    return (trees_reached.size() > 1 && trees_reached[0] == 0 && trees_reached[1] == 1) ? true : false;
 }
 
 // State 'q' from another tree is optimally connected to 'tree'
@@ -292,7 +282,7 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize
         if (update)
         {
             q_opt = ss->newState(q_opt_);
-            float cost = q_reachedNew->getParent()->getCost() + getCostToCome(q_reachedNew->getParent(), q_opt);
+            float cost = q_reachedNew->getParent()->getCost() + computeCostToCome(q_reachedNew->getParent(), q_opt);
             tree->upgradeTree(q_opt, q_reachedNew->getParent(), -1, nullptr, cost);
             q_opt->addChild(q_reachedNew);
             std::shared_ptr<std::vector<std::shared_ptr<base::State>>> children = q_reachedNew->getParent()->getChildren();
@@ -313,7 +303,7 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize
         q_opt = q_reachedNew;
 
     std::shared_ptr<base::State> q_new = ss->newState(q->getCoord());
-    float cost = q_opt->getCost() + getCostToCome(q_opt, q_new);
+    float cost = q_opt->getCost() + computeCostToCome(q_opt, q_new);
     tree->upgradeTree(q_new, q_opt, q_new->getDistance(), q_new->getPlanes(), cost);
     return q_new;
 }
@@ -372,17 +362,30 @@ void planning::rbt::RGBMTStar::deleteTrees(std::vector<int> &trees_connected)
         trees.erase(trees.begin() + trees_connected[i]);
 }
 
-bool planning::rbt::RGBMTStar::checkTerminatingCondition(std::shared_ptr<base::State> q_con0, std::shared_ptr<base::State> q_con1)
+void planning::rbt::RGBMTStar::computePath(std::shared_ptr<base::State> q_con)
+{
+	path.clear();
+    path.emplace_back(q_con);
+    while (q_con->getParent() != nullptr)
+    {
+        path.emplace_back(q_con->getParent());
+        q_con = q_con->getParent();
+    }
+    if (q_con->getTreeIdx() == 0)
+        std::reverse(path.begin(), path.end());
+}
+
+bool planning::rbt::RGBMTStar::checkTerminatingCondition(std::shared_ptr<base::State> q_con)
 {
     if (RGBMTStarConfig::RETURN_WHEN_PATH_IS_FOUND && cost_opt < INFINITY || 
-        planner_info->getNumStates() >= RRTConnectConfig::MAX_NUM_STATES || 
-        planner_info->getIterationsTimes().back() >= RRTConnectConfig::MAX_PLANNING_TIME ||
-        planner_info->getNumIterations() >= RRTConnectConfig::MAX_NUM_ITER)
+        planner_info->getNumStates() >= RGBMTStarConfig::MAX_NUM_STATES || 
+        planner_info->getIterationsTimes().back() >= RGBMTStarConfig::MAX_PLANNING_TIME ||
+        planner_info->getNumIterations() >= RGBMTStarConfig::MAX_NUM_ITER)
     {
         if (cost_opt < INFINITY)
         {
 		    planner_info->setSuccessState(true);
-		    computePath(q_con0, q_con1);
+		    computePath(q_con);
             return true;
         }
         else
@@ -419,10 +422,12 @@ void planning::rbt::RGBMTStar::outputPlannerData(std::string filename, bool outp
                 output_file << *trees[i];
 
             output_file << "Cost convergence: \n" 
-                        << "Num. states\tCost [rad]\t\tTime [ms]" << std::endl;
-            for (int i = 0; i < planner_info->getNumStates(); i++)
-                output_file << i+1 << "\t\t" << planner_info->getCostConvergence()[i] << "\t\t" << planner_info->getStateTimes()[i] << std::endl;
-
+                        << "Cost [rad]\t\tNum. states\t\tTime [ms]" << std::endl;
+			for (int i = 0; i < planner_info->getNumStates(); i++)
+                output_file << planner_info->getCostConvergence()[i] << "\t\t"
+							<< i+1 << "\t\t"
+							<< planner_info->getStateTimes()[i] << std::endl;
+                            
 			if (path.size() > 0)
 			{
 				output_file << "Path:" << std::endl;
