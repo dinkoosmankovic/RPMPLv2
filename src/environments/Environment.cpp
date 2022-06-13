@@ -81,9 +81,12 @@ void env::Environment::updateObstacles()
     for (int i = 0; i < parts.size(); i++)
     {
         trans = parts[i]->getTranslation();
-        trans(0) -= 0.01;    // Move along x axis
-        parts[i]->setTranslation(trans);
-        parts[i]->computeAABB();
+        if (trans(0) > 0)
+        {
+            trans(0) -= 0.01;    // Move along x axis
+            parts[i]->setTranslation(trans);
+            parts[i]->computeAABB();
+        }
         LOG(INFO) << "Obstacle range: (" << parts[i]->getAABB().min_.transpose() << ")\t(" << parts[i]->getAABB().max_.transpose() << ")";
     }
 }

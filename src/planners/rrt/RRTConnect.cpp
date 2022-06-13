@@ -126,26 +126,22 @@ base::State::Status planning::rrt::RRTConnect::connect
 	return status;
 }
 
-void planning::rrt::RRTConnect::computePath(std::shared_ptr<base::State> q_con0, std::shared_ptr<base::State> q_con1)
+void planning::rrt::RRTConnect::computePath()
 {
 	path.clear();
-	if (q_con0 == nullptr)
-		q_con0 = trees[0]->getStates()->back();
-	
-	while (q_con0->getParent() != nullptr)
+	std::shared_ptr<base::State> q_con = trees[0]->getStates()->back();		
+	while (q_con->getParent() != nullptr)
 	{
-		path.emplace_back(q_con0->getParent());
-		q_con0 = q_con0->getParent();
+		path.emplace_back(q_con->getParent());
+		q_con = q_con->getParent();
 	}
 	std::reverse(path.begin(), path.end());
 
-	if (q_con1 == nullptr)
-		q_con1 = trees[1]->getStates()->back();
-	
-	while (q_con1 != nullptr)
+	q_con = trees[1]->getStates()->back();		
+	while (q_con != nullptr)
 	{
-		path.emplace_back(q_con1);
-		q_con1 = q_con1->getParent();
+		path.emplace_back(q_con);
+		q_con = q_con->getParent();
 	}
 }
 

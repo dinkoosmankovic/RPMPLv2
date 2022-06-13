@@ -33,7 +33,7 @@ bool planning::rbt::RBTConnect::solve()
 		//LOG(INFO) << q_rand->getCoord().transpose();
 		q_near = trees[tree_idx]->getNearestState(q_e);
 		//LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
-		if (getDistance(q_near) > RBTConnectConfig::D_CRIT)
+		if (computeDistance(q_near) > RBTConnectConfig::D_CRIT)
 		{
 			for (int i = 0; i < RBTConnectConfig::NUM_SPINES; i++)
 			{
@@ -75,14 +75,14 @@ bool planning::rbt::RBTConnect::solve()
 }
 
 // Get minimal distance from 'q' (determined with the pointer 'q_p' and 'tree') to obstacles
-float planning::rbt::RBTConnect::getDistance(std::shared_ptr<base::State> q)
+float planning::rbt::RBTConnect::computeDistance(std::shared_ptr<base::State> q)
 {
 	float d_c;
 	if (q->getDistance() > 0)
 		d_c = q->getDistance();
 	else
 	{
-		d_c = ss->getDistance(q);
+		d_c = ss->computeDistance(q);
 		q->setDistance(d_c);
 	}
 	return d_c;
@@ -145,7 +145,7 @@ void planning::rbt::RBTConnect::pruneSpine(std::shared_ptr<base::State> q, std::
 std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rbt::RBTConnect::extendSpine
 	(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float d_c_underest)
 {
-	float d_c = (d_c_underest > 0) ? d_c_underest : getDistance(q);
+	float d_c = (d_c_underest > 0) ? d_c_underest : computeDistance(q);
 	float step;
 	float rho = 0;             	// The path length in W-space
 	int counter = 0;
@@ -178,7 +178,7 @@ std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rbt::RBT
 base::State::Status planning::rbt::RBTConnect::connectSpine
 	(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
-	float d_c = getDistance(q);
+	float d_c = computeDistance(q);
 	std::shared_ptr<base::State> q_new = q;
 	base::State::Status status = base::State::Status::Advanced;
 	int num_ext = 0;
@@ -188,7 +188,7 @@ base::State::Status planning::rbt::RBTConnect::connectSpine
 		if (d_c > RBTConnectConfig::D_CRIT)
 		{
 			tie(status, q_new) = extendSpine(q_temp, q_e);
-			d_c = getDistance(q_new);
+			d_c = computeDistance(q_new);
 			tree->upgradeTree(q_new, q_temp, d_c);
 		}
 		else
@@ -199,6 +199,24 @@ base::State::Status planning::rbt::RBTConnect::connectSpine
 		}
 	}
 	return status;
+}
+
+bool planning::rbt::RBTConnect::checkTerminatingCondition(base::State::Status status)
+{
+	if (status == base::State::Status::Reached)
+	{
+		planner_info->setSuccessState(true);
+		computePath();
+		return true;
+	}
+	else if (planner_info->getNumStates() >= RBTConnectConfig::MAX_NUM_STATES || 
+			 planner_info->getIterationsTimes().back() >= RBTConnectConfig::MAX_PLANNING_TIME ||
+			 planner_info->getNumIterations() >= RBTConnectConfig::MAX_NUM_ITER)
+	{
+		planner_info->setSuccessState(false);
+		return true;
+	}
+	return false;
 }
 
 void planning::rbt::RBTConnect::outputPlannerData(std::string filename, bool output_states_and_paths, bool append_output) const

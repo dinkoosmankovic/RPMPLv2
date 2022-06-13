@@ -34,7 +34,7 @@ bool planning::rbt::RGBTConnect::solve()
 		// LOG(INFO) << q_rand->getCoord().transpose();
 		q_near = trees[tree_idx]->getNearestState(q_e);
 		// LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
-		if (getDistance(q_near) > RBTConnectConfig::D_CRIT)
+		if (computeDistance(q_near) > RBTConnectConfig::D_CRIT)
 		{
 			for (int i = 0; i < RBTConnectConfig::NUM_SPINES; i++)
 			{
@@ -83,7 +83,7 @@ bool planning::rbt::RGBTConnect::solve()
 std::tuple<base::State::Status, std::shared_ptr<std::vector<std::shared_ptr<base::State>>>> 
     planning::rbt::RGBTConnect::extendGenSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
-    float d_c = getDistance(q);
+    float d_c = computeDistance(q);
 	std::shared_ptr<base::State> q_new = q;
 	std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list = std::make_shared<std::vector<std::shared_ptr<base::State>>>();
     base::State::Status status;
@@ -92,7 +92,7 @@ std::tuple<base::State::Status, std::shared_ptr<std::vector<std::shared_ptr<base
         std::shared_ptr<base::State> q_temp = ss->newState(q_new);
         tie(status, q_new) = extendSpine(q_temp, q_e, d_c);
 		q_new_list->emplace_back(q_new);
-        d_c = getDistanceUnderestimation(q_new, q->getPlanes());
+        d_c = computeDistanceUnderestimation(q_new, q->getPlanes());
 		// d_c = getDistance(q_new); 	// If you want to use real distance
         if (d_c < RBTConnectConfig::D_CRIT || status == base::State::Status::Reached)
             break;
@@ -105,14 +105,14 @@ std::tuple<base::State::Status, std::shared_ptr<std::vector<std::shared_ptr<base
 std::tuple<base::State::Status, std::shared_ptr<base::State>> 
     planning::rbt::RGBTConnect::extendGenSpineV2(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
-    float d_c = getDistance(q);
+    float d_c = computeDistance(q);
 	std::shared_ptr<base::State> q_new = q;
 	base::State::Status status;
     for (int i = 0; i < RGBTConnectConfig::NUM_LAYERS; i++)
     {
         std::shared_ptr<base::State> q_temp = ss->newState(q_new);
         tie(status, q_new) = extendSpine(q_temp, q_e, d_c);
-        d_c = getDistanceUnderestimation(q_new, q->getPlanes());
+        d_c = computeDistanceUnderestimation(q_new, q->getPlanes());
 		// d_c = getDistance(q_new); 	// If you want to use real distance
         if (d_c < RBTConnectConfig::D_CRIT || status == base::State::Status::Reached)
             break;
@@ -123,7 +123,7 @@ std::tuple<base::State::Status, std::shared_ptr<base::State>>
 base::State::Status planning::rbt::RGBTConnect::connectGenSpine
 	(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
-    float d_c = getDistance(q);
+    float d_c = computeDistance(q);
 	std::shared_ptr<base::State> q_new = q;
     std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list;
 	base::State::Status status = base::State::Status::Advanced;
@@ -139,7 +139,7 @@ base::State::Status planning::rbt::RGBTConnect::connectGenSpine
                 tree->upgradeTree(q_new_list->at(i), q_new_list->at(i-1));
 			
             q_new = q_new_list->back();
-            d_c = getDistance(q_new);
+            d_c = computeDistance(q_new);
 		}
 		else
 		{
@@ -153,7 +153,7 @@ base::State::Status planning::rbt::RGBTConnect::connectGenSpine
 
 // Get minimal distance from 'q' to obstacles
 // Also set corresponding 'planes' (which are approximating the obstacles) for the configuation 'q'
-float planning::rbt::RGBTConnect::getDistance(std::shared_ptr<base::State> q)
+float planning::rbt::RGBTConnect::computeDistance(std::shared_ptr<base::State> q)
 {
     float d_c;
 	if (q->getDistance() > 0)
@@ -161,7 +161,7 @@ float planning::rbt::RGBTConnect::getDistance(std::shared_ptr<base::State> q)
 	else
 	{
     	std::shared_ptr<std::vector<Eigen::MatrixXf>> planes;
-		tie(d_c, planes) = ss->getDistanceAndPlanes(q);
+		tie(d_c, planes) = ss->computeDistanceAndPlanes(q);
 		q->setDistance(d_c);
         q->setPlanes(planes);
 	}
@@ -169,7 +169,7 @@ float planning::rbt::RGBTConnect::getDistance(std::shared_ptr<base::State> q)
 }
 
 // Returns the underestimation of distance-to-obstacles 'd_c', i.e. returns the distance-to-planes
-float planning::rbt::RGBTConnect::getDistanceUnderestimation(std::shared_ptr<base::State> q, std::shared_ptr<std::vector<Eigen::MatrixXf>> planes)
+float planning::rbt::RGBTConnect::computeDistanceUnderestimation(std::shared_ptr<base::State> q, std::shared_ptr<std::vector<Eigen::MatrixXf>> planes)
 {
     float d_c = INFINITY;
     Eigen::Vector3f M, MN;    // planes << M, MN; where MN = N - M, where N is robot nearest point, and M is obstacle nearest point
@@ -186,6 +186,24 @@ float planning::rbt::RGBTConnect::getDistanceUnderestimation(std::shared_ptr<bas
         }
     }
     return d_c;
+}
+
+bool planning::rbt::RGBTConnect::checkTerminatingCondition(base::State::Status status)
+{
+	if (status == base::State::Status::Reached)
+	{
+		planner_info->setSuccessState(true);
+		computePath();
+		return true;
+	}
+	else if (planner_info->getNumStates() >= RGBTConnectConfig::MAX_NUM_STATES || 
+			 planner_info->getIterationsTimes().back() >= RGBTConnectConfig::MAX_PLANNING_TIME ||
+			 planner_info->getNumIterations() >= RGBTConnectConfig::MAX_NUM_ITER)
+	{
+		planner_info->setSuccessState(false);
+		return true;
+	}
+	return false;
 }
 
 void planning::rbt::RGBTConnect::outputPlannerData(std::string filename, bool output_states_and_paths, bool append_output) const

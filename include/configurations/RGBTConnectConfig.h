@@ -5,6 +5,9 @@
 class RGBTConnectConfig
 {
 public:
-    static int NUM_LAYERS;          // Number of layers (extensions) for building a generalized bur
+    static unsigned long MAX_NUM_ITER;          // Maximal number of algorithm iterations
+    static unsigned long MAX_NUM_STATES;        // Maximal number of considered states
+    static float MAX_PLANNING_TIME;             // Maximal algorithm runtime in [ms]
+    static int NUM_LAYERS;                      // Number of layers (extensions) for building a generalized bur
 
 };

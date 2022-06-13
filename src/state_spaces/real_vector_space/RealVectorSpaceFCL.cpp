@@ -31,7 +31,7 @@ bool base::RealVectorSpaceFCL::isValid(const std::shared_ptr<base::State> q)
 	return !collision_data.result.isCollision();
 }
 
-float base::RealVectorSpaceFCL::getDistance(const std::shared_ptr<base::State> q)
+float base::RealVectorSpaceFCL::computeDistance(const std::shared_ptr<base::State> q)
 {
 	prepareCollisionManager(q);
 	fcl::DefaultDistanceData<float> distance_data;
@@ -41,7 +41,7 @@ float base::RealVectorSpaceFCL::getDistance(const std::shared_ptr<base::State> q
 	return distance_data.result.min_distance;
 }
 
-std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVectorSpaceFCL::getDistanceAndPlanes
+std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVectorSpaceFCL::computeDistanceAndPlanes
 	(const std::shared_ptr<base::State> q)
 {
 	robot->setState(q);

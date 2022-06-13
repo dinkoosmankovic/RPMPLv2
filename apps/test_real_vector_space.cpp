@@ -46,8 +46,8 @@ int main(int argc, char **argv)
 			// Test distance underestimation
 			// if (ss->isValid(q))
 			// {
-			// 	tie(d_c, planes) = ss->getDistanceAndPlanes(q);
-			// 	float d_c_under = planner->getDistanceUnderestimation(q, planes);
+			// 	tie(d_c, planes) = ss->computeDistanceAndPlanes(q);
+			// 	float d_c_under = planner->computeDistanceUnderestimation(q, planes);
 			// 	if (abs(d_c - d_c_under) > 1e-3)
 			// 	{
 			// 		LOG(INFO) << "************************ different ************************" << std::endl;
@@ -63,14 +63,14 @@ int main(int argc, char **argv)
 			// LOG(INFO) << "-------------------- WITHOUT FCL --------------------" << std::endl;
 			// bool valid = ss->isValid(q);
 			// LOG(INFO) << "Is valid: " << (valid ? "true" : "false") << std::endl;
-			// float d_c = ss->getDistance(q); if (d_c == 0) d_c = -1;
+			// float d_c = ss->computeDistance(q); if (d_c == 0) d_c = -1;
 			// LOG(INFO) << "Distance: " << d_c << std::endl;
 
 			// LOG(INFO) << "-------------------- WITH FCL -----------------------" << std::endl;
 			// bool valid_FCL = ss_FCL->isValid(q);
 			// LOG(INFO) << "Is valid: " << (valid_FCL ? "true" : "false") << std::endl;
-			// float d_c_FCL = ss_FCL->getDistance(q);
-			// // float d_c_FCL = std::get<0>(ss_FCL->getDistanceAndPlanes(q));
+			// float d_c_FCL = ss_FCL->computeDistance(q);
+			// // float d_c_FCL = std::get<0>(ss_FCL->computeDistanceAndPlanes(q));
 			// LOG(INFO) << "Distance: " << d_c_FCL << std::endl;
 			
 			// if (valid != valid_FCL)

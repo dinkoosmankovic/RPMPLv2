@@ -19,10 +19,10 @@ int main(int argc, char **argv)
 
 	// std::string scenario_file_path = "data/planar_2dof/scenario_easy.yaml";
 	// std::string scenario_file_path = "data/planar_2dof/scenario1.yaml";
-	// std::string scenario_file_path = "data/planar_2dof/scenario2.yaml";
+	std::string scenario_file_path = "data/planar_2dof/scenario2.yaml";
 	// std::string scenario_file_path = "data/planar_2dof/scenario3.yaml";
 	// std::string scenario_file_path = "data/xarm6/scenario_easy.yaml";
-	std::string scenario_file_path = "data/xarm6/scenario1.yaml";
+	// std::string scenario_file_path = "data/xarm6/scenario1.yaml";
 	// std::string scenario_file_path = "data/xarm6/scenario2.yaml";
 
 	bool print_help = false;
@@ -60,15 +60,23 @@ int main(int argc, char **argv)
 	LOG(INFO) << "Start: " << scenario.getStart();
 	LOG(INFO) << "Goal: " << scenario.getGoal();
 
-	int max_num_tests = 30;
+	int max_num_tests = 1;
 	int num_test = 0;
 	int num_success = 0;
-	std::vector<float> path_costs;
-	std::vector<float> planning_times;
-	std::vector<float> found_states;
-	std::vector<float> found_states_times;
+	std::vector<float> initial_costs;
+	std::vector<float> final_costs;
+	std::vector<float> initial_times;
+	std::vector<float> final_times;
+	std::vector<float> initial_num_states;
+	std::vector<float> final_num_states;
 	std::unique_ptr<planning::AbstractPlanner> planner;
-
+	std::ofstream output_file;
+	output_file.open(scenario_file_path.substr(0, scenario_file_path.size()-5) + "_tests/RGBMTStar_test.log", std::ofstream::out);
+	if (ss->getDimensions() == 2)
+		RGBMTStarConfig::MAX_PLANNING_TIME = 10e3;
+	else if (ss->getDimensions() == 6)
+		RGBMTStarConfig::MAX_PLANNING_TIME = 120e3;
+	
 	while (num_test++ < max_num_tests)
 	{
 		try
@@ -85,24 +93,32 @@ int main(int argc, char **argv)
 			{
 				num_success++;
 				LOG(INFO) << "Path cost: " << planner->getPlannerInfo()->getCostConvergence().back();
-				path_costs.emplace_back(planner->getPlannerInfo()->getCostConvergence().back());
-				planning_times.emplace_back(planner->getPlannerInfo()->getPlanningTime());
+				final_costs.emplace_back(planner->getPlannerInfo()->getCostConvergence().back());
+				final_times.emplace_back(planner->getPlannerInfo()->getPlanningTime());
+				final_num_states.emplace_back(planner->getPlannerInfo()->getNumStates());
 				for (int i = 0; i < planner->getPlannerInfo()->getNumStates(); i++)
 				{
 					if (planner->getPlannerInfo()->getCostConvergence()[i] < INFINITY)
 					{
-						LOG(INFO) << "Path is found after " << i << " states:";
-						found_states_times.emplace_back(planner->getPlannerInfo()->getStateTimes()[i]);
-						found_states.emplace_back(i);
+						initial_costs.emplace_back(planner->getPlannerInfo()->getCostConvergence()[i]);
+						initial_times.emplace_back(planner->getPlannerInfo()->getStateTimes()[i]);
+						initial_num_states.emplace_back(i);
+						LOG(INFO) << "Path is found after " << i << " states (after " << initial_times.back() << " [ms])";
 						break;
 					}
-				}
-				std::vector<std::shared_ptr<base::State>> path = planner->getPath();
-				for (int i = 0; i < path.size(); i++)
-					LOG(INFO) << path.at(i)->getCoord().transpose() << std::endl;			
+				}		
 			}
 			LOG(INFO) << "\n--------------------------------------------------------------------\n\n";
-			planner->outputPlannerData(scenario_file_path.substr(0, scenario_file_path.size()-5) + "_tests/RGBMTStar/test" + std::to_string(num_test) + ".log");
+			// planner->outputPlannerData(scenario_file_path.substr(0, scenario_file_path.size()-5) + "_tests/RGBMTStar_test" 
+			// 						      + std::to_string(num_test) + ".log");
+			// output_file << "Cost convergence: \n" 
+            //             << "Cost [rad]\t\tNum. states\t\tTime [ms]" << std::endl;
+			for (int i = 0; i < planner->getPlannerInfo()->getNumStates(); i++)
+                output_file << planner->getPlannerInfo()->getCostConvergence()[i] << "\t\t"
+							<< i+1 << "\t\t"
+							<< planner->getPlannerInfo()->getStateTimes()[i] << std::endl;
+
+			planner->outputPlannerData("/tmp/plannerData.log");
 		}
 		catch (std::domain_error &e)
 		{
@@ -110,27 +126,21 @@ int main(int argc, char **argv)
 		}
 	}
 
-	std::ofstream output_file;
-	std::ios_base::openmode mode = std::ofstream::out;
-	output_file.open(scenario_file_path.substr(0, scenario_file_path.size()-5) + "_tests/RGBMTStar/results.log", mode);
-
-	if (output_file.is_open())
-	{
-		output_file << "Space Type:      " << ss->getStateSpaceType() << std::endl;
-		output_file << "Space dimension: " << ss->getDimensions() << std::endl;
-		output_file << "Planner type:    " << "RGBMT*" << std::endl;
-		output_file << "Using scenario:  " << scenario_file_path << std::endl;
-		output_file << "Planner info:\n";
-		output_file << "\t Success rate [%]:                                    " << (float) num_success / max_num_tests * 100  << std::endl;
-		output_file << "\t Average path cost [rad]:                             " << getMean(path_costs) << " +- " << getStd(path_costs) << std::endl;
-		output_file << "\t Average planning time [ms]:                          " << getMean(planning_times) << " +- " << getStd(planning_times) << std::endl;
-		output_file << "\t Average time when the first path is found [ms]:      " << getMean(found_states_times) << " +- " << getStd(found_states_times) << std::endl;
-		output_file << "\t Average num. of states when the first path is found: " << getMean(found_states) << " +- " << getStd(found_states) << std::endl;
-		output_file << std::string(75, '-') << std::endl;		
-		output_file.close();
-	}
-	else
-		throw "Cannot open file"; // std::something exception perhaps?
+	output_file << std::string(75, '-') << std::endl;
+	output_file << "Space Type:      " << ss->getStateSpaceType() << std::endl;
+	output_file << "Space dimension: " << ss->getDimensions() << std::endl;
+	output_file << "Planner type:    " << "RGBMT*" << std::endl;
+	output_file << "Using scenario:  " << scenario_file_path << std::endl;
+	output_file << "Planner info:\n";
+	output_file << "\t Success rate [%]:                                    " << (float) num_success / max_num_tests * 100  << std::endl;
+	output_file << "\t Average initial path cost [rad]:                     " << getMean(initial_costs) << " +- " << getStd(initial_costs) << std::endl;
+	output_file << "\t Average final path cost [rad]:                       " << getMean(final_costs) << " +- " << getStd(final_costs) << std::endl;
+	output_file << "\t Average time when the first path is found [s]:       " << getMean(initial_times) / 1000 << " +- " << getStd(initial_times) / 1000 << std::endl;
+	output_file << "\t Average planning time [s]:                           " << getMean(final_times) / 1000 << " +- " << getStd(final_times) / 1000 << std::endl;
+	output_file << "\t Average num. of states when the first path is found: " << getMean(initial_num_states) << " +- " << getStd(initial_num_states) << std::endl;
+	output_file << "\t Average number of states:                            " << getMean(final_num_states) << " +- " << getStd(final_num_states) << std::endl;
+	output_file << std::string(75, '-') << std::endl;		
+	output_file.close();
 	
 	google::ShutDownCommandLineFlags();
 	return 0;

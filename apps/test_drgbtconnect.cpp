@@ -66,9 +66,10 @@ int main(int argc, char **argv)
 			
 		if (res)
 		{
+			LOG(INFO) << "Path: ";
 			std::vector<std::shared_ptr<base::State>> path = planner->getPath();
 			for (int i = 0; i < path.size(); i++)
-				LOG(INFO) << path.at(i)->getCoord().transpose() << std::endl;
+				std::cout << path.at(i)->getCoord().transpose() << std::endl;
 		}
 		planner->outputPlannerData("/tmp/plannerData.log");
 	}

@@ -340,12 +340,12 @@ bool base::RealVectorSpace::collisionCapsuleToSphere(const Eigen::Vector3f &A, c
 
 // ------------------------------------------------------------------------------------------------------------------------------- //
 
-float base::RealVectorSpace::getDistance(const std::shared_ptr<base::State> q)
+float base::RealVectorSpace::computeDistance(const std::shared_ptr<base::State> q)
 {
-	return std::get<0>(getDistanceAndPlanes(q));
+	return std::get<0>(computeDistanceAndPlanes(q));
 }
 
-std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVectorSpace::getDistanceAndPlanes(const std::shared_ptr<base::State> q)
+std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVectorSpace::computeDistanceAndPlanes(const std::shared_ptr<base::State> q)
 {
     Eigen::MatrixXf distances(robot->getParts().size(), env->getParts().size());
 	std::shared_ptr<std::vector<Eigen::MatrixXf>> planes = std::make_shared<std::vector<Eigen::MatrixXf>>
