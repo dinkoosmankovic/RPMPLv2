@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 	LOG(INFO) << "Start: " << scenario.getStart();
 	LOG(INFO) << "Goal: " << scenario.getGoal();
 
-	int max_num_tests = 1;
+	int max_num_tests = 30;
 	int num_test = 0;
 	int num_success = 0;
 	std::vector<float> initial_costs;
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 	std::vector<float> final_num_states;
 	std::unique_ptr<planning::AbstractPlanner> planner;
 	std::ofstream output_file;
-	output_file.open(scenario_file_path.substr(0, scenario_file_path.size()-5) + "_tests/RGBMTStar_test.log", std::ofstream::out);
+	output_file.open(scenario_file_path.substr(0, scenario_file_path.size()-5) + "_tests/RGBMTStar_sometest.log", std::ofstream::out);
 	if (ss->getDimensions() == 2)
 		RGBMTStarConfig::MAX_PLANNING_TIME = 10e3;
 	else if (ss->getDimensions() == 6)
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 	output_file << "\t Average time when the first path is found [s]:       " << getMean(initial_times) / 1000 << " +- " << getStd(initial_times) / 1000 << std::endl;
 	output_file << "\t Average planning time [s]:                           " << getMean(final_times) / 1000 << " +- " << getStd(final_times) / 1000 << std::endl;
 	output_file << "\t Average num. of states when the first path is found: " << getMean(initial_num_states) << " +- " << getStd(initial_num_states) << std::endl;
-	output_file << "\t Average number of states:                            " << getMean(final_num_states) << " +- " << getStd(final_num_states) << std::endl;
+	output_file << "\t Average num. of states:                              " << getMean(final_num_states) << " +- " << getStd(final_num_states) << std::endl;
 	output_file << std::string(75, '-') << std::endl;		
 	output_file.close();
 	

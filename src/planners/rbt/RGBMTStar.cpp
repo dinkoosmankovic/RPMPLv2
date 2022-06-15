@@ -89,25 +89,27 @@ bool planning::rbt::RGBMTStar::solve()
                 // If the connection with 'q_near' is not possible, attempt to connect with 'parent(q_near)', etc.
                 q_near = trees[idx]->getNearestState(q_rand);
                 // q_near = trees[idx]->getNearestStateV2(q_rand);
-                std::shared_ptr<base::State> q_nearNew = ss->newState(q_near);
+                std::shared_ptr<base::State> q_near_new = q_near;
                 while (true)
                 {
-                    tie(status, q_new) = connectGenSpine(q_rand, q_nearNew);
-                    if (status == base::State::Status::Reached || q_nearNew->getParent() == nullptr)
+                    tie(status, q_new) = connectGenSpine(q_rand, q_near_new);
+                    if (status == base::State::Status::Reached || q_near_new->getParent() == nullptr)
                         break;
                     else
-                        q_nearNew = q_nearNew->getParent();
+                        q_near_new = q_near_new->getParent();
                 }
+                if (status != base::State::Status::Reached)
+                    q_near_new = q_near;
 
                 // Whether currently considering tree ('tree_new_idx'-th tree) is reached
                 cost = computeCostToCome(q_rand, q_new);
                 if (status == base::State::Status::Reached)
                 {
                     // If 'idx-th' tree is reached
-                    trees[tree_new_idx]->upgradeTree(q_new, q_rand, q_nearNew->getDistance(), q_nearNew->getPlanes(), cost);
+                    trees[tree_new_idx]->upgradeTree(q_new, q_rand, q_near_new->getDistance(), q_near_new->getPlanes(), cost);
                     trees_exist.emplace_back(idx);
                     trees_reached.emplace_back(idx);
-                    states_reached[idx] = q_nearNew;
+                    states_reached[idx] = q_near_new;
                 }
                 else if (status == base::State::Status::Advanced)
                 {
@@ -145,18 +147,18 @@ bool planning::rbt::RGBMTStar::solve()
                     // The connection of 'q_rand' with both main trees exists
                     if (idx < 2 && main_trees_reached)
                     {
-                        std::shared_ptr q_par = states_reached[idx]->getParent();
-                        while (q_par != nullptr)
+                        std::shared_ptr<base::State> q_parent = states_reached[idx]->getParent();
+                        while (q_parent != nullptr)
                         {
-                            q_new = optimize(q_par, trees[tree_idx], q_new);
-                            q_par = q_par->getParent();
+                            q_new = optimize(q_parent, trees[tree_idx], q_new);
+                            q_parent = q_parent->getParent();
                         }
                         cost = q_new->getCost();
                         if (cost < cost_opt)    // The optimal connection between main trees is stored
                         {
-                            // LOG(INFO) << "Cost after " << planner_info->getNumStates() << " states is: " << cost_opt;
                             cost_opt = cost;
                             q_con = q_new;
+                            LOG(INFO) << "Cost after " << planner_info->getNumStates() << " states is: " << cost_opt;
                         }
                     }
                     // Unification of tree 'idx' with 'tree_idx'. Main trees are never unified mutually
@@ -250,57 +252,57 @@ inline float planning::rbt::RGBMTStar::computeCostToCome(std::shared_ptr<base::S
 std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize
     (std::shared_ptr<base::State> q, std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q_reached)
 {
-    // Finding the optimal connection to the predecessors of 'q_reached' until the collision occurs
-    std::shared_ptr<base::State> q_reachedNew = ss->newState(q_reached);
-    while (q_reachedNew->getParent() != nullptr)
+    // Finding the optimal connection to the predecessors of 'q_reached'
+    std::shared_ptr<base::State> q_parent = q_reached->getParent();
+    while (q_parent != nullptr)
     {
-        if (std::get<0>(connectGenSpine(q, q_reachedNew->getParent())) == base::State::Status::Reached)
-            q_reachedNew = q_reachedNew->getParent();
-        else
-            break;
+        if (std::get<0>(connectGenSpine(q, q_parent)) == base::State::Status::Reached)
+            q_reached = q_parent;
+        q_parent = q_parent->getParent();
     }
 
     std::shared_ptr<base::State> q_opt; 
-    if (q_reachedNew->getParent() != nullptr)
+    if (q_reached->getParent() != nullptr)
     {
-        Eigen::VectorXf q_opt_ = q_reachedNew->getCoord();  // It is surely collision-free. It will become an optimal state
-        Eigen::VectorXf q_parent = q_reachedNew->getParent()->getCoord();   // Needs to be collision-checked
+        Eigen::VectorXf q_opt_ = q_reached->getCoord();  // It is surely collision-free. It will become an optimal state later
+        Eigen::VectorXf q_parent_ = q_reached->getParent()->getCoord();   // Needs to be collision-checked
         std::shared_ptr<base::State> q_middle = ss->randomState();
-        float D = (q_opt_ - q_parent).norm();
+        float D = (q_opt_ - q_parent_).norm();
         bool update = false;
         for (int i = 0; i < floor(log2(10 * D)); i++)
         {
-            q_middle->setCoord((q_opt_ + q_parent) / 2);
+            q_middle->setCoord((q_opt_ + q_parent_) / 2);
             if (std::get<0>(connectGenSpine(q, q_middle)) == base::State::Status::Reached)
             {
                 q_opt_ = q_middle->getCoord();
                 update = true;
             }
             else
-                q_parent = q_middle->getCoord();
+                q_parent_ = q_middle->getCoord();
         }
+
         if (update)
         {
             q_opt = ss->newState(q_opt_);
-            float cost = q_reachedNew->getParent()->getCost() + computeCostToCome(q_reachedNew->getParent(), q_opt);
-            tree->upgradeTree(q_opt, q_reachedNew->getParent(), -1, nullptr, cost);
-            q_opt->addChild(q_reachedNew);
-            std::shared_ptr<std::vector<std::shared_ptr<base::State>>> children = q_reachedNew->getParent()->getChildren();
+            float cost = q_reached->getParent()->getCost() + computeCostToCome(q_reached->getParent(), q_opt);
+            tree->upgradeTree(q_opt, q_reached->getParent(), -1, nullptr, cost);
+            q_opt->addChild(q_reached);
+            std::shared_ptr<std::vector<std::shared_ptr<base::State>>> children = q_reached->getParent()->getChildren();
             for (int i = 0; i < children->size(); i++)
             {
-                if (ss->isEqual(children->at(i), q_reachedNew))
+                if (ss->isEqual(children->at(i), q_reached))
                 {
-                    children->erase(children->begin() + i);     // Deleting the child, since it is previously added in upgradeTree when adding 'q_opt'
+                    children->erase(children->begin() + i);     // Deleting the child, since it is previously added in 'upgradeTree' when adding 'q_opt'
                     break;
                 }
             }
-            q_reachedNew->setParent(q_opt);
+            q_reached->setParent(q_opt);
         }
         else
-            q_opt = q_reachedNew;
+            q_opt = q_reached;
     }
     else
-        q_opt = q_reachedNew;
+        q_opt = q_reached;
 
     std::shared_ptr<base::State> q_new = ss->newState(q->getCoord());
     float cost = q_opt->getCost() + computeCostToCome(q_opt, q_new);
