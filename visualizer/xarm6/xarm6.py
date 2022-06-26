@@ -1,4 +1,5 @@
 import math
+from turtle import width
 from urdfpy import URDF
 import pyrender
 from trimesh.creation import box, cylinder
@@ -158,7 +159,7 @@ class Xarm6(RealVectorSpace):
             ob.visual.vertex_colors = [255, 0, 0, 255]
             scene.add(pyrender.Mesh.from_trimesh(ob, smooth=False))
 
-        pyrender.Viewer(scene, use_raymond_lighting=True)
+        pyrender.Viewer(scene, viewport_size = (1400, 1050), use_raymond_lighting=True)
 
     def animate(self, q_traj=None, obstacles=None, fps=10.0, image_file=None):
         import time
@@ -195,15 +196,20 @@ class Xarm6(RealVectorSpace):
         table.visual.vertex_colors = [205, 243, 8, 255]
         scene.add(pyrender.Mesh.from_trimesh(table))
 
-        cam = pyrender.PerspectiveCamera(yfov=np.pi / 3.0, aspectRatio=1.414)
+        cam = pyrender.PerspectiveCamera(yfov=4*np.pi / 3.0, aspectRatio=1.414)
         # init_cam_pose = np.array([[ 0.86595061,  0.28855402, -0.81698498, -0.76317579],\
         #                           [-0.49829176,  0.567737,   -1.3105419,  -1.27955438],\
         #                           [ 0.04283523,  0.77098072,  1.27083259,  1.64027461],\
         #                           [ 0.,          0.,          0.,          1.        ]])
 
+        # init_cam_pose = np.array([[1, 0, 0, 0],\
+        #                           [0, 0, 1, 1.2],\
+        #                           [0, -1, 0, 0.5],\
+        #                           [0, 0, 0, 1]])
+
         init_cam_pose = np.array([[1, 0, 0, 0],\
                                   [0, 1, 0, 0],\
-                                  [0, 0, 1, 2],\
+                                  [0, 0, 1, 2.5],\
                                   [0, 0, 0, 1]])
 
         # init_cam_pose[2, 3] = 2.0
@@ -216,8 +222,7 @@ class Xarm6(RealVectorSpace):
             scene.add(pyrender.Mesh.from_trimesh(ob, smooth=False))
 
         # Pop the visualizer asynchronously
-        v = pyrender.Viewer(scene, run_in_thread=True,
-                            use_raymond_lighting=True, record=True)
+        v = pyrender.Viewer(scene, viewport_size = (1400, 1050), run_in_thread=True, use_raymond_lighting=True, record=True)
         time.sleep(1.0)
         # Now, run our loop
         saved = False
