@@ -19,11 +19,11 @@ int main(int argc, char **argv)
 
 	// std::string scenario_file_path = "data/planar_2dof/scenario_easy.yaml";
 	// std::string scenario_file_path = "data/planar_2dof/scenario1.yaml";
-	std::string scenario_file_path = "data/planar_2dof/scenario2.yaml";
+	// std::string scenario_file_path = "data/planar_2dof/scenario2.yaml";
 	// std::string scenario_file_path = "data/planar_2dof/scenario3.yaml";
 	// std::string scenario_file_path = "data/xarm6/scenario_easy.yaml";
 	// std::string scenario_file_path = "data/xarm6/scenario1.yaml";
-	// std::string scenario_file_path = "data/xarm6/scenario2.yaml";
+	std::string scenario_file_path = "data/xarm6/scenario2.yaml";
 
 	bool print_help = false;
 	CommandLine args("Test RGBMTStar command line parser.");
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 	std::vector<float> final_num_states;
 	std::unique_ptr<planning::AbstractPlanner> planner;
 	std::ofstream output_file;
-	output_file.open(scenario_file_path.substr(0, scenario_file_path.size()-5) + "_tests/RGBMTStar_sometest.log", std::ofstream::out);
+	output_file.open("/home/nermin/RPMPLv2/" + scenario_file_path.substr(0, scenario_file_path.size()-5) + "_tests/RGBMTStar_sometest.log", std::ofstream::out);
 	if (ss->getDimensions() == 2)
 		RGBMTStarConfig::MAX_PLANNING_TIME = 10e3;
 	else if (ss->getDimensions() == 6)
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 			planner = std::make_unique<planning::rbt::RGBMTStar>(ss, scenario.getStart(), scenario.getGoal());					
 			bool res = planner->solve();
 
-			LOG(INFO) << "Test number " << num_test;
+			LOG(INFO) << "Test number " << num_test << " of " << max_num_tests;
 			LOG(INFO) << "RGBMT* planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
 			LOG(INFO) << "Number of states: " << planner->getPlannerInfo()->getNumStates();
 			LOG(INFO) << "Planning time: " << planner->getPlannerInfo()->getPlanningTime() << " [ms]";

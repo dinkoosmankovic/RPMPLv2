@@ -22,7 +22,7 @@ namespace planning
 
 		protected:
             std::vector<size_t> num_states;              // Total number of states for each tree
-            float cost_opt;                              // Cost of the final path
+            float cost_opt;                              // Cost of the final path 
             
 			void initPlanner();
             std::tuple<base::State::Status, std::shared_ptr<base::State>> connectGenSpine
