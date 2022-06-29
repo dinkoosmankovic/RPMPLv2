@@ -1,0 +1,35 @@
+Space Type:      RealVectorSpaceFCL Type
+Space dimension: 2
+Planner type:    RGBMT*
+Planner info:
+	 Succesfull:           yes
+	 Number of iterations: 2
+	 Number of states:     4
+	 Planning time [ms]:   0
+	 Path cost [rad]:      inf
+Tree: start
+q: (  -2 -2.5); parent q: NONE
+q: (-0.984465  -1.26151); parent q: (  -2 -2.5)
+Tree: goal
+q: (  2 2.5); parent q: NONE
+q: ( 2.09381 0.685782); parent q: (  2 2.5)
+q: (-2.35488    2.866); parent q: (-0.449621   2.70587)
+q: (-0.449621   2.70587); parent q: (-0.29652  2.69301)
+q: (-0.984465  -1.26151); parent q: (-0.449621   2.70587)
+q: (-0.29652  2.69301); parent q: (  2 2.5)
+q: (  -2 -2.5); parent q: (-0.29652  2.69301)
+Tree: local
+q: (-2.35488    2.866); parent q: NONE
+q: (-0.984465  -1.26151); parent q: (-2.35488    2.866)
+q: (  2 2.5); parent q: (-2.35488    2.866)
+Cost convergence: 
+Cost [rad]		Num. states		Time [ms]
+inf		1		0
+inf		2		0
+inf		3		0
+inf		4		0
+Path:
+q: (  -2 -2.5); parent q: (-0.29652  2.69301)
+q: (-0.29652  2.69301); parent q: (  2 2.5)
+q: (  2 2.5); parent q: NONE
+-------------------------

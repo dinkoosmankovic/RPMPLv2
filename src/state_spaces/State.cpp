@@ -12,11 +12,11 @@ void base::State::addChild(std::shared_ptr<base::State> child)
 	children->emplace_back(child);
 }
 
-std::ostream &base::operator<<(std::ostream &os, const base::State* state)
+std::ostream &base::operator<<(std::ostream &os, const base::State *state)
 {
 	if (state->getParent() == nullptr)
-		os << "q: (" << state->getCoord().transpose() << ");\t parent q: NONE";
+		os << "q: (" << state->getCoord().transpose() << "); parent q: NONE";
 	else
-		os << "q: (" << state->getCoord().transpose() << ");\t parent q: (" << state->getParent()->getCoord().transpose() << ")";
+		os << "q: (" << state->getCoord().transpose() << "); parent q: (" << state->getParent()->getCoord().transpose() << ")";
 	return os;
 }

@@ -17,9 +17,10 @@ planning::rbt::RBTConnect::~RBTConnect() {}
 bool planning::rbt::RBTConnect::solve()
 {
 	auto time_start = std::chrono::steady_clock::now(); 	// Start the clock
+	auto time_current = time_start;
 	int tree_idx = 0;  	// Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal
 	std::shared_ptr<base::State> q_e, q_near, q_new;
-	base::StateSpace::Status status;
+	base::State::Status status;
 	planner_info->setNumIterations(0);
     planner_info->setNumStates(2);
 
@@ -32,7 +33,7 @@ bool planning::rbt::RBTConnect::solve()
 		//LOG(INFO) << q_rand->getCoord().transpose();
 		q_near = trees[tree_idx]->getNearestState(q_e);
 		//LOG(INFO) << "Tree: " << trees[treeNum]->getTreeName();
-		if (getDistance(q_near) > RBTConnectConfig::D_CRIT)
+		if (computeDistance(q_near) > RBTConnectConfig::D_CRIT)
 		{
 			for (int i = 0; i < RBTConnectConfig::NUM_SPINES; i++)
 			{
@@ -47,40 +48,41 @@ bool planning::rbt::RBTConnect::solve()
 		else	// Distance-to-obstacles is less than d_crit
 		{
 			tie(status, q_new) = extend(q_near, q_e);
-			if (status != base::StateSpace::Status::Trapped)
+			if (status != base::State::Status::Trapped)
 				trees[tree_idx]->upgradeTree(q_new, q_near);
 		}
 
 		tree_idx = 1 - tree_idx;	// Swapping trees
 
 		/* Bur-Connect */
-		if (status != base::StateSpace::Status::Trapped)
+		if (status != base::State::Status::Trapped)
 		{
 			q_near = trees[tree_idx]->getNearestState(q_new);
 			status = connectSpine(trees[tree_idx], q_near, q_new);
 		}
 
-		/* Planner info */
+		/* Planner info and terminating condition */
+		time_current = std::chrono::steady_clock::now();
         planner_info->setNumIterations(planner_info->getNumIterations() + 1);
-		planner_info->addIterationTime(getElapsedTime(time_start));
+		planner_info->addIterationTime(getElapsedTime(time_start, time_current));
 		planner_info->setNumStates(trees[0]->getNumStates() + trees[1]->getNumStates());
-		if (checkStoppingCondition(status, time_start))
+		if (checkTerminatingCondition(status))
 		{
-			planner_info->setPlanningTime(getElapsedTime(time_start));
-			return status == base::StateSpace::Status::Reached ? true : false;
+			planner_info->setPlanningTime(planner_info->getIterationsTimes().back());
+			return planner_info->getSuccessState();
 		}
     }
 }
 
 // Get minimal distance from 'q' (determined with the pointer 'q_p' and 'tree') to obstacles
-float planning::rbt::RBTConnect::getDistance(std::shared_ptr<base::State> q)
+float planning::rbt::RBTConnect::computeDistance(std::shared_ptr<base::State> q)
 {
 	float d_c;
 	if (q->getDistance() > 0)
 		d_c = q->getDistance();
 	else
 	{
-		d_c = ss->getDistance(q);
+		d_c = ss->computeDistance(q);
 		q->setDistance(d_c);
 	}
 	return d_c;
@@ -140,13 +142,13 @@ void planning::rbt::RBTConnect::pruneSpine(std::shared_ptr<base::State> q, std::
 // Spine is generated from 'q' towards 'q_e'
 // 'q_new' is the new reached state
 // If 'd_c_underest' is passed, the spine is extended using the underestimation of distance-to-obstacles for 'q'
-std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> planning::rbt::RBTConnect::extendSpine
+std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rbt::RBTConnect::extendSpine
 	(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float d_c_underest)
 {
-	float d_c = (d_c_underest > 0) ? d_c_underest : getDistance(q);
+	float d_c = (d_c_underest > 0) ? d_c_underest : computeDistance(q);
 	float step;
 	float rho = 0;             	// The path length in W-space
-	int k = 1;
+	int counter = 0;
 	int K_max = 5;              // The number of iterations for computing q*
 	std::shared_ptr<base::State> q_new = ss->newState(q->getCoord());
 	std::shared_ptr<Eigen::MatrixXf> XYZ = ss->robot->computeXYZ(q);
@@ -158,46 +160,63 @@ std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> planning::rbt
 		if (step > 1)
 		{
 			q_new->setCoord(q_e->getCoord());
-			return {base::StateSpace::Status::Reached, q_new};
+			return {base::State::Status::Reached, q_new};
 		}
 		else
 			q_new->setCoord(q_new->getCoord() + step * (q_e->getCoord() - q_new->getCoord()));
 		
-		if (k == K_max)
-			return {base::StateSpace::Status::Advanced, q_new};
+		if (++counter == K_max)
+			return {base::State::Status::Advanced, q_new};
 
 		rho = 0;
 		XYZ_new = ss->robot->computeXYZ(q_new);
 		for (int k = 1; k <= ss->robot->getParts().size(); k++)
 			rho = std::max(rho, (XYZ->col(k) - XYZ_new->col(k)).norm());
-		k += 1;
 	}
 }
 
-base::StateSpace::Status planning::rbt::RBTConnect::connectSpine
+base::State::Status planning::rbt::RBTConnect::connectSpine
 	(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
-	float d_c = getDistance(q);
+	float d_c = computeDistance(q);
 	std::shared_ptr<base::State> q_new = q;
-	base::StateSpace::Status status = base::StateSpace::Status::Advanced;
+	base::State::Status status = base::State::Status::Advanced;
 	int num_ext = 0;
-	while (status == base::StateSpace::Status::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
+	while (status == base::State::Status::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
 	{
 		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
 		if (d_c > RBTConnectConfig::D_CRIT)
 		{
 			tie(status, q_new) = extendSpine(q_temp, q_e);
-			d_c = getDistance(q_new);
+			d_c = computeDistance(q_new);
 			tree->upgradeTree(q_new, q_temp, d_c);
 		}
 		else
 		{
 			tie(status, q_new) = extend(q_temp, q_e);
-			if (status != base::StateSpace::Status::Trapped)
+			if (status != base::State::Status::Trapped)
 				tree->upgradeTree(q_new, q_temp);
 		}
 	}
 	return status;
+}
+
+bool planning::rbt::RBTConnect::checkTerminatingCondition(base::State::Status status)
+{
+	if (status == base::State::Status::Reached)
+	{
+		planner_info->setSuccessState(true);
+		computePath();
+		return true;
+	}
+	else if (planner_info->getNumStates() >= RBTConnectConfig::MAX_NUM_STATES || 
+			 planner_info->getIterationsTimes().back() >= RBTConnectConfig::MAX_PLANNING_TIME ||
+			 planner_info->getNumIterations() >= RBTConnectConfig::MAX_NUM_ITER)
+	{
+		planner_info->setSuccessState(false);
+		return true;
+	}
+	return false;
 }
 
 void planning::rbt::RBTConnect::outputPlannerData(std::string filename, bool output_states_and_paths, bool append_output) const

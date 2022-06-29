@@ -27,8 +27,8 @@ namespace base
 		std::shared_ptr<fcl::BroadPhaseCollisionManagerf> getCollisionManagerEnv() { return collision_manager_env; }
 		
 		bool isValid(const std::shared_ptr<base::State> q) override;
-		float getDistance(const std::shared_ptr<base::State> q) override;
-		std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> getDistanceAndPlanes(const std::shared_ptr<base::State> q) override;
+		float computeDistance(const std::shared_ptr<base::State> q) override;
+		std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> computeDistanceAndPlanes(const std::shared_ptr<base::State> q) override;
 		void prepareCollisionManager(const std::shared_ptr<base::State> q);
 	};
 }

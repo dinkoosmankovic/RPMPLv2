@@ -9,8 +9,6 @@
 
 namespace planning
 {
-	enum Status {Advanced, Trapped, Reached};
-
 	class AbstractPlanner
 	{
 	public:
@@ -23,6 +21,7 @@ namespace planning
 
 		virtual bool solve() = 0;
 		virtual void clearPlanner() = 0;
+		virtual bool checkTerminatingCondition(base::State::Status status) = 0;
 		virtual void outputPlannerData(std::string filename, bool output_states_and_paths = true, bool append_output = false) const = 0;
 
 	protected:

@@ -80,7 +80,6 @@ robots::xARM6::xARM6(std::string robot_desc)
 
 std::shared_ptr<std::vector<KDL::Frame>> robots::xARM6::computeForwardKinematics(std::shared_ptr<base::State> q)
 {
-	//KDL::Chain robot_chain;
 	KDL::TreeFkSolverPos_recursive treefksolver = KDL::TreeFkSolverPos_recursive(robot_tree);
 	std::shared_ptr<std::vector<KDL::Frame>> framesFK = std::make_shared<std::vector<KDL::Frame>>();
 	robot_tree.getChain("link_base", "link_eef", robot_chain);

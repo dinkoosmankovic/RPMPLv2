@@ -46,9 +46,10 @@ void planning::rrt::RRTConnect::initPlanner()
 bool planning::rrt::RRTConnect::solve()
 {
 	auto time_start = std::chrono::steady_clock::now(); 	// Start the clock
+	auto time_current = time_start;
 	int tree_idx = 0;  	// Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal
 	std::shared_ptr<base::State> q_rand, q_near, q_new;
-	base::StateSpace::Status status;
+	base::State::Status status;
 	planner_info->setNumIterations(0);
     planner_info->setNumStates(2);
 
@@ -63,13 +64,13 @@ bool planning::rrt::RRTConnect::solve()
 		// LOG(INFO) << "Tree: " << trees[tree_idx]->getTreeName();
 		tie(status, q_new) = extend(q_near, q_rand);
 		// LOG(INFO) << "Status: " << status;
-		if (status != base::StateSpace::Status::Trapped)
+		if (status != base::State::Status::Trapped)
 			trees[tree_idx]->upgradeTree(q_new, q_near);
 
 		tree_idx = 1 - tree_idx; 	// Swapping trees
 
 		/* Connect */
-		if (status != base::StateSpace::Status::Trapped)
+		if (status != base::State::Status::Trapped)
 		{	
 			// LOG(INFO) << "Not Trapped";
 			// LOG(INFO) << "Trying to connect to: " << q_new->getCoord().transpose() << " from " << trees[tree_idx]->getTreeName();
@@ -77,14 +78,15 @@ bool planning::rrt::RRTConnect::solve()
 			status = connect(trees[tree_idx], q_near, q_new);
 		}
 		
-		/* Planner info */
+		/* Planner info and terminating condition */
+		time_current = std::chrono::steady_clock::now();
         planner_info->setNumIterations(planner_info->getNumIterations() + 1);
-		planner_info->addIterationTime(getElapsedTime(time_start));
+		planner_info->addIterationTime(getElapsedTime(time_start, time_current));
 		planner_info->setNumStates(trees[0]->getNumStates() + trees[1]->getNumStates());
-		if (checkStoppingCondition(status, time_start))
+		if (checkTerminatingCondition(status))
 		{
-			planner_info->setPlanningTime(getElapsedTime(time_start));
-			return status == base::StateSpace::Status::Reached ? true : false;
+			planner_info->setPlanningTime(planner_info->getIterationsTimes().back());
+			return planner_info->getSuccessState();
 		}
 	}
 }
@@ -94,56 +96,52 @@ base::Tree planning::rrt::RRTConnect::getTree(int tree_idx) const
 	return *trees[tree_idx];
 }
 
-std::tuple<base::StateSpace::Status, std::shared_ptr<base::State>> planning::rrt::RRTConnect::extend
+std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rrt::RRTConnect::extend
 	(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
-	base::StateSpace::Status status;
+	base::State::Status status;
 	std::shared_ptr<base::State> q_new;
 	tie(status, q_new) = ss->interpolate(q, q_e, RRTConnectConfig::EPS_STEP);
-	if (status != base::StateSpace::Status::Trapped && ss->isValid(q, q_new))
+	if (status != base::State::Status::Trapped && ss->isValid(q, q_new))
 		return {status, q_new};
 	else
-		return {base::StateSpace::Status::Trapped, q};
+		return {base::State::Status::Trapped, q};
 }
 
-base::StateSpace::Status planning::rrt::RRTConnect::connect
+base::State::Status planning::rrt::RRTConnect::connect
 	(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
 	// LOG(INFO) << "Inside connect.";
 	std::shared_ptr<base::State> q_new = q;
-	base::StateSpace::Status status = base::StateSpace::Status::Advanced;
+	base::State::Status status = base::State::Status::Advanced;
 	int num_ext = 0;
-	while (status == base::StateSpace::Status::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
+	while (status == base::State::Status::Advanced && num_ext++ < RRTConnectConfig::MAX_EXTENSION_STEPS)
 	{
 		std::shared_ptr<base::State> q_temp = ss->newState(q_new);
 		tie(status, q_new) = extend(q_temp, q_e);
-		if (status != base::StateSpace::Status::Trapped)
+		if (status != base::State::Status::Trapped)
 			tree->upgradeTree(q_new, q_temp);
 	}
 	// LOG(INFO) << "extended.";
 	return status;
 }
 
-void planning::rrt::RRTConnect::computePath(std::shared_ptr<base::State> q_con0, std::shared_ptr<base::State> q_con1)
+void planning::rrt::RRTConnect::computePath()
 {
 	path.clear();
-	if (q_con0 == nullptr)
-		q_con0 = trees[0]->getStates()->back();
-	
-	while (q_con0->getParent() != nullptr)
+	std::shared_ptr<base::State> q_con = trees[0]->getStates()->back();		
+	while (q_con->getParent() != nullptr)
 	{
-		path.emplace_back(q_con0->getParent());
-		q_con0 = q_con0->getParent();
+		path.emplace_back(q_con->getParent());
+		q_con = q_con->getParent();
 	}
 	std::reverse(path.begin(), path.end());
 
-	if (q_con1 == nullptr)
-		q_con1 = trees[1]->getStates()->back();
-	
-	while (q_con1 != nullptr)
+	q_con = trees[1]->getStates()->back();		
+	while (q_con != nullptr)
 	{
-		path.emplace_back(q_con1);
-		q_con1 = q_con1->getParent();
+		path.emplace_back(q_con);
+		q_con = q_con->getParent();
 	}
 }
 
@@ -160,23 +158,23 @@ const std::vector<std::shared_ptr<base::State>> &planning::rrt::RRTConnect::getP
 	return path;
 }
 
-// Get elapsed time in milliseconds
-float planning::rrt::RRTConnect::getElapsedTime(std::chrono::steady_clock::time_point &time_start)
+// Get elapsed time in milliseconds from 'time_start' to 'time_current'
+float planning::rrt::RRTConnect::getElapsedTime(std::chrono::steady_clock::time_point &time_start,
+												std::chrono::steady_clock::time_point &time_current)
 {
-	auto end = std::chrono::steady_clock::now();
-	return std::chrono::duration_cast<std::chrono::milliseconds>(end - time_start).count();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(time_current - time_start).count();
 }
 
-bool planning::rrt::RRTConnect::checkStoppingCondition(base::StateSpace::Status status, std::chrono::steady_clock::time_point &time_start)
+bool planning::rrt::RRTConnect::checkTerminatingCondition(base::State::Status status)
 {
-	if (status == base::StateSpace::Status::Reached)
+	if (status == base::State::Status::Reached)
 	{
 		planner_info->setSuccessState(true);
 		computePath();
 		return true;
 	}
 	else if (planner_info->getNumStates() >= RRTConnectConfig::MAX_NUM_STATES || 
-			 getElapsedTime(time_start) >= RRTConnectConfig::MAX_PLANNING_TIME ||
+			 planner_info->getIterationsTimes().back() >= RRTConnectConfig::MAX_PLANNING_TIME ||
 			 planner_info->getNumIterations() >= RRTConnectConfig::MAX_NUM_ITER)
 	{
 		planner_info->setSuccessState(false);

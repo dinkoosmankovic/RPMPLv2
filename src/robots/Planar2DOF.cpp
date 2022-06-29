@@ -61,7 +61,6 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 
 std::shared_ptr<std::vector<KDL::Frame>> robots::Planar2DOF::computeForwardKinematics(std::shared_ptr<base::State> q)
 {
-	KDL::Chain robot_chain;
 	KDL::TreeFkSolverPos_recursive treefksolver = KDL::TreeFkSolverPos_recursive(robot_tree);
 	std::shared_ptr<std::vector<KDL::Frame>> framesFK = std::make_shared<std::vector<KDL::Frame>>();
 	robot_tree.getChain("base_link", "tool", robot_chain);
@@ -116,7 +115,7 @@ void robots::Planar2DOF::setState(std::shared_ptr<base::State> q_)
 	KDL::Frame tf;
 	for (size_t i = 0; i < parts.size(); ++i)
 	{
-		tf = framesFK->at(i);
+		tf = framesFK->at(i) * init_poses[i];
 		//LOG(INFO) << tf.p << "\n" << tf.M << "\n++++++++++++++++++++++++\n";
 						
 		//LOG(INFO) << "fcl\n";
