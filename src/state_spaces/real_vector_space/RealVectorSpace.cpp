@@ -109,7 +109,11 @@ bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q1, const
 	float D = (q2->getCoord() - q1->getCoord()).norm();
 	for (float i = 1; i <= num_checks; i++)
 	{
+<<<<<<< HEAD
 		if (std::get<0>(interpolate(q1, q2, i / num_checks * D, D)) == base::State::Status::Trapped)
+=======
+		if (std::get<0>(interpolate(q1, q2, i / num_checks * D, D)) == base::StateSpace::Status::Trapped)
+>>>>>>> main
 			return false;
 	}
 	return true;
