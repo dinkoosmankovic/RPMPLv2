@@ -4,7 +4,7 @@ import yaml
 
 
 if __name__ == "__main__":
-    scenario_file_path = "data/xarm6/scenario_test/scenario_test.yaml"
+    scenario_file_path = "data/xarm6/scenario_test/scenario_test.yaml" 
     # scenario_file_path = "data/xarm6/scenario1/scenario1.yaml"
     # scenario_file_path = "data/xarm6/scenario2/scenario2.yaml"
     
