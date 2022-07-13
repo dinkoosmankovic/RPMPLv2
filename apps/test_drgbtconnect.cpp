@@ -64,13 +64,13 @@ int main(int argc, char **argv)
 		LOG(INFO) << "Number of iterations: " << planner->getPlannerInfo()->getNumIterations();
 		LOG(INFO) << "Planning time: " << planner->getPlannerInfo()->getPlanningTime() << " [ms]";
 			
-		if (res)
-		{
-			LOG(INFO) << "Path: ";
-			std::vector<std::shared_ptr<base::State>> path = planner->getPath();
-			for (int i = 0; i < path.size(); i++)
-				std::cout << path.at(i)->getCoord().transpose() << std::endl;
-		}
+		// if (res)
+		// {
+		// 	LOG(INFO) << "Path: ";
+		// 	std::vector<std::shared_ptr<base::State>> path = planner->getPath();
+		// 	for (int i = 0; i < path.size(); i++)
+		// 		std::cout << path.at(i)->getCoord().transpose() << std::endl;
+		// }
 		planner->outputPlannerData("../" + scenario_file_path.substr(0, scenario_file_path.size()-5) + "_planner_data.log");
 	}
 	catch (std::domain_error &e)
