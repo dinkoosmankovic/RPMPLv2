@@ -14,7 +14,7 @@ namespace planning
         {
         public:
             DRGBTConnect(std::shared_ptr<base::StateSpace> ss_);
-			DRGBTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> goal_);
+			DRGBTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> Goal_);
 			~DRGBTConnect();
             bool solve() override;
             bool checkTerminatingCondition();
@@ -23,12 +23,12 @@ namespace planning
             class HorizonState
             {
             public:
-                enum Status {good, bad, critical, goal};
+                enum Status {Good, Bad, Critical, Goal};
 
             private:
                 std::shared_ptr<base::State> state;
                 std::shared_ptr<base::State> state_reached = nullptr;       // Reached state when generating spine from 'q_current' towards 'state'
-                HorizonState::Status status = HorizonState::Status::good;   // Status of 'state_reached': 'good', 'bad', 'critical' or 'goal'
+                HorizonState::Status status = HorizonState::Status::Good;   // Status of 'state_reached': 'Good', 'Bad', 'Critical' or 'Goal'
                 int index;                                                  // Index of 'state' in the predefined path. It is -1 if 'state' does not belong to the path
                 float d_c = -1;                                             // Underestimation of distance-to-obstacles for 'state_reached'
                 float d_c_previous = -1;                                    // 'd_c' from previous iteration
@@ -64,17 +64,17 @@ namespace planning
 
 		protected:
             std::vector<std::shared_ptr<HorizonState>> horizon;
-            std::shared_ptr<base::State> q_current;                     // Current robot configuration
-            std::shared_ptr<HorizonState> q_next = nullptr;             // Next robot configuration
-            std::shared_ptr<HorizonState> q_next_previous = nullptr;    // Next robot configuration from the previous iteration
-            float d_max_mean = 0;                                       // Averaged maximal distance-to-obstacles through iterations
-            float hysteresis = 0.1;                                     // Hysteresis size when choosing the next state
-            int num_lateral_spines;                                     // Number of lateral spines
+            std::shared_ptr<base::State> q_current;                             // Current robot configuration
+            std::shared_ptr<HorizonState> q_next = nullptr;                     // Next robot configuration
+            std::shared_ptr<HorizonState> q_next_previous = nullptr;            // Next robot configuration from the previous iteration
+            float d_max_mean = 0;                                               // Averaged maximal distance-to-obstacles through iterations
+            float hysteresis = 0.1;                                             // Hysteresis size when choosing the next state
+            const int num_lateral_states = 2 * getSS()->getDimensions() - 2;    // Number of lateral states
                 
             void computeHorizon();
             void shortenHorizon(int num);
             void addRandomStates(int num);
-            void addLateralStates(int num);
+            void addLateralStates();
             void modifyState(std::shared_ptr<HorizonState> &q);
             void computeReachedState(std::shared_ptr<base::State> q_current, std::shared_ptr<HorizonState> q);
             void computeNextState();
