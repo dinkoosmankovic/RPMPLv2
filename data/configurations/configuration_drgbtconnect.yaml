@@ -6,4 +6,5 @@ DRGBTConnectConfig:
   STEP: 0.1
   WEIGHT_MIN: 0.5
   WEIGHT_MEAN_MIN: 0.5
+  D_CRIT: 0.1
   

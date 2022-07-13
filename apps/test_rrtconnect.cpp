@@ -14,12 +14,12 @@ int main(int argc, char **argv)
 	FLAGS_logtostderr = true;
 	LOG(INFO) << "GLOG successfully initialized!";
 
-	// std::string scenario_file_path = "data/planar_2dof/scenario_easy.yaml";
-	// std::string scenario_file_path = "data/planar_2dof/scenario1.yaml";
-	std::string scenario_file_path = "data/planar_2dof/scenario2.yaml";
-	// std::string scenario_file_path = "data/xarm6/scenario_easy.yaml";
-	// std::string scenario_file_path = "data/xarm6/scenario1.yaml";
-	// std::string scenario_file_path = "data/xarm6/scenario2.yaml";
+	// std::string scenario_file_path = "data/planar_2dof/scenario_test/scenario_test.yaml";
+	// std::string scenario_file_path = "data/planar_2dof/scenario1/scenario1.yaml";
+	std::string scenario_file_path = "data/planar_2dof/scenario2/scenario2.yaml";
+	// std::string scenario_file_path = "data/xarm6/scenario_test/scenario_test.yaml";
+	// std::string scenario_file_path = "data/xarm6/scenario1/scenario1.yaml";
+	// std::string scenario_file_path = "data/xarm6/scenario2/scenario2.yaml";
 
 	bool print_help = false;
 	CommandLine args("Test RRTConnect command line parser.");
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 			for (int i = 0; i < path.size(); i++)
 				LOG(INFO) << path.at(i)->getCoord().transpose() << std::endl;
 		}
-		planner->outputPlannerData("/tmp/plannerData.log", true);
+		planner->outputPlannerData("../" + scenario_file_path.substr(0, scenario_file_path.size()-5) + "_planner_data.log");
 		
 	}
 	catch (std::domain_error &e)

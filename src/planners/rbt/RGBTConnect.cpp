@@ -38,10 +38,7 @@ bool planning::rbt::RGBTConnect::solve()
 		{
 			for (int i = 0; i < RBTConnectConfig::NUM_SPINES; i++)
 			{
-				q_e = ss->randomState();
-				q_e->setCoord(q_e->getCoord() + q_near->getCoord());
-				saturateSpine(q_near, q_e);
-				pruneSpine(q_near, q_e);
+				q_e = getRandomState(q_near);				
 				tie(status, q_new_list) = extendGenSpine(q_near, q_e);
                 trees[tree_idx]->upgradeTree(q_new_list->front(), q_near);
                 for (int j = 1; j < q_new_list->size(); j++)

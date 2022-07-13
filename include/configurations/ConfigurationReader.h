@@ -89,6 +89,8 @@ public:
             DRGBTConnectConfig::WEIGHT_MIN = DRGBTConnectConfigRoot["WEIGHT_MIN"].as<float>();
         if (DRGBTConnectConfigRoot["WEIGHT_MEAN_MIN"].IsDefined())
             DRGBTConnectConfig::WEIGHT_MEAN_MIN = DRGBTConnectConfigRoot["WEIGHT_MEAN_MIN"].as<float>();
+        if (DRGBTConnectConfigRoot["D_CRIT"].IsDefined())
+            DRGBTConnectConfig::D_CRIT = DRGBTConnectConfigRoot["D_CRIT"].as<float>();
 
         LOG(INFO) << "Configuration parameters read successfully!";
         

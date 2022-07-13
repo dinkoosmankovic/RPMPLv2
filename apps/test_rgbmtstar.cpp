@@ -17,13 +17,12 @@ int main(int argc, char **argv)
 	FLAGS_logtostderr = true;
 	LOG(INFO) << "GLOG successfully initialized!";
 
-	// std::string scenario_file_path = "data/planar_2dof/scenario_easy.yaml";
-	// std::string scenario_file_path = "data/planar_2dof/scenario1.yaml";
-	// std::string scenario_file_path = "data/planar_2dof/scenario2.yaml";
-	// std::string scenario_file_path = "data/planar_2dof/scenario3.yaml";
-	// std::string scenario_file_path = "data/xarm6/scenario_easy.yaml";
-	// std::string scenario_file_path = "data/xarm6/scenario1.yaml";
-	std::string scenario_file_path = "data/xarm6/scenario2.yaml";
+	// std::string scenario_file_path = "data/planar_2dof/scenario_test/scenario_test.yaml";
+	// std::string scenario_file_path = "data/planar_2dof/scenario1/scenario1.yaml";
+	std::string scenario_file_path = "data/planar_2dof/scenario2/scenario2.yaml";
+	// std::string scenario_file_path = "data/xarm6/scenario_test/scenario_test.yaml";
+	// std::string scenario_file_path = "data/xarm6/scenario1/scenario1.yaml";
+	// std::string scenario_file_path = "data/xarm6/scenario2/scenario2.yaml";
 
 	bool print_help = false;
 	CommandLine args("Test RGBMTStar command line parser.");
@@ -71,7 +70,7 @@ int main(int argc, char **argv)
 	std::vector<float> final_num_states;
 	std::unique_ptr<planning::AbstractPlanner> planner;
 	std::ofstream output_file;
-	output_file.open("/home/nermin/RPMPLv2/" + scenario_file_path.substr(0, scenario_file_path.size()-5) + "_tests/RGBMTStar_sometest.log", std::ofstream::out);
+	output_file.open("../" + scenario_file_path.substr(0, scenario_file_path.size()-5) + "_sometest.log", std::ofstream::out);
 	if (ss->getDimensions() == 2)
 		RGBMTStarConfig::MAX_PLANNING_TIME = 10e3;
 	else if (ss->getDimensions() == 6)
@@ -109,7 +108,7 @@ int main(int argc, char **argv)
 				}		
 			}
 			LOG(INFO) << "\n--------------------------------------------------------------------\n\n";
-			// planner->outputPlannerData(scenario_file_path.substr(0, scenario_file_path.size()-5) + "_tests/RGBMTStar_test" 
+			// planner->outputPlannerData(scenario_file_path.substr(0, scenario_file_path.size()-5) + "_test" 
 			// 						      + std::to_string(num_test) + ".log");
 			// output_file << "Cost convergence: \n" 
             //             << "Cost [rad]\t\tNum. states\t\tTime [ms]" << std::endl;
@@ -118,7 +117,7 @@ int main(int argc, char **argv)
 							<< i+1 << "\t\t"
 							<< planner->getPlannerInfo()->getStateTimes()[i] << std::endl;
 
-			planner->outputPlannerData("/tmp/plannerData.log");
+			planner->outputPlannerData("../" + scenario_file_path.substr(0, scenario_file_path.size()-5) + "_planner_data.log");
 		}
 		catch (std::domain_error &e)
 		{

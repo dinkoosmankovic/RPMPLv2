@@ -37,10 +37,7 @@ bool planning::rbt::RBTConnect::solve()
 		{
 			for (int i = 0; i < RBTConnectConfig::NUM_SPINES; i++)
 			{
-				q_e = ss->randomState();
-				q_e->setCoord(q_e->getCoord() + q_near->getCoord());
-				saturateSpine(q_near, q_e);
-				pruneSpine(q_near, q_e);
+				q_e = getRandomState(q_near);
 				tie(status, q_new) = extendSpine(q_near, q_e);
 				trees[tree_idx]->upgradeTree(q_new, q_near);
 			}
@@ -74,6 +71,20 @@ bool planning::rbt::RBTConnect::solve()
     }
 }
 
+// Get a random state 'q_rand' with uniform distribution, which is centered around 'q_center'.
+// The spine from 'q_center' to 'q_rand' is saturated and prunned.
+std::shared_ptr<base::State> planning::rbt::RBTConnect::getRandomState(std::shared_ptr<base::State> q_center)
+{
+	std::shared_ptr<base::State> q_rand;
+	do
+	{
+		q_rand = ss->randomState(q_center);
+		saturateSpine(q_center, q_rand);
+	} while (!pruneSpine(q_center, q_rand));
+
+	return q_rand;
+}
+
 // Get minimal distance from 'q' (determined with the pointer 'q_p' and 'tree') to obstacles
 float planning::rbt::RBTConnect::computeDistance(std::shared_ptr<base::State> q)
 {
@@ -96,8 +107,9 @@ void planning::rbt::RBTConnect::saturateSpine(std::shared_ptr<base::State> q, st
 		q_e->setCoord(q->getCoord() + (q_e->getCoord() - q->getCoord()) * RBTConnectConfig::DELTA / d);
 }
 
-// Prune the spine from 'q' to 'q_e', if it comes out C-space domain
-void planning::rbt::RBTConnect::pruneSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
+// Prune the spine from 'q' to 'q_e', if it comes out of C-space domain.
+// Return result of the prunning. Return false if 'q_e' becomes equal to 'q'. Otherwise, return true.
+bool planning::rbt::RBTConnect::pruneSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
 	int dim = ss->getDimensions();
 	Eigen::VectorXf q_temp;
@@ -137,6 +149,7 @@ void planning::rbt::RBTConnect::pruneSpine(std::shared_ptr<base::State> q, std::
 			}
 		}
 	}
+	return !ss->isEqual(q, q_e) ? true : false;
 }
 
 // Spine is generated from 'q' towards 'q_e'

@@ -12,4 +12,5 @@ public:
     static float STEP;                  // Advancing step when moving from current towards next state in a single iteration
     static float WEIGHT_MIN;            // Treshold 1 for the replanning assessment. Range: between 0 and 1
     static float WEIGHT_MEAN_MIN;       // Treshold 2 for the replanning assessment. Range: between 0 and 1
+    static float D_CRIT;                // Critical distance in W-space
 };

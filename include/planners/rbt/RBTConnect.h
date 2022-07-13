@@ -21,9 +21,10 @@ namespace planning
 			void outputPlannerData(std::string filename, bool output_states_and_paths = true, bool append_output = false) const override;
 
 		protected:
-			virtual float computeDistance(std::shared_ptr<base::State> q);
+            std::shared_ptr<base::State> getRandomState(std::shared_ptr<base::State> q_center);
 			void saturateSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
-			void pruneSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
+			bool pruneSpine(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
+			virtual float computeDistance(std::shared_ptr<base::State> q);
 			std::tuple<base::State::Status, std::shared_ptr<base::State>> extendSpine
 				(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e, float d_c_underest = -1);
 			base::State::Status connectSpine(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
