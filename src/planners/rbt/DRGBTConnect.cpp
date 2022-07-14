@@ -86,9 +86,9 @@ bool planning::rbt::DRGBTConnect::solve()
             addRandomStates(1);
         q_next = horizon.front();
 
-        LOG(INFO) << "Initial horizon " << horizon.size() << " states are: ";
-        for (int i = 0; i < horizon.size(); i++)
-            LOG(INFO) << i << ". state:\n" << horizon[i]; 
+        // LOG(INFO) << "Initial horizon consists of " << horizon.size() << " states: ";
+        // for (int i = 0; i < horizon.size(); i++)
+        //     LOG(INFO) << i << ". state:\n" << horizon[i]; 
 
         // Moving from 'q_current' towards 'q_next' for step 'DRGBTConnectConfig::STEP', where 'q_next' may change
         do
@@ -103,20 +103,22 @@ bool planning::rbt::DRGBTConnect::solve()
             {
                 LOG(INFO) << "Collision has been occured! ";
                 planner_info->setSuccessState(false);
+                planner_info->setPlanningTime(planner_info->getIterationsTimes().back());
                 return false;
             }
             
             // Compute the horizon and the next state
             computeHorizon();
             computeNextState();
-            LOG(INFO) << "Horizon " << horizon.size() << " states are: ";
-            for (int i = 0; i < horizon.size(); i++)
-                LOG(INFO) << i << ". state:\n" << horizon[i]; 
+            LOG(INFO) << "Horizon consists of " << horizon.size() << " states: ";
+            // for (int i = 0; i < horizon.size(); i++)
+            //     LOG(INFO) << i << ". state:\n" << horizon[i];
 
             // Update the robot current state
             // Check validity of the motion from 'q_current' to 'q_new'
             tie(status, q_new) = ss->interpolate(q_current, q_next->getState(), DRGBTConnectConfig::STEP);
-            if (!q_next->getIsReached() && 
+            if (status == base::State::Status::Trapped || 
+                !q_next->getIsReached() && 
                 (q_next->getStateReached()->getCoord() - q_current->getCoord()).norm() < DRGBTConnectConfig::STEP && 
                 !ss->isValid(q_current, q_new))
             {

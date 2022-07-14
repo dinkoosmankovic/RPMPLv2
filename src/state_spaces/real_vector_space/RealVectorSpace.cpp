@@ -86,7 +86,7 @@ std::tuple<base::State::Status, std::shared_ptr<base::State>> base::RealVectorSp
 	if (D < 0) 	// D = -1 is the default value
 		D = (q2->getCoord() - q1->getCoord()).norm();
 	
-	if (step < D)
+	if (step + RealVectorSpaceConfig::EQUALITY_THRESHOLD < D)
 	{
 		q_new->setCoord(q1->getCoord() + step * (q2->getCoord() - q1->getCoord()) / D);
 		status = base::State::Status::Advanced;
