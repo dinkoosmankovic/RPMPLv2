@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 	LOG(INFO) << "Start: " << scenario.getStart();
 	LOG(INFO) << "Goal: " << scenario.getGoal();
 
-	int max_num_tests = 1;
+	int max_num_tests = 30;
 	int num_test = 0;
 	int num_success = 0;
 	std::vector<float> initial_costs;
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 	else if (ss->getDimensions() == 6)
 		RGBMTStarConfig::MAX_PLANNING_TIME = 120e3; 	// 2 min
 	else
-		RGBMTStarConfig::MAX_PLANNING_TIME = 300e3;		// 5 min
+		RGBMTStarConfig::MAX_PLANNING_TIME = 240e3;		// 4 min
 	
 	while (num_test++ < max_num_tests)
 	{
