@@ -9,6 +9,7 @@
 #include "RealVectorSpaceState.h"
 #include "xArm6.h"
 #include "Planar2DOF.h"
+#include "Planar10DOF.h"
 
 #include <yaml-cpp/yaml.h>
 #include "yaml-cpp/parser.h"
@@ -67,6 +68,8 @@ scenario::Scenario::Scenario(std::string configuration_file)
         robot = std::make_shared<robots::xARM6>(robot_node["urdf"].as<std::string>());
     else if (type == "planar_2DOF")
         robot = std::make_shared<robots::Planar2DOF>(robot_node["urdf"].as<std::string>());
+    else if (type == "planar_10DOF")
+        robot = std::make_shared<robots::Planar10DOF>(robot_node["urdf"].as<std::string>());
 
     if (space_state == "RealVectorSpace")
         ss = std::make_shared<base::RealVectorSpace>(dim, robot, env);

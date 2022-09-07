@@ -10,24 +10,24 @@ import threading
 import time
 
 
-class Planar2DOF(RealVectorSpace):
+class Planar10DOF(RealVectorSpace):
     def __init__(self, obstacles) -> None:
-        self.robot = URDF.load('../data/planar_2dof/planar_2dof.urdf')
-        self.spaces = RealVectorSpace(2)
+        self.robot = URDF.load('../data/planar_10dof/planar_10dof.urdf')
+        self.spaces = RealVectorSpace(10)
         self.robot_cm = CollisionManager()
         self.env_cm = CollisionManager()
-        self.start_config = [0, 0]
+        self.start_config = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.camera_pos_z = 3.0
 
         self.traj = []
         self.count_i = 0
-        self.curr_q = [0, 0]
+        self.curr_q = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-        cfg = self.get_config([0, 0])
+        cfg = self.get_config([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         fk = self.robot.link_fk(cfg=cfg)
         self.init_poses = []
         for i, tm in enumerate(fk):
-            if i == 3:
+            if i == 11:
                 break
             pose = fk[tm]
             init_pose, link_mesh = self.get_link_mesh(tm)
@@ -75,7 +75,7 @@ class Planar2DOF(RealVectorSpace):
         fk = self.robot.link_fk(cfg=cfg)
         # adding robot to the scene
         for i, tm in enumerate(fk):
-            if i == 3:
+            if i == 11:
                 break
             pose = fk[tm]
             init_pose = self.init_poses[i]
@@ -89,7 +89,7 @@ class Planar2DOF(RealVectorSpace):
         fk = self.robot.link_fk(cfg=cfg)
         # adding robot to the scene
         for i, tm in enumerate(fk):
-            if i == 3:
+            if i == 11:
                 break
             pose = fk[tm]
             init_pose = self.init_poses[i]
@@ -232,7 +232,7 @@ class Planar2DOF(RealVectorSpace):
             fk = self.robot.link_fk(cfg=cfg)
             v.render_lock.acquire()
             for j, mesh in enumerate(fk):
-                if j < 3:
+                if j < 11:
                     pose = fk[mesh]
                     node_map[mesh].matrix = np.matmul(pose, init_pose_map[mesh])
             v.render_lock.release()
@@ -289,7 +289,7 @@ class Planar2DOF(RealVectorSpace):
             cfg = cfgs[i]
             fk = self.robot.link_fk(cfg=cfg)
             for j, mesh in enumerate(fk):
-                if j < 3:
+                if j < 11:
                     pose = fk[mesh]
                     node_map[mesh].matrix = np.matmul(pose, init_pose_map[mesh])
             v.render_lock.release()
@@ -319,7 +319,7 @@ class Planar2DOF(RealVectorSpace):
         node_map = {}
         init_pose_map = {}
         for i, tm in enumerate(fk):
-            if i == 3:
+            if i == 11:
                 break
             init_pose, link_mesh = self.get_link_mesh(tm)
             if not color == None:

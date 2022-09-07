@@ -20,13 +20,13 @@ namespace robots
 	class Planar2DOF : public AbstractRobot
 	{
 	public:
-		Planar2DOF(std::string robot_desc);
+		Planar2DOF(std::string robot_desc, int dim_ = 2);
 		~Planar2DOF();
 
 		const KDL::Tree& getRobotTree() const { return robot_tree; }
 		const std::vector<std::unique_ptr<fcl::CollisionObject<float>>> &getParts() const override { return parts; }
 		const std::vector<std::vector<float>> &getLimits() const override { return limits; }
-		const int getDimensions() override { return 2; }
+		const int getDimensions() override { return dim; }
 		const float getRadius(int dim) override { return radii[dim]; }
 
 		void setState(std::shared_ptr<base::State> q_) override;
@@ -38,7 +38,7 @@ namespace robots
 
 		void test(std::shared_ptr<env::Environment> env, std::shared_ptr<base::State> q);
 
-	private:
+	protected:
 		fcl::Transform3f KDL2fcl(const KDL::Frame &in);
 		KDL::Frame fcl2KDL(const fcl::Transform3f &in);
 		fcl::Vector3f transformPoint(fcl::Vector3f& v, fcl::Transform3f t);
@@ -49,6 +49,7 @@ namespace robots
 		KDL::Chain robot_chain;
 		std::vector<std::vector<float>> limits;
 		std::vector<float> radii;		// Radii of all enclosing cylinders
+		int dim = 2;
 	};
 
 }

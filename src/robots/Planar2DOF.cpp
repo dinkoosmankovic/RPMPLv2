@@ -15,8 +15,9 @@ typedef std::shared_ptr <fcl::CollisionGeometryf> CollisionGeometryPtr;
 
 robots::Planar2DOF::~Planar2DOF() {}
 
-robots::Planar2DOF::Planar2DOF(std::string robot_desc)
+robots::Planar2DOF::Planar2DOF(std::string robot_desc, int dim_)
 {
+	dim = dim_;
     if (!kdl_parser::treeFromFile(robot_desc, robot_tree))
 		throw std::runtime_error("Failed to construct kdl tree");
 
@@ -28,7 +29,7 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 	std::vector<urdf::LinkSharedPtr > links;
 	model.getLinks(links);
 
-	for (size_t i = 0; i < 2; ++i)
+	for (size_t i = 0; i < dim; ++i)
 	{
 		float lower = model.getJoint("joint"+std::to_string(i+1))->limits->lower;
 		float upper = model.getJoint("joint"+std::to_string(i+1))->limits->upper;
@@ -55,7 +56,7 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc)
 	}
 	//LOG(INFO) << "constructor----------------------\n";
 	robot_tree.getChain("base_link", "tool", robot_chain);
-	Eigen::Vector2f state; state << 0.0, 0.0;
+	Eigen::VectorXf state = Eigen::VectorXf::Zero(dim);
 	setState(std::make_shared<base::RealVectorSpaceState>(state));
 }
 
