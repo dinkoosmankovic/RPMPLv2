@@ -87,6 +87,6 @@ void env::Environment::updateObstacles()
             parts[i]->setTranslation(trans);
             parts[i]->computeAABB();
         // }
-        LOG(INFO) << "Obstacle range: (" << parts[i]->getAABB().min_.transpose() << ")\t(" << parts[i]->getAABB().max_.transpose() << ")";
+        // LOG(INFO) << "Obstacle range: (" << parts[i]->getAABB().min_.transpose() << ")\t(" << parts[i]->getAABB().max_.transpose() << ")";
     }
 }

@@ -85,7 +85,7 @@ bool planning::rrt::RRTConnect::solve()
 		planner_info->setNumStates(trees[0]->getNumStates() + trees[1]->getNumStates());
 		if (checkTerminatingCondition(status))
 		{
-			planner_info->setPlanningTime(planner_info->getIterationsTimes().back());
+			planner_info->setPlanningTime(planner_info->getIterationTimes().back());
 			return planner_info->getSuccessState();
 		}
 	}
@@ -158,11 +158,15 @@ const std::vector<std::shared_ptr<base::State>> &planning::rrt::RRTConnect::getP
 	return path;
 }
 
-// Get elapsed time in milliseconds from 'time_start' to 'time_current'
+// Get elapsed time (defaultly in milliseconds) from 'time_start' to 'time_current'
 float planning::rrt::RRTConnect::getElapsedTime(std::chrono::steady_clock::time_point &time_start,
-												std::chrono::steady_clock::time_point &time_current)
+												std::chrono::steady_clock::time_point &time_current,
+												std::string time_unit)
 {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(time_current - time_start).count();
+	if (time_unit == "milliseconds")
+		return std::chrono::duration_cast<std::chrono::milliseconds>(time_current - time_start).count();
+	else if (time_unit == "microseconds")
+		return std::chrono::duration_cast<std::chrono::microseconds>(time_current - time_start).count();
 }
 
 bool planning::rrt::RRTConnect::checkTerminatingCondition(base::State::Status status)
@@ -174,7 +178,7 @@ bool planning::rrt::RRTConnect::checkTerminatingCondition(base::State::Status st
 		return true;
 	}
 	else if (planner_info->getNumStates() >= RRTConnectConfig::MAX_NUM_STATES || 
-			 planner_info->getIterationsTimes().back() >= RRTConnectConfig::MAX_PLANNING_TIME ||
+			 planner_info->getIterationTimes().back() >= RRTConnectConfig::MAX_PLANNING_TIME ||
 			 planner_info->getNumIterations() >= RRTConnectConfig::MAX_NUM_ITER)
 	{
 		planner_info->setSuccessState(false);

@@ -6,7 +6,7 @@
 
 unsigned long DRGBTConnectConfig::MAX_NUM_ITER  = 10e6;
 float DRGBTConnectConfig::MAX_ITER_TIME         = 100;
-float DRGBTConnectConfig::MAX_PLANNING_TIME     = 60e3;
+float DRGBTConnectConfig::MAX_PLANNING_TIME     = 10e3;
 int DRGBTConnectConfig::INIT_HORIZON_SIZE       = 10;
 float DRGBTConnectConfig::STEP                  = 0.1;
 float DRGBTConnectConfig::WEIGHT_MIN            = 0.5;

@@ -65,7 +65,7 @@ bool planning::rbt::RBTConnect::solve()
 		planner_info->setNumStates(trees[0]->getNumStates() + trees[1]->getNumStates());
 		if (checkTerminatingCondition(status))
 		{
-			planner_info->setPlanningTime(planner_info->getIterationsTimes().back());
+			planner_info->setPlanningTime(planner_info->getIterationTimes().back());
 			return planner_info->getSuccessState();
 		}
     }
@@ -223,7 +223,7 @@ bool planning::rbt::RBTConnect::checkTerminatingCondition(base::State::Status st
 		return true;
 	}
 	else if (planner_info->getNumStates() >= RBTConnectConfig::MAX_NUM_STATES || 
-			 planner_info->getIterationsTimes().back() >= RBTConnectConfig::MAX_PLANNING_TIME ||
+			 planner_info->getIterationTimes().back() >= RBTConnectConfig::MAX_PLANNING_TIME ||
 			 planner_info->getNumIterations() >= RBTConnectConfig::MAX_NUM_ITER)
 	{
 		planner_info->setSuccessState(false);

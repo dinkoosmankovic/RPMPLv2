@@ -35,7 +35,8 @@ namespace planning
 			std::tuple<base::State::Status, std::shared_ptr<base::State>> extend(std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			base::State::Status connect(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
 			void computePath();
-			float getElapsedTime(std::chrono::steady_clock::time_point &time_start, std::chrono::steady_clock::time_point &time_current);
+			float getElapsedTime(std::chrono::steady_clock::time_point &time_start, std::chrono::steady_clock::time_point &time_current,
+								 std::string time_unit = "milliseconds");
 		};
 	}
 }

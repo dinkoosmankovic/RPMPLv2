@@ -55,8 +55,8 @@ bool planning::rbt::RGBMTStar::solve()
     {
 		// LOG(INFO) << "Iteration: " << planner_info->getNumIterations();
 		// LOG(INFO) << "Num. states: " << planner_info->getNumStates();
-        // LOG(INFO) << "Num. main: " << num_states[0] + num_states[1] << "\t "
-        //           << "Num. local: " << planner_info->getNumStates() - num_states[0] - num_states[1] << std::endl;
+        LOG(INFO) << "Num. main: " << num_states[0] + num_states[1] << "\t "
+                  << "Num. local: " << planner_info->getNumStates() - num_states[0] - num_states[1] << std::endl;
         
 		q_rand = getRandomState();
         
@@ -181,11 +181,11 @@ bool planning::rbt::RGBMTStar::solve()
 		    numStatesTotal += num_states[idx];
         }
         planner_info->addCostConvergence(std::vector<float>(numStatesTotal - planner_info->getNumStates(), cost_opt));
-        planner_info->addStateTimes(std::vector<float>(numStatesTotal - planner_info->getNumStates(), planner_info->getIterationsTimes().back()));
+        planner_info->addStateTimes(std::vector<float>(numStatesTotal - planner_info->getNumStates(), planner_info->getIterationTimes().back()));
         planner_info->setNumStates(numStatesTotal);
 		if (checkTerminatingCondition(q_con))
 		{
-			planner_info->setPlanningTime(planner_info->getIterationsTimes().back());
+			planner_info->setPlanningTime(planner_info->getIterationTimes().back());
 			return planner_info->getSuccessState();
 		}
     }
@@ -385,7 +385,7 @@ bool planning::rbt::RGBMTStar::checkTerminatingCondition(std::shared_ptr<base::S
 {
     if (RGBMTStarConfig::RETURN_WHEN_PATH_IS_FOUND && cost_opt < INFINITY || 
         planner_info->getNumStates() >= RGBMTStarConfig::MAX_NUM_STATES || 
-        planner_info->getIterationsTimes().back() >= RGBMTStarConfig::MAX_PLANNING_TIME ||
+        planner_info->getIterationTimes().back() >= RGBMTStarConfig::MAX_PLANNING_TIME ||
         planner_info->getNumIterations() >= RGBMTStarConfig::MAX_NUM_ITER)
     {
         if (cost_opt < INFINITY)

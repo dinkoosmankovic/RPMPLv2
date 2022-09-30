@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 	LOG(INFO) << "Start: " << scenario.getStart();
 	LOG(INFO) << "Goal: " << scenario.getGoal();
 
-	int max_num_tests = 30;
+	int max_num_tests = 1;
 	int num_test = 0;
 	int num_success = 0;
 	std::vector<float> initial_costs;

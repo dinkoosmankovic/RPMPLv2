@@ -8,7 +8,7 @@
 
 void PlannerInfo::addIterationTime(float time)
 {
-	iterations_times.emplace_back(time);
+	iteration_times.emplace_back(time);
 }
 
 void PlannerInfo::addStateTimes(const std::vector<float> &state_times)
@@ -23,9 +23,19 @@ void PlannerInfo::addCostConvergence(const std::vector<float> &cost_convergence)
 		PlannerInfo::cost_convergence.emplace_back(cost_convergence[i]);
 }
 
+void PlannerInfo::addRoutineTime(float time)
+{
+	routine_times.emplace_back(time);
+}
+
+void PlannerInfo::addReplanningTime(float time)
+{
+	replanning_times.emplace_back(time);
+}
+
 void PlannerInfo::clearPlannerInfo()
 {
-	iterations_times.clear();
+	iteration_times.clear();
 	planning_time = 0;
 	num_collision_queries = 0;
 	num_distance_queries = 0;

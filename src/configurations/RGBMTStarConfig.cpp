@@ -6,5 +6,5 @@
 
 unsigned long RGBMTStarConfig::MAX_NUM_ITER     = 1e9;
 unsigned long RGBMTStarConfig::MAX_NUM_STATES   = 1e9;
-float RGBMTStarConfig::MAX_PLANNING_TIME        = 10e3;
+float RGBMTStarConfig::MAX_PLANNING_TIME        = 30e3;
 int RGBMTStarConfig::RETURN_WHEN_PATH_IS_FOUND  = false;

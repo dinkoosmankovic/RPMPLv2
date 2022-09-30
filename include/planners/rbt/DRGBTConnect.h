@@ -19,7 +19,7 @@ namespace planning
             bool solve() override;
             bool checkTerminatingCondition();
 			void outputPlannerData(std::string filename, bool output_states_and_paths = true, bool append_output = false) const override;
-
+            
             class HorizonState
             {
             public:
@@ -54,28 +54,34 @@ namespace planning
                 inline void setStateReached(std::shared_ptr<base::State> state_reached_) { state_reached = state_reached_; }
                 inline void setStatus(HorizonState::Status status_) { status = status_; }
                 inline void setIndex(int index_) { index = index_; }
-                inline void setDistance(float d_c_) { d_c = d_c_; }
+                inline void setDistance(float d_c_);
                 inline void setDistancePrevious(float d_c_previous_) { d_c_previous = d_c_previous_; }
-                inline void setWeight(float weight_) { weight = weight_; }
+                inline void setWeight(float weight_);
                 inline void setIsReached(bool is_reached_) { is_reached = is_reached_; }
 
 		        friend std::ostream &operator<<(std::ostream &os, const HorizonState *q);
             };
 
 		protected:
-            std::vector<std::shared_ptr<HorizonState>> horizon;
+            std::vector<std::shared_ptr<HorizonState>> horizon;                 // List of all horizon states and their information
             std::shared_ptr<base::State> q_current;                             // Current robot configuration
             std::shared_ptr<HorizonState> q_next = nullptr;                     // Next robot configuration
             std::shared_ptr<HorizonState> q_next_previous = nullptr;            // Next robot configuration from the previous iteration
             float d_max_mean = 0;                                               // Averaged maximal distance-to-obstacles through iterations
             float hysteresis = 0.1;                                             // Hysteresis size when choosing the next state
             const int num_lateral_states = 2 * getSS()->getDimensions() - 2;    // Number of lateral states
-                
+            int horizon_size;                                                   // Number of states that is required to be in the horizon
+            bool replanning = false;                                            // Whether path replanning is required
+            base::State::Status status = base::State::Status::Reached;          // The status of proceeding from 'q_curr' towards 'q_next'
+            std::vector<std::shared_ptr<base::State>> predefined_path;          // The predefined path that is being followed
+            
+            void generateHorizon();
             void computeHorizon();
             void shortenHorizon(int num);
             void addRandomStates(int num);
             void addLateralStates();
-            void modifyState(std::shared_ptr<HorizonState> &q);
+            bool modifyState(std::shared_ptr<HorizonState> &q);
+            void updateCurrentState();
             void computeReachedState(std::shared_ptr<base::State> q_current, std::shared_ptr<HorizonState> q);
             void computeNextState();
             bool whetherToReplan();
