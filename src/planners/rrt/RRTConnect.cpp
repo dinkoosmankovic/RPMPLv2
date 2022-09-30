@@ -167,6 +167,8 @@ float planning::rrt::RRTConnect::getElapsedTime(std::chrono::steady_clock::time_
 		return std::chrono::duration_cast<std::chrono::milliseconds>(time_current - time_start).count();
 	else if (time_unit == "microseconds")
 		return std::chrono::duration_cast<std::chrono::microseconds>(time_current - time_start).count();
+	else
+		LOG(INFO) << "Error in measuring time!";
 }
 
 bool planning::rrt::RRTConnect::checkTerminatingCondition(base::State::Status status)

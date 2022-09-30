@@ -68,7 +68,10 @@ bool planning::rbt::DRGBTConnect::solve()
             //     LOG(INFO) << i << ". state:\n" << horizon[i];
 
             // Update the robot current state
+            // auto T = std::chrono::steady_clock::now();
             updateCurrentState();
+            // auto time_current = std::chrono::steady_clock::now();
+            // planner_info->addRoutineTime(getElapsedTime(T, time_current, "microseconds"));
             // LOG(INFO) << "Status: " << (status == base::State::Status::Advanced ? "Advanced" : "")
             //                         << (status == base::State::Status::Trapped  ? "Trapped"  : "")
             //                         << (status == base::State::Status::Reached  ? "Reached"  : "");
@@ -80,11 +83,11 @@ bool planning::rbt::DRGBTConnect::solve()
                 {
                     // LOG(INFO) << "Trying to replan...";
                     time_current = std::chrono::steady_clock::now();
-                    RGBTConnectConfig::MAX_PLANNING_TIME = getElapsedTime(time_iter_start, time_current) - 1; // 1 [ms] is reserved for the following code lines
+                    RGBTConnectConfig::MAX_PLANNING_TIME = DRGBTConnectConfig::MAX_ITER_TIME - getElapsedTime(time_iter_start, time_current) - 1; // 1 [ms] is reserved for the following code lines
                     RGBTConnect_planner = std::make_unique<planning::rbt::RGBTConnect>(ss, q_current, goal);
                     if (RGBTConnect_planner->solve())   // New path is found, thus update predefined path to the goal
                     {
-                        // LOG(INFO) << "The path has been replanned in " << RGBTConnect_planner->getPlannerInfo()->getPlanningTime() << " [ms]. ";
+                        LOG(INFO) << "The path has been replanned in " << RGBTConnect_planner->getPlannerInfo()->getPlanningTime() << " [ms]. ";
                         // LOG(INFO) << "Predefined path is: ";
                         predefined_path = RGBTConnect_planner->getPath();
                         // for (int i = 0; i < predefined_path.size(); i++)
@@ -112,7 +115,7 @@ bool planning::rbt::DRGBTConnect::solve()
             time_current = std::chrono::steady_clock::now();
             float time_iter_current = getElapsedTime(time_iter_start, time_current);
             float time_iter_remain = DRGBTConnectConfig::MAX_ITER_TIME - time_iter_current;
-            // LOG(INFO) << "Remaining iteration time is " << time_iter_remain << " [ms]. ";
+            LOG(INFO) << "Remaining iteration time is " << time_iter_remain << " [ms]. ";
             if (time_iter_remain < 0)
                 LOG(INFO) << "*************** Real-time is broken. " << -time_iter_remain << " [ms] exceeded!!! ***************";
             time_iter_start = time_current;
@@ -382,7 +385,7 @@ void planning::rbt::DRGBTConnect::updateCurrentState()
             update = false;
             status = base::State::Status::Trapped;
             horizon.clear();
-            LOG(INFO) << "Emergency situation!!! Not updating the robot current state! \t d_c: " << q_next->getDistance();
+            // LOG(INFO) << "Emergency situation!!! Not updating the robot current state! \t d_c: " << q_next->getDistance();
         }
     }
 
