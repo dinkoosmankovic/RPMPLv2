@@ -68,10 +68,10 @@ bool planning::rbt::DRGBTConnect::solve()
             //     LOG(INFO) << i << ". state:\n" << horizon[i];
 
             // Update the robot current state
-            // auto T = std::chrono::steady_clock::now();
+            auto T = std::chrono::steady_clock::now();
             updateCurrentState();
-            // auto time_current = std::chrono::steady_clock::now();
-            // planner_info->addRoutineTime(getElapsedTime(T, time_current, "microseconds"));
+            auto time_current = std::chrono::steady_clock::now();
+            planner_info->addRoutineTime(getElapsedTime(T, time_current, "microseconds"));
             // LOG(INFO) << "Status: " << (status == base::State::Status::Advanced ? "Advanced" : "")
             //                         << (status == base::State::Status::Trapped  ? "Trapped"  : "")
             //                         << (status == base::State::Status::Reached  ? "Reached"  : "");

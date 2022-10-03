@@ -55,8 +55,8 @@ bool planning::rbt::RGBMTStar::solve()
     {
 		// LOG(INFO) << "Iteration: " << planner_info->getNumIterations();
 		// LOG(INFO) << "Num. states: " << planner_info->getNumStates();
-        LOG(INFO) << "Num. main: " << num_states[0] + num_states[1] << "\t "
-                  << "Num. local: " << planner_info->getNumStates() - num_states[0] - num_states[1] << std::endl;
+        // LOG(INFO) << "Num. main: " << num_states[0] + num_states[1] << "\t "
+        //           << "Num. local: " << planner_info->getNumStates() - num_states[0] - num_states[1] << std::endl;
         
 		q_rand = getRandomState();
         

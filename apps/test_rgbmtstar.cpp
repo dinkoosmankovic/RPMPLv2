@@ -23,6 +23,7 @@ int main(int argc, char **argv)
 	// std::string scenario_file_path = "data/planar_2dof/scenario3/scenario3.yaml";
 	// std::string scenario_file_path = "data/planar_10dof/scenario_test/scenario_test.yaml";
 	std::string scenario_file_path = "data/planar_10dof/scenario1/scenario1.yaml";
+	// std::string scenario_file_path = "data/planar_10dof/scenario1/scenario2.yaml";
 	// std::string scenario_file_path = "data/xarm6/scenario_test/scenario_test.yaml";
 	// std::string scenario_file_path = "data/xarm6/scenario1/scenario1.yaml";
 	// std::string scenario_file_path = "data/xarm6/scenario2/scenario2.yaml";
@@ -62,7 +63,7 @@ int main(int argc, char **argv)
 	LOG(INFO) << "Start: " << scenario.getStart();
 	LOG(INFO) << "Goal: " << scenario.getGoal();
 
-	int max_num_tests = 1;
+	int max_num_tests = 30;
 	int num_test = 0;
 	int num_success = 0;
 	std::vector<float> initial_costs;
@@ -79,16 +80,16 @@ int main(int argc, char **argv)
 	else if (ss->getDimensions() == 6)
 		RGBMTStarConfig::MAX_PLANNING_TIME = 120e3; 	// 2 min
 	else
-		RGBMTStarConfig::MAX_PLANNING_TIME = 240e3;		// 4 min
+		RGBMTStarConfig::MAX_PLANNING_TIME = 60e3;		// 1 min
 	
 	while (num_test++ < max_num_tests)
 	{
 		try
 		{
+			LOG(INFO) << "Test number " << num_test << " of " << max_num_tests;
 			planner = std::make_unique<planning::rbt::RGBMTStar>(ss, scenario.getStart(), scenario.getGoal());					
 			bool res = planner->solve();
 
-			LOG(INFO) << "Test number " << num_test << " of " << max_num_tests;
 			LOG(INFO) << "RGBMT* planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
 			LOG(INFO) << "Number of states: " << planner->getPlannerInfo()->getNumStates();
 			LOG(INFO) << "Planning time: " << planner->getPlannerInfo()->getPlanningTime() << " [ms]";
