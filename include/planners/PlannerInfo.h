@@ -12,22 +12,20 @@ class PlannerInfo
 protected:
 	std::vector<float> iteration_times;
 	std::vector<float> state_times;
-	std::vector<float> cost_convergence;		// Cost vs state convergence rate (cost-state curve)
-	std::vector<float> routine_times; 			// Running times for the specified routine
-	std::vector<float> replanning_times; 		// Running times for the replanning routine
+	std::vector<float> cost_convergence;			// Cost vs state convergence rate (cost-state curve)
+	std::vector<std::vector<float>> routine_times; 	// Running times for the specified routine
 	float planning_time;
 	size_t num_collision_queries;
 	size_t num_distance_queries;
 	size_t num_states;
 	size_t num_iterations;
-	bool success_state = false;					// Did planner succeed to find a solution?
+	bool success_state = false;						// Did planner succeed to find a solution?
 
 public:
 	void addIterationTime(float time);
 	void addStateTimes(const std::vector<float> &state_times);
 	void addCostConvergence(const std::vector<float> &cost_convergence);
-	void addRoutineTime(float time);
-	void addReplanningTime(float time);
+	void addRoutineTime(float time, int idx);
 	void setPlanningTime(float planning_time_) { planning_time = planning_time_; }
 	void setNumCollisionQueries(size_t num_collision_queries_) { num_collision_queries = num_collision_queries_; }
 	void setNumDistanceQueries(size_t num_distance_queries_) { num_distance_queries = num_distance_queries_; }
@@ -38,8 +36,7 @@ public:
 	const std::vector<float> &getIterationTimes() const { return iteration_times; }
 	const std::vector<float> &getStateTimes() const { return state_times; }
 	const std::vector<float> &getCostConvergence() const { return cost_convergence; }
-	const std::vector<float> &getRoutineTimes() const {return routine_times; }
-	const std::vector<float> &getReplanningTimes() const {return replanning_times; }
+	const std::vector<std::vector<float>> &getRoutineTimes() const {return routine_times; }
 	float getPlanningTime() const { return planning_time; }
 	size_t getNumCollisionQueries() const { return num_collision_queries; }
 	size_t getNumDistanceQueries() const { return num_distance_queries; }

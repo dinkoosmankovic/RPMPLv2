@@ -48,9 +48,12 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	std::vector<float> routine_times, replanning_times, times;
 	int num_test = 0;
-	int max_num_tests = 1;
+	int max_num_tests = 100;
+	std::vector<std::string> routines = {"generateHorizon [us]", "updateHorizon [us]", "updateCurrentState [us]", "generateGBur [ms]", "RGBTConnect [ms]"};
+	std::vector<std::vector<float>> routine_times(routines.size());
+	std::ofstream output_file;
+	output_file.open("../" + scenario_file_path.substr(0, scenario_file_path.size()-5) + "_routine_times.log", std::ofstream::out);
 
 	while (num_test++ < max_num_tests)
 	{
@@ -84,12 +87,11 @@ int main(int argc, char **argv)
 			// }
 			// planner->outputPlannerData("../" + scenario_file_path.substr(0, scenario_file_path.size()-5) + "_planner_data.log");
 
-			times = planner->getPlannerInfo()->getRoutineTimes();
-			for (float t : times)
-				routine_times.emplace_back(t);
-			// times = planner->getPlannerInfo()->getReplanningTimes();
-			// for (float t : times)
-			// 	replanning_times.emplace_back(t);
+			std::vector<std::vector<float>> times = planner->getPlannerInfo()->getRoutineTimes();
+			for (int idx = 0; idx < times.size(); idx++)
+				for (int i = 0; i < times[idx].size(); i++)
+					routine_times[idx].emplace_back(times[idx][i]);
+			
 			LOG(INFO) << "\n--------------------------------------------------------------------\n\n";
 		}
 		catch (std::domain_error &e)
@@ -98,11 +100,18 @@ int main(int argc, char **argv)
 		}
 	}
 
-	LOG(INFO) << "Time of the routine: " << getMean(routine_times) << " +- " << getStd(routine_times)
-			  << ". Size " << routine_times.size();
-	// LOG(INFO) << "Time of the replanning routine: " << getMean(replanning_times) << " +- " << getStd(replanning_times)
-	// 		  << ". Size " << replanning_times.size();
+	for (int idx = 0; idx < routines.size(); idx++)
+	{
+		LOG(INFO) << "Average time of the routine " << routines[idx] << ": " << getMean(routine_times[idx]) << " +- " << getStd(routine_times[idx]) << "\t"
+				  << "Maximal time: " << *std::max_element(routine_times[idx].begin(), routine_times[idx].end()) << "\t"
+				  << "Size " << routine_times[idx].size();
+		output_file << "Routine " << idx << ": " << routines[idx] << std::endl;
+		for (float t : routine_times[idx])
+			output_file << t << std::endl;
+		output_file << "-------------------------------------------------------------\n\n";
+	}
 	
+	output_file.close();
 	google::ShutDownCommandLineFlags();
 	return 0;
 }

@@ -5,7 +5,7 @@
 #include "DRGBTConnectConfig.h"
 
 unsigned long DRGBTConnectConfig::MAX_NUM_ITER  = 10e6;
-float DRGBTConnectConfig::MAX_ITER_TIME         = 100;
+float DRGBTConnectConfig::MAX_ITER_TIME         = 1000;
 float DRGBTConnectConfig::MAX_PLANNING_TIME     = 60e3;
 int DRGBTConnectConfig::INIT_HORIZON_SIZE       = 10;
 float DRGBTConnectConfig::STEP                  = 0.1;
