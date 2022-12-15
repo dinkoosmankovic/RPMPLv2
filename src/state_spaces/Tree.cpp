@@ -27,7 +27,7 @@ std::shared_ptr<base::State> base::Tree::getNearestState(std::shared_ptr<base::S
 	std::vector<float> vec(&v[0], v.data()+v.cols()*v.rows());
 
 	float *vec_c = &vec[0];
-	kd_tree->findNeighbors(result_set, vec_c, nanoflann::SearchParams(10));
+	kd_tree->findNeighbors(result_set, vec_c, nanoflann::SearchParameters(10));
 	vec_c = nullptr;
 	return states->at(q_near_idx);
 }

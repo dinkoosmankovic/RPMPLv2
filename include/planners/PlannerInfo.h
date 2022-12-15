@@ -15,10 +15,10 @@ protected:
 	std::vector<float> cost_convergence;			// Cost vs state convergence rate (cost-state curve)
 	std::vector<std::vector<float>> routine_times; 	// Running times for the specified routine
 	float planning_time;
-	size_t num_collision_queries;
-	size_t num_distance_queries;
-	size_t num_states;
-	size_t num_iterations;
+	int num_collision_queries;
+	int num_distance_queries;
+	int num_states;
+	int num_iterations;
 	bool success_state = false;						// Did planner succeed to find a solution?
 
 public:
@@ -27,10 +27,10 @@ public:
 	void addCostConvergence(const std::vector<float> &cost_convergence);
 	void addRoutineTime(float time, int idx);
 	void setPlanningTime(float planning_time_) { planning_time = planning_time_; }
-	void setNumCollisionQueries(size_t num_collision_queries_) { num_collision_queries = num_collision_queries_; }
-	void setNumDistanceQueries(size_t num_distance_queries_) { num_distance_queries = num_distance_queries_; }
-	void setNumStates(size_t num_states_) { num_states = num_states_; }
-	void setNumIterations(size_t num_iterations_) { num_iterations = num_iterations_; }
+	void setNumCollisionQueries(int num_collision_queries_) { num_collision_queries = num_collision_queries_; }
+	void setNumDistanceQueries(int num_distance_queries_) { num_distance_queries = num_distance_queries_; }
+	void setNumStates(int num_states_) { num_states = num_states_; }
+	void setNumIterations(int num_iterations_) { num_iterations = num_iterations_; }
 	void setSuccessState(bool success_state_) { success_state = success_state_; }
 
 	const std::vector<float> &getIterationTimes() const { return iteration_times; }
@@ -38,10 +38,10 @@ public:
 	const std::vector<float> &getCostConvergence() const { return cost_convergence; }
 	const std::vector<std::vector<float>> &getRoutineTimes() const {return routine_times; }
 	float getPlanningTime() const { return planning_time; }
-	size_t getNumCollisionQueries() const { return num_collision_queries; }
-	size_t getNumDistanceQueries() const { return num_distance_queries; }
-	size_t getNumStates() const { return num_states; }
-	size_t getNumIterations() const { return num_iterations; }
+	int getNumCollisionQueries() const { return num_collision_queries; }
+	int getNumDistanceQueries() const { return num_distance_queries; }
+	int getNumStates() const { return num_states; }
+	int getNumIterations() const { return num_iterations; }
 	bool getSuccessState() const { return success_state; }
 
 	void clearPlannerInfo();
