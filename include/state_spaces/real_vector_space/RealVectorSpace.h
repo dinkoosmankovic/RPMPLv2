@@ -35,12 +35,9 @@ namespace base
 		virtual std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> computeDistanceAndPlanes(const std::shared_ptr<base::State> q) override;
 		friend std::ostream &operator<<(std::ostream &os, const RealVectorSpace &space);
 
-	private:
 		static bool collisionCapsuleToBox(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
 		static bool collisionCapsuleToRectangle(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs, int coord);
 		static bool collisionLineSegToLineSeg(const Eigen::Vector3f &A, const Eigen::Vector3f &B, Eigen::Vector3f &C, Eigen::Vector3f &D);
-		static float checkCases(const Eigen::Vector3f &A, const Eigen::Vector3f &B, Eigen::Vector4f &rec, Eigen::Vector2f &point, float obs_coord, int coord);
-		static const Eigen::Vector3f get3DPoint(const Eigen::Vector2f &point, float coord_value, int coord);
 		static bool collisionCapsuleToSphere(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
 		
 		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceCapsuleToBox
@@ -54,6 +51,10 @@ namespace base
 		static std::tuple<float, std::shared_ptr<Eigen::MatrixXf>> distanceCapsuleToSphere
 			(const Eigen::Vector3f &A, const Eigen::Vector3f &B, float radius, Eigen::VectorXf &obs);
 
+	private:
+		static float checkCases(const Eigen::Vector3f &A, const Eigen::Vector3f &B, Eigen::Vector4f &rec, Eigen::Vector2f &point, float obs_coord, int coord);
+		static const Eigen::Vector3f get3DPoint(const Eigen::Vector2f &point, float coord_value, int coord);
+		
 		class Capsule_Box
 		{
 			private:

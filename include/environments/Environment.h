@@ -19,9 +19,12 @@ namespace env
 	public:
 		Environment(const std::string &filename); // filename with description
         Environment(const fcl::Box<float> &box, const fcl::Transform3<float> &tf);
-		Environment(std::vector<Obstacle> obs);
+		Environment(const std::vector<Obstacle> obs);
 		~Environment();
+
 		const std::vector<std::shared_ptr<fcl::CollisionObject<float>>> &getParts() const { return parts; }
+		void setParts(const std::vector<std::shared_ptr<fcl::CollisionObject<float>>> &parts_);
+		void addCollisionObject(const std::shared_ptr<fcl::CollisionObject<float>> ob);
 		void updateObstacles();
 
 	private:

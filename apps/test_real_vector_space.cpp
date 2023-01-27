@@ -17,8 +17,8 @@ int main(int argc, char **argv)
 	LOG(INFO) << "GLOG successfully initialized!";
 
 	ConfigurationReader::initConfiguration();
-	scenario::Scenario scenario("data/xarm6/scenario_test.yaml");
-	scenario::Scenario scenario_FCL("data/xarm6/scenario1.yaml");
+	scenario::Scenario scenario("/data/xarm6/scenario_test.yaml");
+	scenario::Scenario scenario_FCL("/data/xarm6/scenario1.yaml");
 
 	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
 	std::shared_ptr<base::StateSpace> ss_FCL = scenario_FCL.getStateSpace();
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 			// std::shared_ptr<base::State> q = std::make_shared<base::RealVectorSpaceState>(Q);
 			std::shared_ptr<base::State> q = scenario.getStart();
 			LOG(INFO) << "Num: " << num << " Configuration: " << q << std::endl;
-			LOG(INFO) << *ss->robot->computeXYZ(q) << std::endl;
+			LOG(INFO) << *ss->robot->computeSkeleton(q) << std::endl;
 			ss->robot->setState(q);
 			
 			// Test distance underestimation

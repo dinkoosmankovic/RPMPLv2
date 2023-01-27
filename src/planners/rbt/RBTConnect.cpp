@@ -95,6 +95,7 @@ float planning::rbt::RBTConnect::computeDistance(std::shared_ptr<base::State> q)
 	{
 		d_c = ss->computeDistance(q);
 		q->setDistance(d_c);
+		LOG(INFO) << "Distance-to-obstacles: " << d_c;
 	}
 	return d_c;
 }
@@ -164,7 +165,7 @@ std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rbt::RBT
 	int counter = 0;
 	int K_max = 5;              // The number of iterations for computing q*
 	std::shared_ptr<base::State> q_new = ss->newState(q->getCoord());
-	std::shared_ptr<Eigen::MatrixXf> XYZ = ss->robot->computeXYZ(q);
+	std::shared_ptr<Eigen::MatrixXf> XYZ = ss->robot->computeSkeleton(q);
 	std::shared_ptr<Eigen::MatrixXf> XYZ_new = XYZ;
 	
 	while (true)
@@ -182,7 +183,7 @@ std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rbt::RBT
 			return {base::State::Status::Advanced, q_new};
 
 		rho = 0;
-		XYZ_new = ss->robot->computeXYZ(q_new);
+		XYZ_new = ss->robot->computeSkeleton(q_new);
 		for (int k = 1; k <= ss->robot->getParts().size(); k++)
 			rho = std::max(rho, (XYZ->col(k) - XYZ_new->col(k)).norm());
 	}

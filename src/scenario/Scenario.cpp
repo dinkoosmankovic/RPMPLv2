@@ -91,3 +91,18 @@ scenario::Scenario::Scenario(std::string configuration_file)
     goal = std::make_shared<base::RealVectorSpaceState>(goal_vec);
 
 }
+
+void scenario::Scenario::setEnvironment(const std::vector<std::shared_ptr<fcl::CollisionObject<float>>> &parts)
+{
+    env->setParts(parts);
+}
+
+void scenario::Scenario::setStart(const std::shared_ptr<base::State> start_)
+{
+    start = start_;
+}
+
+void scenario::Scenario::setGoal(const std::shared_ptr<base::State> goal_)
+{
+    goal = goal_;
+}

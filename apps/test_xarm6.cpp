@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 	FLAGS_logtostderr = true;
 	
 	
-	std::shared_ptr<robots::xARM6> robot = std::make_shared<robots::xARM6>("data/xarm6/xarm6.urdf");
+	std::shared_ptr<robots::xARM6> robot = std::make_shared<robots::xARM6>("/data/xarm6/xarm6.urdf");
 
 	/*LOG(INFO) << robot->getRobotTree().getNrOfSegments();
 	LOG(INFO) << robot->getParts().size();

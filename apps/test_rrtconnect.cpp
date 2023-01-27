@@ -14,14 +14,14 @@ int main(int argc, char **argv)
 	FLAGS_logtostderr = true;
 	LOG(INFO) << "GLOG successfully initialized!";
 
-	// std::string scenario_file_path = "data/planar_2dof/scenario_test/scenario_test.yaml";
-	// std::string scenario_file_path = "data/planar_2dof/scenario1/scenario1.yaml";
-	// std::string scenario_file_path = "data/planar_2dof/scenario2/scenario2.yaml";
-	// std::string scenario_file_path = "data/planar_10dof/scenario_test/scenario_test.yaml";
-	std::string scenario_file_path = "data/planar_10dof/scenario1/scenario1.yaml";
-	// std::string scenario_file_path = "data/xarm6/scenario_test/scenario_test.yaml";
-	// std::string scenario_file_path = "data/xarm6/scenario1/scenario1.yaml";
-	// std::string scenario_file_path = "data/xarm6/scenario2/scenario2.yaml";
+	// std::string scenario_file_path = "/data/planar_2dof/scenario_test/scenario_test.yaml";
+	// std::string scenario_file_path = "/data/planar_2dof/scenario1/scenario1.yaml";
+	// std::string scenario_file_path = "/data/planar_2dof/scenario2/scenario2.yaml";
+	// std::string scenario_file_path = "/data/planar_10dof/scenario_test/scenario_test.yaml";
+	std::string scenario_file_path = "/data/planar_10dof/scenario1/scenario1.yaml";
+	// std::string scenario_file_path = "/data/xarm6/scenario_test/scenario_test.yaml";
+	// std::string scenario_file_path = "/data/xarm6/scenario1/scenario1.yaml";
+	// std::string scenario_file_path = "/data/xarm6/scenario2/scenario2.yaml";
 
 	bool print_help = false;
 	CommandLine args("Test RRTConnect command line parser.");

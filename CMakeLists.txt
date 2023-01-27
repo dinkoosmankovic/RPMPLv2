@@ -44,16 +44,16 @@ find_package(orocos_kdl REQUIRED)
 include_directories(${OROCOS_KDL_INCLUDE_DIR})
 
 find_package(yaml-cpp REQUIRED)
-
 find_package(fcl 0.7 REQUIRED)
 
 add_subdirectory(external/glog)
 add_subdirectory(external/nanoflann)
 add_subdirectory(external/googletest)
-#add_subdirectory(external/fcl)
-add_subdirectory(external/QuadProgpp)
+# add_subdirectory(external/QuadProgpp)
 
-set(PROJECT_LIBRARIES gtest glog::glog nanoflann kdl_parser orocos-kdl fcl ccd yaml-cpp quadprog)
+set(PROJECT_LIBRARIES gtest glog::glog nanoflann kdl_parser orocos-kdl fcl ccd yaml-cpp 
+  # quadprog
+)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data/
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
@@ -70,7 +70,6 @@ add_subdirectory(apps)
 # Testing only available if this is the main app
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well
 
-if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
-   AND BUILD_TESTING)
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING) AND BUILD_TESTING)
   add_subdirectory(tests)
 endif()

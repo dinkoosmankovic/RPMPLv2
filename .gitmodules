@@ -7,6 +7,6 @@
 [submodule "external/googletest"]
 	path = external/googletest
 	url = https://github.com/google/googletest
-[submodule "external/FCL"]
-	path = external/FCL
-	url = https://github.com/flexible-collision-library/fcl.git
+[submodule "external/QuadProgpp"]
+	path = external/QuadProgpp
+	url = https://github.com/liuq/QuadProgpp.git

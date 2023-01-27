@@ -8,9 +8,8 @@
 #include <Eigen/Dense>
 #include <time.h>
 #include "RealVectorSpaceConfig.h"
-
-#include <glog/log_severity.h>
-#include <glog/logging.h>
+// #include <glog/log_severity.h>
+// #include <glog/logging.h>
 
 base::RealVectorSpaceFCL::~RealVectorSpaceFCL() {}
 
@@ -50,7 +49,7 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 		(std::vector<Eigen::MatrixXf>(env->getParts().size(), Eigen::MatrixXf(6, robot->getParts().size())));
 	fcl::DefaultDistanceData<float> distance_data;
 	
-	for (size_t i = 0; i < robot->getParts().size(); ++i)
+	for (size_t i = 1; i < robot->getParts().size(); ++i)
 	{	
 		for (size_t j = 0; j < env->getParts().size(); ++j)
 		{
@@ -83,7 +82,7 @@ void base::RealVectorSpaceFCL::prepareCollisionManager(const std::shared_ptr<bas
 	collision_manager_env->clear();
 	robot->setState(q);
 
-	for (size_t i = 0; i < robot->getParts().size(); i++)
+	for (size_t i = 1; i < robot->getParts().size(); i++)
 		collision_manager_robot->registerObject(robot->getParts()[i].get());
 	
 	for (size_t j = 0; j < env->getParts().size(); j++)

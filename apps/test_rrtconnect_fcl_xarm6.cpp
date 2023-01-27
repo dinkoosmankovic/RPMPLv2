@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
 	ConfigurationReader::initConfiguration();
 	
-	scenario::Scenario scenario("data/xarm6/scenario_easy.yaml");
+	scenario::Scenario scenario("/data/xarm6/scenario_easy.yaml");
 	
 	std::shared_ptr<base::StateSpace> ss = scenario.getStateSpace();
 	LOG(INFO) << "Dimensions: " << ss->getDimensions();

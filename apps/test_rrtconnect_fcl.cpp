@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 	FLAGS_logtostderr = true;
 	LOG(INFO) << "GLOG successfully initialized!";
 
-	std::string scenarioFilePath = "data/planar_2dof/scenario_easy.yaml";
+	std::string scenarioFilePath = "/data/planar_2dof/scenario_easy.yaml";
 	bool printHelp = false;
 
 	CommandLine args("Test RRTConnect command line parser.");

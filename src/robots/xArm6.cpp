@@ -31,18 +31,14 @@ robots::xARM6::xARM6(std::string robot_desc)
 	std::vector<urdf::LinkSharedPtr > links;
 	model.getLinks(links);
 	robot_tree.getChain("link_base", "link_eef", robot_chain);
-	
+
 	for (size_t i = 0; i < robot_chain.getNrOfJoints(); ++i)
 	{
 		float lower = model.getJoint("joint"+std::to_string(i+1))->limits->lower;
 		float upper = model.getJoint("joint"+std::to_string(i+1))->limits->upper;
 		limits.emplace_back(std::vector<float>({lower, upper}));
-	}
 
-	for (size_t i = 0; i < 6; ++i)
-	{
 		//LOG(INFO) << links[i]->name << "\t" << links[i]->collision->geometry->type;
-
 		urdf::Pose pose = model.getJoint("joint"+std::to_string(i+1))->parent_to_joint_origin_transform;
 		KDL::Vector pos(pose.position.x, pose.position.y, pose.position.z);
 		double roll, pitch, yaw;
@@ -75,11 +71,12 @@ robots::xARM6::xARM6(std::string robot_desc)
 		}
 	}
 	//LOG(INFO) << "constructor----------------------\n";
-	setState(std::make_shared<base::RealVectorSpaceState>(Eigen::VectorXf::Zero(6)));
+	setState(std::make_shared<base::RealVectorSpaceState>(Eigen::VectorXf::Zero(robot_chain.getNrOfJoints())));
 }
 
 std::shared_ptr<std::vector<KDL::Frame>> robots::xARM6::computeForwardKinematics(std::shared_ptr<base::State> q)
 {
+	setConfiguration(q);
 	KDL::TreeFkSolverPos_recursive treefksolver = KDL::TreeFkSolverPos_recursive(robot_tree);
 	std::shared_ptr<std::vector<KDL::Frame>> framesFK = std::make_shared<std::vector<KDL::Frame>>();
 	robot_tree.getChain("link_base", "link_eef", robot_chain);
@@ -98,73 +95,72 @@ std::shared_ptr<std::vector<KDL::Frame>> robots::xARM6::computeForwardKinematics
 	return framesFK;
 }
 
-std::shared_ptr<Eigen::MatrixXf> robots::xARM6::computeXYZ(std::shared_ptr<base::State> q)
+std::shared_ptr<Eigen::MatrixXf> robots::xARM6::computeSkeleton(std::shared_ptr<base::State> q)
 {
 	std::shared_ptr<std::vector<KDL::Frame>> frames = computeForwardKinematics(q);
-	std::shared_ptr<Eigen::MatrixXf> XYZ = std::make_shared<Eigen::MatrixXf>(3, getParts().size() + 1);
-	XYZ->col(0) << 0, 0, 0;
-	XYZ->col(1) << frames->at(1).p(0), frames->at(1).p(1), frames->at(1).p(2);
-	XYZ->col(2) << frames->at(2).p(0), frames->at(2).p(1), frames->at(2).p(2);
+	std::shared_ptr<Eigen::MatrixXf> skeleton = std::make_shared<Eigen::MatrixXf>(3, getParts().size() + 1);
+	skeleton->col(0) << 0, 0, 0;
+	skeleton->col(1) << frames->at(1).p(0), frames->at(1).p(1), frames->at(1).p(2);
+	skeleton->col(2) << frames->at(2).p(0), frames->at(2).p(1), frames->at(2).p(2);
 
 	KDL::Vector i2(frames->at(2).M(0,0), frames->at(2).M(1,0), frames->at(2).M(2,0));
 	KDL::Vector p3 = frames->at(2).p + i2 * 0.0775;
-	XYZ->col(3) << p3(0), p3(1), p3(2);
-	XYZ->col(4) << frames->at(4).p(0), frames->at(4).p(1), frames->at(4).p(2);
+	skeleton->col(3) << p3(0), p3(1), p3(2);
+	skeleton->col(4) << frames->at(4).p(0), frames->at(4).p(1), frames->at(4).p(2);
 
 	KDL::Vector i4(frames->at(4).M(0,0), frames->at(4).M(1,0), frames->at(4).M(2,0));
 	KDL::Vector p5 = frames->at(4).p + i4 * 0.076;
-	XYZ->col(5) << p5(0), p5(1), p5(2);
-	XYZ->col(6) << frames->at(5).p(0), frames->at(5).p(1), frames->at(5).p(2);
+	skeleton->col(5) << p5(0), p5(1), p5(2);
+	skeleton->col(6) << frames->at(5).p(0), frames->at(5).p(1), frames->at(5).p(2);
 
-	return XYZ;
+	return skeleton;
 }
 
 float robots::xARM6::computeStep(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2, float fi, 
-								 std::shared_ptr<Eigen::MatrixXf> XYZ)
+								 std::shared_ptr<Eigen::MatrixXf> skeleton)
 {
 	Eigen::VectorXf r(6);
-	r(0) = getEnclosingRadius(XYZ, 2, -2);
-	r(1) = getEnclosingRadius(XYZ, 2, -1);
-	r(2) = getEnclosingRadius(XYZ, 3, -1);
-	r(3) = getEnclosingRadius(XYZ, 5, 3);
-	r(4) = getEnclosingRadius(XYZ, 5, -1);
+	r(0) = getEnclosingRadius(skeleton, 2, -2);
+	r(1) = getEnclosingRadius(skeleton, 2, -1);
+	r(2) = getEnclosingRadius(skeleton, 3, -1);
+	r(3) = getEnclosingRadius(skeleton, 5, 3);
+	r(4) = getEnclosingRadius(skeleton, 5, -1);
 	r(5) = 0;
 	float d = r.dot((q1->getCoord() - q2->getCoord()).cwiseAbs());
 	return fi / d;
 }
 
-float robots::xARM6::getEnclosingRadius(std::shared_ptr<Eigen::MatrixXf> XYZ, int j_start, int j_proj)
+float robots::xARM6::getEnclosingRadius(std::shared_ptr<Eigen::MatrixXf> skeleton, int j_start, int j_proj)
 {
 	float r = 0;
 	if (j_proj == -2)	// Special case when all frame origins starting from j_start are projected on {x,y} plane
 	{
-		for (int j = j_start; j < XYZ->cols(); j++)
-			r = std::max(r, XYZ->col(j).head(2).norm() + radii[j-1]);
+		for (int j = j_start; j < skeleton->cols(); j++)
+			r = std::max(r, skeleton->col(j).head(2).norm() + radii[j-1]);
 	}
 	else if (j_proj == -1) 	// No projection
 	{
-		for (int j = j_start; j < XYZ->cols(); j++)
-			r = std::max(r, (XYZ->col(j) - XYZ->col(j_start-1)).norm() + radii[j-1]);
+		for (int j = j_start; j < skeleton->cols(); j++)
+			r = std::max(r, (skeleton->col(j) - skeleton->col(j_start-1)).norm() + radii[j-1]);
 	}
 	else	// Projection of all frame origins starting from j_start to the link (j_proj, j_proj+1) is needed
 	{
 		float t;
-		Eigen::Vector3f A = XYZ->col(j_proj);
-		Eigen::Vector3f B = XYZ->col(j_proj+1);
+		Eigen::Vector3f A = skeleton->col(j_proj);
+		Eigen::Vector3f B = skeleton->col(j_proj+1);
 		Eigen::Vector3f P, P_proj;
-		for (int j = j_start; j < XYZ->cols(); j++)
+		for (int j = j_start; j < skeleton->cols(); j++)
 		{
-			t = (XYZ->col(j) - A).dot(B - A) / (B - A).squaredNorm();
+			t = (skeleton->col(j) - A).dot(B - A) / (B - A).squaredNorm();
 			P_proj = A + t * (B - A);
-			r = std::max(r, (XYZ->col(j) - P_proj).norm() + radii[j-1]);
+			r = std::max(r, (skeleton->col(j) - P_proj).norm() + radii[j-1]);
 		}
 	}
 	return r;
 }
 
-void robots::xARM6::setState(std::shared_ptr<base::State> q_)
+void robots::xARM6::setState(std::shared_ptr<base::State> q)
 {
-	q = q_;
 	KDL::JntArray jointpositions = KDL::JntArray(q->getDimensions());
 	std::shared_ptr<std::vector<KDL::Frame>> framesFK = computeForwardKinematics(q);
 	KDL::Frame tf;

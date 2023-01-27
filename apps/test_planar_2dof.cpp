@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 	FLAGS_logtostderr = true;
 	LOG(INFO) << "GLOG successfully initialized!";
 
-	std::string scenario_file_path = "data/planar_2dof/scenario_easy.yaml";
+	std::string scenario_file_path = "/data/planar_2dof/scenario_easy.yaml";
 	bool print_help = false;
 
 	CommandLine args("Test Planar2DOF command line parser.");

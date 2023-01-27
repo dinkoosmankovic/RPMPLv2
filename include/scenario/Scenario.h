@@ -28,6 +28,9 @@ namespace scenario
         const std::shared_ptr<base::State> &getGoal() const { return goal; }
         const std::string &getSpaceType() const { return spaceType; }
         const int &getDimensions() const { return dimensions; }
+        void setEnvironment(const std::vector<std::shared_ptr<fcl::CollisionObject<float>>> &parts);
+        void setStart(const std::shared_ptr<base::State> start_);
+        void setGoal(const std::shared_ptr<base::State> goal_);
 
 	private:
 		std::shared_ptr<robots::AbstractRobot> robot;

@@ -33,7 +33,7 @@ obstacles:
       rot: [0, 0, 0, 0]
 robot:
   type: "xARM6"
-  urdf: "data/xarm6/xarm6.urdf"
+  urdf: "/data/xarm6/xarm6.urdf"
   space: "RealVectorSpaceFCL"
   dimensions: 6
   start: [1.5708, 1.3849, -2.9557, 1.5708, 0, 0]

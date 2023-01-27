@@ -20,21 +20,21 @@ namespace robots
 	class Planar2DOF : public AbstractRobot
 	{
 	public:
-		Planar2DOF(std::string robot_desc, int dim_ = 2);
+		Planar2DOF(std::string robot_desc, int num_DOFs = 2);
 		~Planar2DOF();
 
 		const KDL::Tree& getRobotTree() const { return robot_tree; }
 		const std::vector<std::unique_ptr<fcl::CollisionObject<float>>> &getParts() const override { return parts; }
 		const std::vector<std::vector<float>> &getLimits() const override { return limits; }
 		const int getDimensions() override { return dim; }
-		const float getRadius(int dim) override { return radii[dim]; }
+		const float getRadius(int num) override { return radii[num]; }
 
-		void setState(std::shared_ptr<base::State> q_) override;
+		void setState(std::shared_ptr<base::State> q) override;
 
 		std::shared_ptr<std::vector<KDL::Frame>> computeForwardKinematics(std::shared_ptr<base::State> q) override;
-		std::shared_ptr<Eigen::MatrixXf> computeXYZ(std::shared_ptr<base::State> q) override;
+		std::shared_ptr<Eigen::MatrixXf> computeSkeleton(std::shared_ptr<base::State> q) override;
 		float computeStep(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2, float fi, 
-						  std::shared_ptr<Eigen::MatrixXf> XYZ) override;
+						  std::shared_ptr<Eigen::MatrixXf> skeleton) override;
 
 		void test(std::shared_ptr<env::Environment> env, std::shared_ptr<base::State> q);
 

@@ -11,7 +11,7 @@
 
 #include <glog/logging.h>
 
-typedef std::shared_ptr <fcl::CollisionGeometry<float>> CollisionGeometryPtr;
+typedef std::shared_ptr<fcl::CollisionGeometry<float>> CollisionGeometryPtr;
 
 env::Environment::~Environment() {}
 
@@ -62,7 +62,7 @@ env::Environment::Environment(const fcl::Box<float> &box, const fcl::Transform3<
     LOG(INFO) << "Obstacle range: (" << ob->getAABB().min_.transpose() << ")\t(" << ob->getAABB().max_.transpose() << ")";
 }
 
-env::Environment::Environment(std::vector<env::Obstacle> obs)
+env::Environment::Environment(const std::vector<env::Obstacle> obs)
 {
     for (size_t i = 0; i < obs.size(); ++i)
     {
@@ -72,7 +72,16 @@ env::Environment::Environment(std::vector<env::Obstacle> obs)
         parts.emplace_back(ob);
         LOG(INFO) << "Obstacle range: (" << ob->getAABB().min_.transpose() << ")\t(" << ob->getAABB().max_.transpose() << ")";
     }
+}
 
+void env::Environment::setParts(const std::vector<std::shared_ptr<fcl::CollisionObject<float>>> &parts_)
+{
+    parts = parts_;
+}
+
+void env::Environment::addCollisionObject(const std::shared_ptr<fcl::CollisionObject<float>> ob) 
+{ 
+    parts.emplace_back(ob); 
 }
 
 void env::Environment::updateObstacles()

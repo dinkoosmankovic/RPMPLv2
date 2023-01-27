@@ -10,7 +10,7 @@ obstacles:
       
 robot:
   type: "planar_2DOF"
-  urdf: "data/planar_2dof/planar_2dof.urdf"
+  urdf: "/data/planar_2dof/planar_2dof.urdf"
   space: "RealVectorSpaceFCL"
   dimensions: 2
   start: [-2, -2.5]

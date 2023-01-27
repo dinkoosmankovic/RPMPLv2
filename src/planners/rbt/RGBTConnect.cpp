@@ -170,7 +170,7 @@ float planning::rbt::RGBTConnect::computeDistanceUnderestimation(std::shared_ptr
 {
     float d_c = INFINITY;
     Eigen::Vector3f M, MN;    // planes << M, MN; where MN = N - M, where N is robot nearest point, and M is obstacle nearest point
-	std::shared_ptr<Eigen::MatrixXf> XYZ = ss->robot->computeXYZ(q);
+	std::shared_ptr<Eigen::MatrixXf> XYZ = ss->robot->computeSkeleton(q);
     
     for (int i = 0; i < ss->robot->getParts().size(); i++)
     {

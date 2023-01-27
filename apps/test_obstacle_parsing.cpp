@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 	google::InitGoogleLogging(argv[0]);
 	FLAGS_logtostderr = true;
 
-	env::Environment environment("data/planar_2dof/obstacles_easy.yaml");
+	env::Environment environment("/data/planar_2dof/obstacles_easy.yaml");
 
 	return 0;
 }
