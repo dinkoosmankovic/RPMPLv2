@@ -46,7 +46,8 @@ namespace robots
 		KDL::Tree robot_tree;
 		KDL::Chain robot_chain;
 		std::vector<std::vector<float>> limits;
-		std::vector<float> radii = {0.0776, 0.0940, 0.0812, 0.0812, 0.0530, 0.0380}; 	// Radii of all enclosing cylinders
+		// std::vector<float> radii = {0.0776, 0.0940, 0.0812, 0.0812, 0.0530, 0.0380}; 	// Radii of all enclosing cylinders
+		std::vector<float> radii = {0.08, 0.13, 0.12, 0.11, 0.05, 0.04}; 	// Radii of all enclosing cylinders
 		int dim = 3;
 	};
 
