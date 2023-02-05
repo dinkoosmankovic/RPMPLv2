@@ -48,10 +48,11 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 	std::shared_ptr<std::vector<Eigen::MatrixXf>> planes = std::make_shared<std::vector<Eigen::MatrixXf>>
 		(std::vector<Eigen::MatrixXf>(env->getParts().size(), Eigen::MatrixXf(6, robot->getParts().size())));
 	fcl::DefaultDistanceData<float> distance_data;
+	int i0 = (robot->getType() == "xarm6") ? 1 : 0;
 	
-	for (size_t i = 1; i < robot->getParts().size(); ++i)
+	for (size_t i = i0; i < robot->getParts().size(); i++)
 	{	
-		for (size_t j = 0; j < env->getParts().size(); ++j)
+		for (size_t j = 0; j < env->getParts().size(); j++)
 		{
 			collision_manager_robot->clear();
 			collision_manager_env->clear();
@@ -80,9 +81,10 @@ void base::RealVectorSpaceFCL::prepareCollisionManager(const std::shared_ptr<bas
 {
 	collision_manager_robot->clear();
 	collision_manager_env->clear();
-	robot->setState(q);
+	robot->setState(q);	
+	int i0 = (robot->getType() == "xarm6") ? 1 : 0;
 
-	for (size_t i = 1; i < robot->getParts().size(); i++)
+	for (size_t i = i0; i < robot->getParts().size(); i++)
 		collision_manager_robot->registerObject(robot->getParts()[i].get());
 	
 	for (size_t j = 0; j < env->getParts().size(); j++)

@@ -27,7 +27,8 @@ robots::xARM6::xARM6(std::string robot_desc)
 	
 	const size_t last_slash_idx = robot_desc.rfind('/');
 	std::string urdf_root_path = robot_desc.substr(0, last_slash_idx) + "/";
-	LOG(INFO) << "Creating " << model.getName();
+	type = model.getName();
+	LOG(INFO) << "Creating " << type;
 	std::vector<urdf::LinkSharedPtr > links;
 	model.getLinks(links);
 	robot_tree.getChain("link_base", "link_eef", robot_chain);

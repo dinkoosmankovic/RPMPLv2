@@ -19,6 +19,7 @@ namespace robots
 	{
 	protected:
 		std::shared_ptr<base::State> q;
+		std::string type;
 		
 	public:
 		AbstractRobot() { q = nullptr; }
@@ -29,6 +30,7 @@ namespace robots
 		virtual const int getDimensions() = 0;
 		virtual const float getRadius(int num) = 0;
 		const std::shared_ptr<base::State> getConfiguration() { return q; }
+		const std::string &getType() { return type; }
 
 		virtual void setState(std::shared_ptr<base::State> q) = 0;
 		void setConfiguration(std::shared_ptr<base::State> q_) { q = q_; }

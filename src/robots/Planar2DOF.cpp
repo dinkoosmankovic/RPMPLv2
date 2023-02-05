@@ -24,7 +24,8 @@ robots::Planar2DOF::Planar2DOF(std::string robot_desc, int num_DOFs)
 	if (!model.initFile(robot_desc))
     	throw std::runtime_error("Failed to parse urdf file");
 	
-	LOG(INFO) << model.getName() << std::endl;
+	type = model.getName();
+	LOG(INFO) << "Creating " << type;
 	std::vector<urdf::LinkSharedPtr > links;
 	model.getLinks(links);
 

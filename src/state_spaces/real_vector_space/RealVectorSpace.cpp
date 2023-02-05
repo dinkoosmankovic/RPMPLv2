@@ -119,7 +119,9 @@ bool base::RealVectorSpace::isValid(const std::shared_ptr<base::State> q)
 {
 	bool collision;
 	std::shared_ptr<Eigen::MatrixXf> XYZ = robot->computeSkeleton(q);
-	for (int i = 0; i < robot->getParts().size(); i++)
+	int i0 = (robot->getType() == "xarm6") ? 1 : 0;
+	
+	for (int i = i0; i < robot->getParts().size(); i++)
 	{
     	for (int j = 0; j < env->getParts().size(); j++)
 		{
@@ -352,7 +354,9 @@ std::tuple<float, std::shared_ptr<std::vector<Eigen::MatrixXf>>> base::RealVecto
 		(std::vector<Eigen::MatrixXf>(env->getParts().size(), Eigen::MatrixXf(6, robot->getParts().size())));
 	std::shared_ptr<Eigen::MatrixXf> nearest_pts;
 	std::shared_ptr<Eigen::MatrixXf> XYZ = robot->computeSkeleton(q);
-	for (int i = 0; i < robot->getParts().size(); i++)
+	int i0 = (robot->getType() == "xarm6") ? 1 : 0;
+
+	for (int i = i0; i < robot->getParts().size(); i++)
 	{
     	for (int j = 0; j < env->getParts().size(); j++)
 		{
