@@ -8,50 +8,43 @@
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 
-planning::rrt::RRTConnect::RRTConnect(std::shared_ptr<base::StateSpace> ss_) : AbstractPlanner(ss_)
-{
-	initPlanner();
-}
-
 planning::rrt::RRTConnect::RRTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_,
-									  std::shared_ptr<base::State> goal_) : AbstractPlanner(ss_)
-{
-	start = start_;
-	goal = goal_;
-	if (!ss->isValid(start) || !ss->isValid(goal))
-		throw std::domain_error("Start or goal positions are invalid!");
-	initPlanner();
-}
-
-planning::rrt::RRTConnect::~RRTConnect()
-{
-	trees[0]->clearTree();
-	trees[1]->clearTree();
-	path.clear();
-}
-
-void planning::rrt::RRTConnect::initPlanner()
+									  std::shared_ptr<base::State> goal_) : AbstractPlanner(ss_, start_, goal_)
 {
 	LOG(INFO) << "Initializing planner...";
-	planner_info = std::make_shared<PlannerInfo>();
+	if (!ss->isValid(start))
+		throw std::domain_error("Start position is invalid!");
+	if (!ss->isValid(goal))
+		throw std::domain_error("Goal position is invalid!");
+	
 	trees = {std::make_shared<base::Tree>("start", 0),
 			 std::make_shared<base::Tree>("goal", 1)};
 	trees[0]->setKdTree(std::make_shared<base::KdTree>(ss->getDimensions(), *trees[0], nanoflann::KDTreeSingleIndexAdaptorParams(10)));
 	trees[1]->setKdTree(std::make_shared<base::KdTree>(ss->getDimensions(), *trees[1], nanoflann::KDTreeSingleIndexAdaptorParams(10)));
 	trees[0]->upgradeTree(start, nullptr);
 	trees[1]->upgradeTree(goal, nullptr);
-	LOG(INFO) << "Planner initialized!";
+	
+	planner_info = std::make_shared<PlannerInfo>();
+	planner_info->setNumIterations(0);
+    planner_info->setNumStates(2);	
+	LOG(INFO) << "Planner has been initialized!";
+}
+
+planning::rrt::RRTConnect::~RRTConnect()
+{
+	trees[0]->clearTree();
+	trees[1]->clearTree();
+	trees.clear();
+	path.clear();
 }
 
 bool planning::rrt::RRTConnect::solve()
 {
 	auto time_start = std::chrono::steady_clock::now(); 	// Start the clock
 	auto time_current = time_start;
-	int tree_idx = 0;  	// Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal
+	int tree_idx = 0;  	// Determines the tree index, i.e., which tree is chosen, 0: from q_start; 1: from q_goal
 	std::shared_ptr<base::State> q_rand, q_near, q_new;
 	base::State::Status status;
-	planner_info->setNumIterations(0);
-    planner_info->setNumStates(2);
 
 	while (true)
 	{
@@ -143,14 +136,6 @@ void planning::rrt::RRTConnect::computePath()
 		path.emplace_back(q_con);
 		q_con = q_con->getParent();
 	}
-}
-
-void planning::rrt::RRTConnect::clearPlanner()
-{
-	for (int i = 0; i < trees.size(); i++)
-		trees[i]->clearTree();
-	path.clear();
-	initPlanner();
 }
 
 const std::vector<std::shared_ptr<base::State>> &planning::rrt::RRTConnect::getPath() const

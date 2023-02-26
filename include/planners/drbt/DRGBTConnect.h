@@ -8,12 +8,12 @@
 
 namespace planning
 {
-    namespace rbt
+    namespace drbt
     {
         class DRGBTConnect : public planning::rbt::RGBTConnect
         {
         public:
-            DRGBTConnect(std::shared_ptr<base::StateSpace> ss_);
+            DRGBTConnect() {}
 			DRGBTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> Goal_);
 			~DRGBTConnect();
             bool solve() override;

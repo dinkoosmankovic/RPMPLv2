@@ -23,7 +23,6 @@ void benchmark::Benchmark::runContext(BenchmarkContext context)
             bool res = planner.solve();
             planner.outputPlannerData(benchmark_file, false, true);
         }
-        planner.clearPlanner();
     }
 }
 

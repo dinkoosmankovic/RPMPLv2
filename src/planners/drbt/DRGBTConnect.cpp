@@ -7,34 +7,48 @@
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 
-planning::rbt::DRGBTConnect::DRGBTConnect(std::shared_ptr<base::StateSpace> ss_) : RGBTConnect(ss_) {}
-
-planning::rbt::DRGBTConnect::DRGBTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_,
-                                          std::shared_ptr<base::State> goal_) : RGBTConnect(ss_, start_, goal_) {}
-
-planning::rbt::DRGBTConnect::~DRGBTConnect() {}
-
-bool planning::rbt::DRGBTConnect::solve()
+planning::drbt::DRGBTConnect::DRGBTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_,
+                                           std::shared_ptr<base::State> goal_)
 {
-    auto time_alg_start = std::chrono::steady_clock::now();     // Start the algorithm clock
-    auto time_iter_start = time_alg_start;                      // Start the iteration clock
-    auto time_current = time_alg_start;
+	LOG(INFO) << "Initializing planner...";
+    ss = ss_;
+    start = start_;
+    goal = goal_;
+	if (!ss->isValid(start))
+		throw std::domain_error("Start position is invalid!");
+    
     q_current = start;
     q_next = std::make_shared<HorizonState>(q_current, 0);
     q_next_previous = q_next;
     path.emplace_back(start);                                   // State 'start' is added to the realized path
     horizon_size = DRGBTConnectConfig::INIT_HORIZON_SIZE + num_lateral_states;
-    planner_info->setNumIterations(0);
-    planner_info->setNumStates(1);
+
+	planner_info = std::make_shared<PlannerInfo>();
+	planner_info->setNumIterations(0);
+    planner_info->setNumStates(1);	
+	LOG(INFO) << "Planner has been initialized!";
+}
+
+planning::drbt::DRGBTConnect::~DRGBTConnect()
+{
+    path.clear();
+    horizon.clear();
+}
+
+bool planning::drbt::DRGBTConnect::solve()
+{
+    auto time_alg_start = std::chrono::steady_clock::now();     // Start the algorithm clock
+    auto time_iter_start = time_alg_start;                      // Start the iteration clock
+    auto time_current = time_alg_start;
 
     // Obtaining the inital path using RGBTConnect (any planner can be used)
-    std::unique_ptr<planning::AbstractPlanner> RGBTConnect_planner = std::make_unique<planning::rbt::RGBTConnect>(ss, start, goal);
-    RGBTConnect_planner->solve();
-    predefined_path = RGBTConnect_planner->getPath();
+    std::unique_ptr<planning::AbstractPlanner> RGBTConnect = std::make_unique<planning::rbt::RGBTConnect>(ss, start, goal);
+    RGBTConnect->solve();
+    predefined_path = RGBTConnect->getPath();
     // LOG(INFO) << "Predefined path is" << (predefined_path.empty() ? " empty! " : ":");
     // for (int i = 0; i < predefined_path.size(); i++)
     //     std::cout << predefined_path.at(i) << std::endl;
-	
+
     while (true)
     {
         // Generate a horizon
@@ -81,19 +95,19 @@ bool planning::rbt::DRGBTConnect::solve()
                     // LOG(INFO) << "Trying to replan...";
                     time_current = std::chrono::steady_clock::now();
                     RGBTConnectConfig::MAX_PLANNING_TIME = DRGBTConnectConfig::MAX_ITER_TIME - getElapsedTime(time_iter_start, time_current) - 1; // 1 [ms] is reserved for the following code lines
-                    RGBTConnect_planner = std::make_unique<planning::rbt::RGBTConnect>(ss, q_current, goal);
-                    if (RGBTConnect_planner->solve())   // New path is found, thus update predefined path to the goal
+                    RGBTConnect = std::make_unique<planning::rbt::RGBTConnect>(ss, q_current, goal);
+                    if (RGBTConnect->solve())   // New path is found, thus update predefined path to the goal
                     {
-                        // LOG(INFO) << "The path has been replanned in " << RGBTConnect_planner->getPlannerInfo()->getPlanningTime() << " [ms]. ";
+                        // LOG(INFO) << "The path has been replanned in " << RGBTConnect->getPlannerInfo()->getPlanningTime() << " [ms]. ";
                         // LOG(INFO) << "Predefined path is: ";
-                        predefined_path = RGBTConnect_planner->getPath();
+                        predefined_path = RGBTConnect->getPath();
                         // for (int i = 0; i < predefined_path.size(); i++)
                         //     std::cout << predefined_path.at(i) << std::endl;
                         replanning = false;
                         status = base::State::Status::Reached;
                         q_next = std::make_shared<HorizonState>(predefined_path.front(), 0);
                         horizon.clear();
-                        planner_info->addRoutineTime(RGBTConnect_planner->getPlannerInfo()->getPlanningTime(), 4);
+                        planner_info->addRoutineTime(RGBTConnect->getPlannerInfo()->getPlanningTime(), 4);
                     }
                     else    // New path is not found
                         throw std::runtime_error("New path is not found! ");
@@ -133,7 +147,7 @@ bool planning::rbt::DRGBTConnect::solve()
 
 // Generate a horizon using predefined path (or random nodes).
 // Only states from predefined path that come after 'q_next' are remained in the horizon. Other states are deleted.
-void planning::rbt::DRGBTConnect::generateHorizon()
+void planning::drbt::DRGBTConnect::generateHorizon()
 {
     auto T = std::chrono::steady_clock::now();
     // LOG(INFO) << "Preparing horizon...";
@@ -188,7 +202,7 @@ void planning::rbt::DRGBTConnect::generateHorizon()
 
 // Update and then compute the horizon.
 // Bad and critical states will be replaced with "better" states, such that the horizon contains possibly better states.
-void planning::rbt::DRGBTConnect::computeHorizon()
+void planning::drbt::DRGBTConnect::computeHorizon()
 {
     float d_c = computeDistance(q_current);
 
@@ -228,7 +242,7 @@ void planning::rbt::DRGBTConnect::computeHorizon()
 }
 
 // Shorten the horizon by removing 'num' states. Excess states are deleted, and best states holds priority.
-void planning::rbt::DRGBTConnect::shortenHorizon(int num)
+void planning::drbt::DRGBTConnect::shortenHorizon(int num)
 {
     int num_deleted = 0;
     for (int i = horizon.size() - 1; i >= 0; i--)
@@ -263,7 +277,7 @@ void planning::rbt::DRGBTConnect::shortenHorizon(int num)
     }
 }
 
-void planning::rbt::DRGBTConnect::addRandomStates(int num)
+void planning::drbt::DRGBTConnect::addRandomStates(int num)
 {
     std::shared_ptr<base::State> q_rand;
     for (int i = 0; i < num; i++)
@@ -274,7 +288,7 @@ void planning::rbt::DRGBTConnect::addRandomStates(int num)
     }
 }
 
-void planning::rbt::DRGBTConnect::addLateralStates()
+void planning::drbt::DRGBTConnect::addLateralStates()
 {
     int num_added = 0;
     if (ss->getDimensions() == 2)   // In 2D C-space only two possible lateral spines exist
@@ -328,7 +342,7 @@ void planning::rbt::DRGBTConnect::addLateralStates()
 // Modify state by replacing it with a random state, which is generated using biased distribution,
 // i.e., oriented weight around 'q' ('q->getStatus()' == bad), or around '-q' ('q->getStatus()' == critical).
 // Return whether the modification is successful
-bool planning::rbt::DRGBTConnect::modifyState(std::shared_ptr<HorizonState> &q)
+bool planning::drbt::DRGBTConnect::modifyState(std::shared_ptr<HorizonState> &q)
 {
     std::shared_ptr<HorizonState> q_new_;
     std::shared_ptr<base::State> q_new;
@@ -369,7 +383,7 @@ bool planning::rbt::DRGBTConnect::modifyState(std::shared_ptr<HorizonState> &q)
 
 // Update the current state of the robot
 // Moreover, check validity of the motion from 'q_current' to 'q_new'
-void planning::rbt::DRGBTConnect::updateCurrentState()
+void planning::drbt::DRGBTConnect::updateCurrentState()
 {
     auto T = std::chrono::steady_clock::now();
     std::shared_ptr<base::State> q_new;
@@ -407,7 +421,7 @@ void planning::rbt::DRGBTConnect::updateCurrentState()
 }
 
 // Compute reached state when generating a generalized spine from 'q_current' towards 'q'.
-void planning::rbt::DRGBTConnect::computeReachedState(std::shared_ptr<base::State> q_current, std::shared_ptr<HorizonState> q)
+void planning::drbt::DRGBTConnect::computeReachedState(std::shared_ptr<base::State> q_current, std::shared_ptr<HorizonState> q)
 {
     base::State::Status status;
     std::shared_ptr<base::State> q_reached;
@@ -430,7 +444,7 @@ void planning::rbt::DRGBTConnect::computeReachedState(std::shared_ptr<base::Stat
 }
 
 // Compute the next state from the horizon
-void planning::rbt::DRGBTConnect::computeNextState()
+void planning::drbt::DRGBTConnect::computeNextState()
 {
     std::vector<float> dist_to_goal(horizon.size());
     float d_goal_min = INFINITY;
@@ -513,7 +527,7 @@ void planning::rbt::DRGBTConnect::computeNextState()
     q_next_previous = q_next;
 }
 
-bool planning::rbt::DRGBTConnect::whetherToReplan()
+bool planning::drbt::DRGBTConnect::whetherToReplan()
 {
     float weight_max = 0;
     float weight_sum = 0;
@@ -527,7 +541,7 @@ bool planning::rbt::DRGBTConnect::whetherToReplan()
 }
 
 // Return index in the horizon of state 'q'. If 'q' does not belong to the horizon, -1 is returned.
-int planning::rbt::DRGBTConnect::getIndexInHorizon(std::shared_ptr<HorizonState> q)
+int planning::drbt::DRGBTConnect::getIndexInHorizon(std::shared_ptr<HorizonState> q)
 {
     for (int idx = 0; idx < horizon.size(); idx++)
     {
@@ -537,7 +551,7 @@ int planning::rbt::DRGBTConnect::getIndexInHorizon(std::shared_ptr<HorizonState>
     return -1;   
 }
 
-bool planning::rbt::DRGBTConnect::checkTerminatingCondition()
+bool planning::drbt::DRGBTConnect::checkTerminatingCondition()
 {
     if (ss->isEqual(q_current, goal))
     {
@@ -561,7 +575,7 @@ bool planning::rbt::DRGBTConnect::checkTerminatingCondition()
 	return false;
 }
 
-void planning::rbt::DRGBTConnect::outputPlannerData(std::string filename, bool output_states_and_paths, bool append_output) const
+void planning::drbt::DRGBTConnect::outputPlannerData(std::string filename, bool output_states_and_paths, bool append_output) const
 {
 	std::ofstream output_file;
 	std::ios_base::openmode mode = std::ofstream::out;
@@ -594,27 +608,27 @@ void planning::rbt::DRGBTConnect::outputPlannerData(std::string filename, bool o
 		throw "Cannot open file"; // std::something exception perhaps?
 }
 
-planning::rbt::DRGBTConnect::HorizonState::HorizonState(std::shared_ptr<base::State> state_, int index_)
+planning::drbt::DRGBTConnect::HorizonState::HorizonState(std::shared_ptr<base::State> state_, int index_)
 {
     state = state_;
     index = index_;
 }
 
-void planning::rbt::DRGBTConnect::HorizonState::setDistance(float d_c_)
+void planning::drbt::DRGBTConnect::HorizonState::setDistance(float d_c_)
 {
     d_c = d_c_;
     if (d_c < DRGBTConnectConfig::D_CRIT)
         setStatus(HorizonState::Status::Critical);
 }
 
-void planning::rbt::DRGBTConnect::HorizonState::setWeight(float weight_) 
+void planning::drbt::DRGBTConnect::HorizonState::setWeight(float weight_) 
 { 
     weight = weight_;
     if (weight == 0)
         setStatus(HorizonState::Status::Bad);
 }
 
-std::ostream &planning::rbt::operator<<(std::ostream &os, const planning::rbt::DRGBTConnect::HorizonState *q)
+std::ostream &planning::drbt::operator<<(std::ostream &os, const planning::drbt::DRGBTConnect::HorizonState *q)
 {
     os << "q:         (" << q->getCoord().transpose() << ")" << std::endl;
     if (q->getStateReached() == nullptr)

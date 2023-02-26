@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 		try
 		{
 			LOG(INFO) << "Test number " << num_test << " of " << max_num_tests;
-			planner = std::make_unique<planning::rbt::RGBMTStar>(ss, scenario.getStart(), scenario.getGoal());					
+			planner = std::make_unique<planning::rbt_star::RGBMTStar>(ss, scenario.getStart(), scenario.getGoal());					
 			bool res = planner->solve();
 
 			LOG(INFO) << "RGBMT* planning finished with " << (res ? "SUCCESS!" : "FAILURE!");

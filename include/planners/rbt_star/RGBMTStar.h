@@ -8,12 +8,12 @@
 
 namespace planning
 {
-	namespace rbt
+	namespace rbt_star
 	{
 		class RGBMTStar : public planning::rbt::RGBTConnect
 		{
 		public:
-			RGBMTStar(std::shared_ptr<base::StateSpace> ss_);
+            RGBMTStar() {}
 			RGBMTStar(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> goal_);
 			~RGBMTStar();
 			bool solve() override;
@@ -24,8 +24,7 @@ namespace planning
             std::vector<size_t> num_states;              // Total number of states for each tree
             float cost_opt;                              // Cost of the final path 
             
-			void initPlanner();
-            std::tuple<base::State::Status, std::shared_ptr<base::State>> connectGenSpine
+			std::tuple<base::State::Status, std::shared_ptr<base::State>> connectGenSpine
                 (std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e);
             float computeCostToCome(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2);
             std::shared_ptr<base::State> optimize(std::shared_ptr<base::State> q, std::shared_ptr<base::Tree> tree, 

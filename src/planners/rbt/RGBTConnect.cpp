@@ -7,23 +7,17 @@
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 
-planning::rbt::RGBTConnect::RGBTConnect(std::shared_ptr<base::StateSpace> ss_) : RBTConnect(ss_) {}
-
 planning::rbt::RGBTConnect::RGBTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_,
                                         std::shared_ptr<base::State> goal_) : RBTConnect(ss_, start_, goal_) {}
-
-planning::rbt::RGBTConnect::~RGBTConnect() {}
 
 bool planning::rbt::RGBTConnect::solve()
 {
 	auto time_start = std::chrono::steady_clock::now();		// Start the clock
 	auto time_current = time_start;
-	int tree_idx = 0;  // Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal
+	int tree_idx = 0;  // Determines the tree index, i.e., which tree is chosen, 0: from q_start; 1: from q_goal
 	std::shared_ptr<base::State> q_e, q_near, q_new;
     std::shared_ptr<std::vector<std::shared_ptr<base::State>>> q_new_list;
 	base::State::Status status;
-	planner_info->setNumIterations(0);
-    planner_info->setNumStates(2);
 
 	while (true)
 	{

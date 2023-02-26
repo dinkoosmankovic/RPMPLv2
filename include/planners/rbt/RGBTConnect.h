@@ -13,9 +13,8 @@ namespace planning
 		class RGBTConnect : public planning::rbt::RBTConnect
 		{
 		public:
-			RGBTConnect(std::shared_ptr<base::StateSpace> ss_);
+			RGBTConnect() {}
 			RGBTConnect(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_, std::shared_ptr<base::State> goal_);
-			~RGBTConnect();
 			bool solve() override;
 			bool checkTerminatingCondition(base::State::Status status) override;
 			void outputPlannerData(std::string filename, bool output_states_and_paths = true, bool append_output = false) const override;

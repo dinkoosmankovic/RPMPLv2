@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 
 		try
 		{
-			planner = std::make_unique<planning::rbt::DRGBTConnect>(ss, scenario.getStart(), scenario.getGoal());
+			planner = std::make_unique<planning::drbt::DRGBTConnect>(ss, scenario.getStart(), scenario.getGoal());
 			bool res = planner->solve();
 			LOG(INFO) << "DRGBTConnect planning finished with " << (res ? "SUCCESS!" : "FAILURE!");
 			LOG(INFO) << "Number of iterations: " << planner->getPlannerInfo()->getNumIterations();

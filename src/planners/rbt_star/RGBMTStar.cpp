@@ -7,36 +7,32 @@
 #include <glog/log_severity.h>
 #include <glog/logging.h>
 
-planning::rbt::RGBMTStar::RGBMTStar(std::shared_ptr<base::StateSpace> ss_) : RGBTConnect(ss_)
-{ 
-	initPlanner();
-}
-
-planning::rbt::RGBMTStar::RGBMTStar(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_,
-                                    std::shared_ptr<base::State> goal_) : RGBTConnect(ss_, start_, goal_)
-{ 
-	initPlanner();
-}
-
-planning::rbt::RGBMTStar::~RGBMTStar()
+planning::rbt_star::RGBMTStar::RGBMTStar(std::shared_ptr<base::StateSpace> ss_, std::shared_ptr<base::State> start_,
+                                         std::shared_ptr<base::State> goal_) : RGBTConnect(ss_, start_, goal_)
 {
-    for (int i = 2; i < trees.size(); i++)
-        trees[i]->clearTree();
-}
-
-void planning::rbt::RGBMTStar::initPlanner()
-{
-    start->setCost(0);
+    // Additionally the following is required:
+	start->setCost(0);
     goal->setCost(0);
     num_states = {1, 1};
     cost_opt = INFINITY;
+    planner_info->addCostConvergence({INFINITY, INFINITY});
+    planner_info->addStateTimes({0, 0});
 }
 
-bool planning::rbt::RGBMTStar::solve()
+planning::rbt_star::RGBMTStar::~RGBMTStar()
+{
+	for (int i = 0; i < trees.size(); i++)
+		trees[i]->clearTree();
+    
+	trees.clear();
+	path.clear();
+}
+
+bool planning::rbt_star::RGBMTStar::solve()
 {
 	auto time_start = std::chrono::steady_clock::now();     // Start the clock
     auto time_current = time_start;
-	int tree_idx;                           // Determines the tree index, i.e., which tree is chosen, 0: from q_init; 1: from q_goal; >1: local trees
+	int tree_idx;                           // Determines the tree index, i.e., which tree is chosen, 0: from q_start; 1: from q_goal; >1: local trees
     int tree_new_idx = 2;                   // Index of the new tree
     std::shared_ptr<base::State> q_con;     // State (takes start or goal conf.) from which the optimal path is constructed
 	std::shared_ptr<base::State> q_rand, q_near, q_new;
@@ -46,10 +42,6 @@ bool planning::rbt::RGBMTStar::solve()
     std::vector<int> trees_connected;                           // List of connected trees
     std::vector<std::shared_ptr<base::State>> states_reached;   // Reached states from other trees
     float cost;
-    planner_info->setNumIterations(0);
-    planner_info->setNumStates(2);
-    planner_info->addCostConvergence({INFINITY, INFINITY});
-    planner_info->addStateTimes({0, 0});
 
     while (true)
     {
@@ -191,7 +183,7 @@ bool planning::rbt::RGBMTStar::solve()
     }
 }
 
-std::shared_ptr<base::State> planning::rbt::RGBMTStar::getRandomState(){
+std::shared_ptr<base::State> planning::rbt_star::RGBMTStar::getRandomState(){
     int tree_idx;
     std::shared_ptr<base::State> q_rand, q_near;
     base::State::Status status;
@@ -216,7 +208,7 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::getRandomState(){
 // Connect state 'q' with state 'q_e'
 // Return 'Status'
 // Return 'q_new': the reached state
-std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rbt::RGBMTStar::connectGenSpine
+std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rbt_star::RGBMTStar::connectGenSpine
     (std::shared_ptr<base::State> q, std::shared_ptr<base::State> q_e)
 {
 	float d_c = computeDistance(q);
@@ -245,7 +237,7 @@ std::tuple<base::State::Status, std::shared_ptr<base::State>> planning::rbt::RGB
 }
 
 // Returns cost-to-come from 'q1' to 'q2'
-inline float planning::rbt::RGBMTStar::computeCostToCome(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2)
+inline float planning::rbt_star::RGBMTStar::computeCostToCome(std::shared_ptr<base::State> q1, std::shared_ptr<base::State> q2)
 {
     return (q1->getCoord() - q2->getCoord()).norm();
 }
@@ -253,7 +245,7 @@ inline float planning::rbt::RGBMTStar::computeCostToCome(std::shared_ptr<base::S
 // State 'q' from another tree is optimally connected to 'tree'
 // 'q_reached' is a state from 'tree' that is reached by 'q'
 // return 'q_new': state 'q' which now belongs to 'tree'
-std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize
+std::shared_ptr<base::State> planning::rbt_star::RGBMTStar::optimize
     (std::shared_ptr<base::State> q, std::shared_ptr<base::Tree> tree, std::shared_ptr<base::State> q_reached)
 {
     // Finding the optimal connection to the predecessors of 'q_reached'
@@ -317,8 +309,8 @@ std::shared_ptr<base::State> planning::rbt::RGBMTStar::optimize
 // Optimally unifies a local tree 'tree' with 'tree0'
 // 'q_con' - a state that connects 'tree' with 'tree0'
 // 'q0_con' - a state that connects 'tree0' with 'tree'
-void planning::rbt::RGBMTStar::unifyTrees(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::Tree> tree0, 
-                                          std::shared_ptr<base::State> q_con, std::shared_ptr<base::State> q0_con)
+void planning::rbt_star::RGBMTStar::unifyTrees(std::shared_ptr<base::Tree> tree, std::shared_ptr<base::Tree> tree0, 
+                                               std::shared_ptr<base::State> q_con, std::shared_ptr<base::State> q0_con)
 {
     std::shared_ptr<base::State> q_considered = nullptr;
     std::shared_ptr<base::State> q_conNew = ss->newState(q_con);
@@ -336,7 +328,7 @@ void planning::rbt::RGBMTStar::unifyTrees(std::shared_ptr<base::Tree> tree, std:
 }
 
 // Consider all children (except 'q_considered', that has already being considered) of 'q', and connect them optimally to 'tree0' 
-void planning::rbt::RGBMTStar::considerChildren(std::shared_ptr<base::State> q, std::shared_ptr<base::Tree> tree0,
+void planning::rbt_star::RGBMTStar::considerChildren(std::shared_ptr<base::State> q, std::shared_ptr<base::Tree> tree0,
                                                 std::shared_ptr<base::State> q0_con, std::shared_ptr<base::State> q_considered)
 {
     // Remove child 'q_considered' of 'q' from 'tree'
@@ -362,13 +354,13 @@ void planning::rbt::RGBMTStar::considerChildren(std::shared_ptr<base::State> q, 
 }
 
 // Delete all trees with indices 'idx'
-void planning::rbt::RGBMTStar::deleteTrees(std::vector<int> &trees_connected)
+void planning::rbt_star::RGBMTStar::deleteTrees(std::vector<int> &trees_connected)
 {
     for (int i = trees_connected.size()-1; i >= 0; i--)
         trees.erase(trees.begin() + trees_connected[i]);
 }
 
-void planning::rbt::RGBMTStar::computePath(std::shared_ptr<base::State> q_con)
+void planning::rbt_star::RGBMTStar::computePath(std::shared_ptr<base::State> q_con)
 {
 	path.clear();
     path.emplace_back(q_con);
@@ -381,7 +373,7 @@ void planning::rbt::RGBMTStar::computePath(std::shared_ptr<base::State> q_con)
         std::reverse(path.begin(), path.end());
 }
 
-bool planning::rbt::RGBMTStar::checkTerminatingCondition(std::shared_ptr<base::State> q_con)
+bool planning::rbt_star::RGBMTStar::checkTerminatingCondition(std::shared_ptr<base::State> q_con)
 {
     if (RGBMTStarConfig::RETURN_WHEN_PATH_IS_FOUND && cost_opt < INFINITY || 
         planner_info->getNumStates() >= RGBMTStarConfig::MAX_NUM_STATES || 
@@ -403,7 +395,7 @@ bool planning::rbt::RGBMTStar::checkTerminatingCondition(std::shared_ptr<base::S
     return false;
 }
 
-void planning::rbt::RGBMTStar::outputPlannerData(std::string filename, bool output_states_and_paths, bool append_output) const
+void planning::rbt_star::RGBMTStar::outputPlannerData(std::string filename, bool output_states_and_paths, bool append_output) const
 {
     std::ofstream output_file;
 	std::ios_base::openmode mode = std::ofstream::out;
